@@ -17,7 +17,8 @@
  *     type 2 mouse   a, b = x, y (driver coordinates), c = buttons: the
  *                    position is set through the driver (AX=4, clamped by
  *                    it) right before this AX=3 read, buttons are reported
- *                    from now on
+ *                    from now on.  AX=3 reports only positions set by the
+ *                    game or the script (host pointer ignored, see int33)
  *     type 4 buttons a = buttons
  *     type 5 sync    nothing; due only when also DGROUP word a == b
  *     type 6 syncne  the same for a != b
@@ -64,6 +65,9 @@ last_read:  .long 0             /* reads at the last applied event */
 blocked:    .byte 0             /* this check is a wake-up of a blocking read */
 count_it:   .byte 0
 in_dos:     .byte 0             /* inside our own call of the DOS/BIOS handler */
+mvalid:     .byte 0             /* mxr/myr hold the position the game/script set */
+mxr:        .word 0
+myr:        .word 0
     .org 0x100
 vgabuf:     .space 829          /* misc, seq 0-4, gc 0-8, crtc 0-24, attr 0-20, dac 768 */
 
@@ -389,9 +393,42 @@ i21dos:                           /* call DOS with INT 16h passing through */
 
 /* ---- INT 33h ---------------------------------------------------------------- */
 int33:
+    /* The mouse position is only what the game (AX=0 reset, AX=4, window AX=7/8) or the
+       script set, latched as the driver clamped it: the host pointer over
+       the DOSBox-X window (mouse integration) cannot move it.  The port has
+       no host mouse in script mode either. */
     cmp $3, %ax
     je m3
+    cmp $0, %ax                   /* reset: the driver centres the pointer */
+    je mset
+    cmp $4, %ax
+    je mset
+    cmp $7, %ax
+    je mset
+    cmp $8, %ax
+    je mset
     ljmp *%cs:old33
+mset:
+    pushf
+    lcall *%cs:old33
+    call mlatch
+    iret
+mlatch:                           /* driver position -> mxr/myr; preserves all */
+    push %ax
+    push %bx
+    push %cx
+    push %dx
+    mov $3, %ax
+    pushf
+    lcall *%cs:old33
+    mov %cx, %cs:mxr
+    mov %dx, %cs:myr
+    movb $1, %cs:mvalid
+    pop %dx
+    pop %cx
+    pop %bx
+    pop %ax
+    ret
 m3:
     call check_read
     cmpw $0, %cs:mpend
@@ -404,13 +441,18 @@ m3:
     mov $4, %ax
     pushf
     lcall *%cs:old33
+    call mlatch
     pop %dx
     pop %cx
     mov $3, %ax
 m3r:
     pushf
     lcall *%cs:old33
-    mov %cs:mbtn, %bx
+    cmpb $0, %cs:mvalid
+    je 1f
+    mov %cs:mxr, %cx
+    mov %cs:myr, %dx
+1:  mov %cs:mbtn, %bx
     iret
 
     .org 0x1000

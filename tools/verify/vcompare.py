@@ -113,9 +113,9 @@ def dg_ignore_ranges(kind, dgo=None):
     ign.update(range(0xEA80, 0x10000))       # past DGROUP: SS = DGROUP+EA8h (stack, then heap)
     ign.update(range(0x0050, 0x0090))        # c0/RTL: saved INT 0/4/5/6 vectors, PSP, env, heap
                                              # segments (DOS environment, not game state)
-    ign.update(range(0x7BA0, 0x7BE8))        # AMP's private interrupt stack (0EF6:0F64 switches
-                                             # SS:SP to DGROUP:7BE4; frames + saved SS:SP); the
-                                             # port runs the ISR natively
+    ign.update(range(0x7AE3, 0x7BE8))        # AMP's private interrupt stack (0EF6:0F64 switches
+                                             # SS:SP to DGROUP:7BE4; nested driver frames reach
+                                             # down to 7B70, below the "cdiRegister" string)
     ign.update(range(0xE764, 0xE766))        # int86 flags image after INT 33h: DOSBox-X's FLAGS
                                              # carry IOPL=3/NT (7212h), the port stores 0212h;
                                              # never read

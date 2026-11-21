@@ -47,27 +47,75 @@ loop (videos, fades with input polls, timed texts) came before:
 +0 srand 00001000            RTL random state DGROUP:94C4 := 1000h (re-aligns rand())
 ```
 
-Result (2026-11-21, `play2`): between two events both sides make the same
-number of rand() calls per segment except for clock-timed ones (chargen
-blink `random(3)`, the talking-face `random(2)`): off by one per few
-thousand calls, which is enough to change the next roll.  `srand` before
-each roll fixes the roll only if no blink is pending; in the battle the
-first voice differs and the original then waits (DOSBox-X) in
-ui_wait_voice for a 300h-byte voice whose channel position never reaches
-the end (open).
+Checkpoint events that neutralise clock-timed state (both sides):
 
-What stays clock-driven and therefore differs under read-count sync: the
-game clock E74A itself and everything timed from it (chargen walking sprite
-frame and blink state 48E8/48EA, 3DSYS portrait blink with its once-a-second
-`random(20)`, the battle's talking-face animation with `random(2)` every
-1.5 s while a voice plays, AMP/DSMI timing, fade/gfl timestamps).  Under
-clock sync it is the other way round: per-pass `random()` calls drift.
+```
++0 srand 00001000            RTL random state DGROUP:94C4 := 1000h
++0 poke 48E8 03 00 02 00     write bytes (hex) to DGROUP:48E8.. (split into
+                             byte/word events, hook.S type 8)
+```
 
-`tools/verify/mkscript.py` builds longer scripts (play-through) from Python:
-`python tools/verify/mkscript.py play2 out/verify/scripts/play2.txt` is the
-verification play-through (chargen in reads, story skipped, district 0,
-save to slot 2, the door event with its treasure screen, the dog battle in
-reads from the first actor on).
+### What is clock-timed and how play3 neutralises it
+
+| State | Why it differs | play3 |
+|---|---|---|
+| chargen walking frame / blink 48E8/48EA, the blink's `random(3)` (150 ms tick) | ticks fall on different passes | at each checkpoint `poke 48E8 = 3, 48EA = 2` (no new blink; the next tick draws frame 0 and the normal face), `sync 48E8 0000` (that tick), `srand`, dump; at Space `srand` + `poke 48E8 = 0 0 0 0` - the roll and the next member's screen are then identical |
+| 3DSYS portrait blink: `random(20)` once a second, timer and state are locals whose phase depends on load times (DOSBox-X spends emulated clock loading, the port's virtual time does not) | blinks start on different calls; a blink cut by leaving the loop leaves its face on screen | `srand` with a *quiet seed* (`mkscript.quiet_seed`: the next 8 `rand()` values are all >= 1639, so no `random(20)` is 0) every 2 s from the story on and at every exploration key / dump |
+| battle talking face `random(2)` every 150 ms while a voice plays (BBC4) | as above | keys 30000 reads after the previous checkpoint (voice over on both sides), `srand` at every key, dumps 10000 reads after a key, 100000 after TAB (the enemy turn's clock-timed animations; the port makes ~3x fewer reads per ms than DOSBox-X) |
+| AMP/DSMI timer state, DSMI time, GFL frame/start times, s3d fade time, voice end time 73D1, EMS mapping registers that follow GFL streaming | music/videos started at load-time-dependent clocks | not neutralised: `vcompare.py` lists them by name only with `--clock` (`CLOCK_FIELDS`) |
+
+`vcompare.py` also ignores *host fields* (`HOST_FIELDS`: Borland RTL data
+the port replaces - _8087, atexit count, exit hooks, conio _video, delay
+calibration/brk/environ, overlay-manager table, harderr vectors - and the
+CD request block, kept by cd5737.c in a native mirror; none is read by game
+code) and far pointers whose segment is 0 in the port (`farptr_ranges`,
+`farptr_tail_filter`: records that keep only the offset).
+
+### Result (2026-11-21, `play3`)
+
+`python tools/verify/mkscript.py play3 out/verify/scripts/play3.txt;
+python -u tools/verify/pair.py out/verify/scripts/play3.txt play3`
+(pair.py resets the game folders, runs both sides, compares the dumps and
+the files the game wrote):
+
+* menu, chargen start + 4 members: identical (screen, DAC, registers,
+  DGROUP); GRP.DAT identical.  `c03_after_chargen` is inside the
+  clock-timed fade into the story (expected to differ).
+* district 0: arrival, 2 turns, save menu, save to slot 2, the door
+  question, the treasure screen: identical; SAKLA001.SAV identical.
+* the dog battle: start (first actor up) and 12 battle keys (UP, UP,
+  ENTER, TAB x3, both sides' turns): identical at all 13 checkpoints.
+* So every checkpoint of play3 but `c03_after_chargen` is identical in
+  registers, DAC, screen, video memory and DGROUP (minus host fields; the
+  clock fields are listed with `--clock`), and both written files match.
+  (Run of 2026-11-21 after the mouse latch; earlier runs differed only in
+  the 3DSYS cursor shape E5E1/E5E3 = host pointer, and in battle dumps
+  taken mid enemy turn before the 100000-read gap.)
+* Not covered yet: a shop (FRPOS shop opcodes), a battle with spells.
+* Differential suite after these changes: 219/219 (out/base).
+
+Port fixes found on the way: the DSMI driver load opens SDISB16.DSD through
+the game's file layer (its 512-byte stdio buffer is the paragraph that made
+6E06/DE30 differ, `src/dsmi/dds.c`); the save description buffer is an
+uninitialised stack buffer written in full (60 bytes) - modelled as a
+zeroed static (`src/game/s3d_menu.c`).
+
+Mouse: hook.S reports at AX=3 only the position the game (AX=0/4/7/8) or
+the script set, as the driver clamped it - with `autolock = false`
+DOSBox-X's mouse integration otherwise moves the DOS mouse whenever the
+host pointer crosses its window (seen as a different 3DSYS cursor shape
+E5E3 in one run).
+
+DOSBox-X configuration: the SB16 must be on IRQ 7 (tools/dosbox/ist.conf),
+as SES.CFG says.  With IRQ 5 the DSMI driver unmasks IRQ 7, gets no
+interrupt, the DMA stalls, every voice's position stays 0 and
+ui_wait_voice (05DC:1D1B: position + 20h >= sample end, or Esc) never ends
+and eats the script's keys; on hardware (and in the port) a 300h-byte
+voice at 3676 Hz ends after ~0.21 s.  Dumps made before this change ran
+without sound and are not comparable.
+
+`tools/verify/mkscript.py` builds the scripts (`play3` above; `play2` is
+the older version without the checkpoint neutralisation).
 
 ## Port side
 
@@ -101,7 +149,8 @@ dumps A000 (chain-4) or the 4 planes and DGROUP.
 `<name>.vga` (misc, seq 0-4, gc 0-8, crtc 0-24, attr 0-20, DAC), `.vram`
 (chain-4: the CPU view of A000, else 4 planes), `.dg` (DGROUP), `.txt` (clock).
 
-* `tools/verify/vcompare.py <port> <orig> [--png dir] [--dg-detail]` - same-name
+* `tools/verify/pair.py <script> <tag>` - both sides + vcompare + written files.
+* `tools/verify/vcompare.py <port> <orig> [--png dir] [--dg-detail] [--clock]` - same-name
   checkpoints: registers, DAC, rendered picture, video memory, DGROUP.  DGROUP
   ignores: far pointers (heap/EMS/VGA, native in the port), relocated segment
   words (16E0 vs 1F04), RTL vectors/PSP, AMP's private ISR stack (7BA0-7BE7),

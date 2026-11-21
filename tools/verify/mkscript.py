@@ -270,9 +270,11 @@ def play3(path, battle_keys=12):
     s.syncne(0xD5DE, 0)                                       # battle: the first actor is up
     s.reads(0).srand(0x2100).dump('c10_battle')
     for i, k in enumerate((['UP', 'UP', 'ENTER', 'TAB'] * 8)[:battle_keys]):
-        # 40000 reads: the enemy's turn after TAB (clock-timed animations, the
-        # port makes fewer reads per ms) is over on both sides at the dump
-        s.wait(10000).srand(0x2200 + i).key(k, 40000).dump(f'c11_b{i:02d}_{k}')
+        # 30000 reads before a key: the talking face (random(2) while a voice
+        # plays) is over; after TAB 100000 (the enemy's turn: clock-timed
+        # animations; DOSBox-X makes ~3x more reads per ms than the port)
+        s.wait(30000).srand(0x2200 + i).key(k, 100000 if k == 'TAB' else 10000)
+        s.dump(f'c11_b{i:02d}_{k}')
     s.wait(1000).quit()
     s.write(path)
 
