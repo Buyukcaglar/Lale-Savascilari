@@ -28,7 +28,8 @@ def key_of(ch):
 
 class Script:
     """events are timed on the game clock (at(), the default) or, after
-    reads(), relative to the previous event in counted input reads (+n)"""
+    reads(), relative to the previous event in counted input reads (+n), or
+    after after(), in ms of the game clock after the previous event (@n)"""
     def __init__(self, seed=1234, t=0):
         self.lines = [f'seed {seed}']
         self.t = t
@@ -46,9 +47,15 @@ class Script:
         self.pend = n
         return self
 
+    def after(self, n=0):
+        """switch to clock-relative timing; the next event n ms after the last one"""
+        self.rel = '@'
+        self.pend = n
+        return self
+
     def emit(self, text):
         if self.rel:
-            self.lines.append(f'+{self.pend} {text}')
+            self.lines.append(f'{"@" if self.rel == "@" else "+"}{self.pend} {text}')
             self.pend = 0
         else:
             self.lines.append(f'{self.t} {text}')
@@ -199,6 +206,7 @@ def play2(path):
 
 
 CG_WALK, CG_BLINK = 0x48E8, 0x48EA      # chargen walking frame, blink state (chargen.h)
+GFL_LAST_FRAME = 0xD618                 # last frame processed by gfl_show_frame (gfl.h)
 
 
 def cg_settle(s, name, seed):
@@ -221,7 +229,10 @@ def chargen_exact(s, gap=3000, typing=1500):
         cg_settle(s, f'c02_member{i + 1}', 0x0F10 + i)
         s.srand(0x1000 + i).poke(CG_WALK, [0, 0, 0, 0])   # the Space's pass rolls next
         s.key('SPACE', gap)
-    s.dump('c03_after_chargen')
+    # the story video seq1.GFL follows; its frame is due by the clock, so
+    # dump when the player has processed frame 5 (D618, the read after it:
+    # both sides show every frame at 10 fps, no drops)
+    s.sync(GFL_LAST_FRAME, 5).dump('c03_after_chargen')
     return s
 
 
@@ -279,6 +290,277 @@ def play3(path, battle_keys=12):
     s.write(path)
 
 
+def play3_prefix(s):
+    """play3 up to the dog battle's first actor (c10_battle)"""
+    chargen_exact(s)
+    story_skip(s)
+    for i, t in enumerate(range(84000, 150000, 2000)):       # no portrait blink can start
+        s.at(t).srand(quiet_seed(0x3000 + 0x10 * i))
+    s.at(150000).srand(quiet_seed(0x3800)).dump('c04_district')
+    xkey(s, 'RIGHT', 2500, 0x3100).srand(quiet_seed(0x3180)).dump('c05_turn1')
+    xkey(s, 'RIGHT', 2500, 0x3200).srand(quiet_seed(0x3280)).dump('c05_turn2')
+    xkey(s, 0x1F73, 2500, 0x3300).dump('c06_savemenu')        # S: save / load
+    s.key('DOWN', 1000).key('ENTER', 1500).text('ab', 400).key('ENTER', 1500).key('ENTER', 4000)
+    s.dump('c07_saved')
+    xkey(s, 'UP', 2500, 0x3400).dump('c08_door')              # event 0, trigger 1: the question
+    xkey(s, 0x1265, 8000, 0x3500).dump('c09_treasure')        # 'e' (evet): treasure screen
+    s.srand(0x2000).key('ESC', 500)                           # leave it: trigger 2, the battle
+    s.syncne(0xD5DE, 0)                                       # battle: the first actor is up
+    s.reads(0).srand(0x2100).dump('c10_battle')
+    return s
+
+
+def battle_groups(s, groups, prefix, n0=0, last_dump=True):
+    """battle actions: each group is a list of keys (one actor's action),
+    30000 reads before every key (the talking face is over), a re-seed in
+    the key's read, 10000 reads after it (100000 after Tab: the enemy turn;
+    12 s of clock after a bump or a cast); one dump per group"""
+    n = n0
+    for gi, g in enumerate(groups):
+        for ki, k in enumerate(g):
+            kk = key_of(k) if isinstance(k, str) and len(k) == 1 else k
+            s.wait(30000).srand(0x2200 + n)
+            if isinstance(k, int) or (k == 'ENTER' and ki and g[ki - 1] == 'o'):
+                # a bump or a cast: its animation, voice and texts are
+                # clock-timed (DOSBox-X makes ~2.5x more reads per ms):
+                # 12 s of clock, then back to read counts
+                s.key(kk, 0).after(12000).srand(0x2300 + n).reads(0)
+            else:
+                s.key(kk, 100000 if k == 'TAB' else 10000)
+            n += 1
+        if last_dump or gi < len(groups) - 1:     # the last one ends the battle (clock-timed)
+            s.dump(f'{prefix}{gi:02d}')
+    return n
+
+
+# the dog battle (out/verify/h/plan2.py, planned on the port): everybody
+# waits (Tab) but Rifki (unit 27), who casts vecize 1 ("pis") once the dog
+# is next to him and then bumps into it (the party has no weapons: Enter
+# attacks need one); the dog's AI bites the party to death: lost
+DOG_BATTLE = [['TAB'], ['TAB'], ['TAB'], ['TAB'], ['TAB'], ['v', 'ENTER', 'o', 'ENTER'], ['TAB'], ['TAB'],
+              ['TAB'], [0x5000], ['TAB'], ['TAB'], ['TAB'], ['TAB'], [0x5000], ['TAB'],
+              [0x5000], ['TAB'], ['TAB'], ['TAB'], ['TAB'], [0x5000], ['TAB'], ['TAB'],
+              ['TAB'], ['TAB'], ['TAB'], ['TAB'], ['TAB'], ['TAB'], ['TAB'], ['TAB'],
+              ['TAB'], ['TAB'], ['TAB'], ['TAB'], ['TAB'], ['TAB'], ['TAB'], ['TAB'],
+              ['TAB'], ['TAB']]
+
+# the same battle after loading: every member tries vecize 1 (the dog is out
+# of its range: "desem de duyamaz ki!") and an attack (no weapon: ignored),
+# then Tab; the dog's AI runs away on its first turn
+FLEE_BATTLE = [['v', 'ENTER', 'o', 'ENTER', 'ENTER', 'o', 'ENTER', 'TAB']] * 4
+
+
+def bprobe(path, groups=None):
+    """battle probe (port): the dog battle, a dump after each group"""
+    s = Script(seed=1234)
+    play3_prefix(s)
+    battle_groups(s, groups or DOG_BATTLE, 'b')
+    s.wait(1000).quit()
+    s.write(path)
+
+
+# exploration after a battle: the two clocks differ (the battle ran in
+# read-count timing), so the 3D keys are timed in ms of the game clock after
+# the previous event (@n), each with a quiet re-seed in its read.  The FRPOS
+# waits (ui_wait_click_or_key, the message box) poll the mouse in a tight
+# loop (reads at CPU speed), so read counts cannot time them; on the clock
+# they end at the same time on both sides (up to the few ms that loading and
+# drawing take in DOSBox-X), keys are sent after them.
+XGAP = 2500
+
+
+def quiet_wait(s, ms, seed, step=1000):
+    """wait ms (clock-relative) with a quiet re-seed every step ms: the 3D
+    view's portrait blink (random(20) once a second) cannot start while
+    nothing else draws random numbers"""
+    for i in range(ms // step):     # 64 quiet draws: the 3D view draws more than 8 a second
+        s.wait(step).srand(quiet_seed(seed + 0x10 * i, 64))
+    return s.wait(ms % step)
+
+
+def rkey(s, k, seed, gap=XGAP):
+    """3D key (clock-relative) with a quiet re-seed in its read"""
+    return s.srand(quiet_seed(seed)).key(k, gap)
+
+
+def rwalk(s, keys, seed, name=None, gap=XGAP, extra=None, syncs=None):
+    """3D keys; extra = {step: ms} waits after the moves that start a
+    dialog, syncs = {step: (addr, word)} anchors on the flag word a dialog
+    sets at its end (then XGAP more); dumps <name>_NN after each when name
+    is given"""
+    for i, k in enumerate(keys):
+        rkey(s, k, seed + 0x10 * i, gap + (extra or {}).get(i, 0))
+        if syncs and i in syncs:
+            s.sync(*syncs[i]).srand(quiet_seed(seed + 0x10 * i + 8))
+            quiet_wait(s, XGAP, seed + 0x10 * i + 9)
+        if name:
+            s.dump(f'{name}_{i:02d}')
+    return s
+
+
+# district walks (out/verify/h/path.py: BFS over the map cells' walls)
+# district 0 (PC1), after the dog battle at (2,0) facing north -> the
+# unconscious man (8,1); step 4 enters (1,2) (event 3: a remark), step 39
+# (8,1) (event 1: "search him?")
+D0_TO_MAN = ['LEFT', 'UP', 'LEFT', 'UP', 'UP', 'LEFT', 'UP', 'RIGHT', 'UP', 'UP', 'LEFT', 'UP',
+             'UP', 'LEFT', 'UP', 'UP', 'UP', 'UP', 'RIGHT', 'UP', 'RIGHT', 'UP', 'UP', 'UP', 'UP',
+             'LEFT', 'UP', 'UP', 'LEFT', 'UP', 'UP', 'UP', 'UP', 'RIGHT', 'UP', 'UP', 'RIGHT', 'UP',
+             'RIGHT', 'UP']
+# (8,1) facing west -> the car park exit (0,5); step 25 enters (4,5) (event
+# 4: "really leave?"), step 45 (0,5) (event 2: the exit, teleport to
+# district 1 (PC2) at (3,22) facing west)
+D0_TO_EXIT = ['LEFT', 'LEFT', 'UP', 'RIGHT', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'RIGHT', 'UP',
+              'LEFT', 'UP', 'UP', 'RIGHT', 'UP', 'UP', 'UP', 'RIGHT', 'UP', 'UP', 'UP', 'UP', 'LEFT',
+              'UP', 'UP', 'UP', 'LEFT', 'UP', 'UP', 'UP', 'UP', 'RIGHT', 'UP', 'UP', 'RIGHT', 'UP',
+              'UP', 'RIGHT', 'UP', 'LEFT', 'UP', 'UP', 'LEFT', 'UP']
+# district 1 (PC2) from (3,22) facing west: the goods shop (3,7) through
+# events 1 (3,20: the Phantom), 30 (1,15: the party talks), 28 (1,13), 28 (1,7)
+D1_TO_GOODS = ['RIGHT', 'UP', 'UP', 'UP', 'LEFT', 'UP', 'UP', 'RIGHT', 'UP', 'UP', 'UP', 'UP',
+               'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'RIGHT', 'UP', 'UP']
+# leaving a shop puts the party back on its previous cell: (2,7) facing
+# east -> the weapon shop (11,10), through 28 (1,7: key 2), 28 (1,13: key 9)
+D1_TO_WEAPONS = ['LEFT', 'LEFT', 'UP', 'LEFT', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'LEFT',
+                 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'LEFT', 'UP', 'UP',
+                 'UP', 'UP']
+# (11,11) facing north -> the food stall (13,16), through 19 (11,19: key 14)
+D1_TO_FOOD = ['LEFT', 'LEFT', 'UP', 'UP', 'UP', 'RIGHT', 'UP', 'LEFT', 'UP', 'UP', 'UP', 'UP',
+              'UP', 'LEFT', 'UP', 'LEFT', 'UP', 'UP', 'UP', 'RIGHT', 'UP', 'UP']
+FR_FLAGS = 0xB9CA                       # FRPOS event flags (flag n: byte n/8, bit n%8)
+KEY_E = 0x1265                          # 'e': evet / eminim (first answer)
+
+
+def play4(path, stop=None):
+    """play3's prefix, the dog battle to its end (vecize + attacks, the dog's
+    AI), then on the clock relative to the battle's end: district 0 to the
+    unconscious man (item exchange: take his item), out of the car park (two
+    questions, teleport to district 1), the goods shop, the weapon shop
+    (buy and sell by keys and by mouse), the food stall, camp, save"""
+    s = Script(seed=1234)
+    play3_prefix(s)
+    battle_groups(s, DOG_BATTLE, 'c12_b', last_dump=False)
+    s.sync(0x632E, 2)                                       # lost (ISOSYS result): game over
+    # "continue an old game?" (the music tempo fade of s3d_apply_sound_options,
+    # 100 ms steps in the idle callback, ends ~10 s after the result in DOSBox-X)
+    s.after(0).srand(quiet_seed(0x3DF0))
+    quiet_wait(s, 14000, 0x3E00).dump('c13_game_over')
+    s.key(KEY_E, 3000).dump('c13_loadmenu')                 # evet: the load menu
+    s.key('ENTER', 0)                                       # SAKLA001.SAV
+    quiet_wait(s, 8000, 0x3E10).dump('c13_loaded')
+    rkey(s, 'UP', 0x3F00, 2500).dump('c14_door')            # the door again
+    rkey(s, KEY_E, 0x3F10, 8000).dump('c14_treasure')
+    s.poke16(0xD5DE, 0)                                     # the first battle's last actor
+    s.srand(0x2000).key('ESC', 500)                         # the dog battle again
+    s.syncne(0xD5DE, 0)
+    s.reads(0).srand(0x2100).dump('c14_battle2')
+    battle_groups(s, FLEE_BATTLE, 'c14_b', last_dump=False)  # the dog runs away: won
+    s.sync(FR_FLAGS, 0x0002)                                # the remark after it, flag 1
+    s.after(0).srand(quiet_seed(0x4000))
+    quiet_wait(s, 6000, 0x4010).dump('c14_after_battle')
+    rwalk(s, D0_TO_MAN, 0x4100, extra={4: 8000})            # step 4: a remark (event 3)
+    s.srand(quiet_seed(0x4600)).dump('c15_man')
+    rkey(s, KEY_E, 0x4610, 1500).dump('c15_exchange')       # search him: the exchange screen
+    for i, k in enumerate(['i', 'ENTER', 'ENTER']):         # his item -> slot 1 of member 1
+        kk = key_of(k) if len(k) == 1 else k
+        s.srand(quiet_seed(0x4620 + 0x10 * i)).key(kk, 1000).dump(f'c15_x{i}_{k}')
+    rkey(s, 'ESC', 0x4660, 0).sync(FR_FLAGS, 0x0006).srand(quiet_seed(0x4670))  # "a key!", flag 2
+    quiet_wait(s, XGAP, 0x4680).dump('c16_key')
+    if stop == 'man':
+        return s.quit().write(path)
+    rwalk(s, D0_TO_EXIT[:26], 0x4700)
+    s.dump('c17_leave_q')                                   # (4,5): "really leave?"
+    rkey(s, KEY_E, 0x4A00, 0).sync(FR_FLAGS + 10, 0x0002).srand(quiet_seed(0x4A10))  # .. flag 81
+    quiet_wait(s, XGAP, 0x4A20).dump('c17_left')
+    rwalk(s, D0_TO_EXIT[26:], 0x4B00)
+    s.dump('c18_exit_q')                                    # (0,5): leave the car park?
+    rkey(s, KEY_E, 0x4E00, 0)
+    quiet_wait(s, 12000, 0x4E10).dump('c19_district1')     # district 1 loaded, music
+    if stop == 'd1':
+        return s.quit().write(path)
+    # the Phantom (step 2, flag 82), the party talks (step 11, flag 181),
+    # two signs (steps 13, 19)
+    rwalk(s, D1_TO_GOODS, 0x5000, syncs={2: (FR_FLAGS + 10, 0x0006), 11: (FR_FLAGS + 22, 0x0020)},
+          extra={13: 12000, 19: 12000})
+    # "gerekli seyler" (a 0.8 s ui_wait_click_or_key: 40 rounds that take
+    # > 2.5 s in DOSBox-X), then the stock is rolled (random(): no re-seed
+    # may fall between the move's re-seed and the roll) and the panel slides in
+    s.wait(8000).srand(quiet_seed(0x5200)).dump('c20_goods')
+    shop(s, 'c21_goods', 0x5300)
+    rwalk(s, D1_TO_WEAPONS, 0x5400, extra={2: 12000, 9: 12000})
+    s.wait(8000).srand(quiet_seed(0x5600)).dump('c22_weapons')
+    shop(s, 'c23_weapons', 0x5700)
+    rwalk(s, D1_TO_FOOD, 0x5800, extra={14: 12000})
+    s.wait(8000).srand(quiet_seed(0x5A00)).dump('c24_food')  # the stall: price random(5)+2, "evet?"
+    rkey(s, KEY_E, 0x5A10, 0)                               # evet: hunger cleared
+    quiet_wait(s, 12000, 0x5A20).dump('c25_fed')
+    if stop == 'food':
+        return s.quit().write(path)
+    rkey(s, key_of('k'), 0x5B00, 2000).dump('c26_camp')     # camp: rest until healed
+    s.wait(28000).srand(quiet_seed(0x5B10)).dump('c27_rested')
+    rkey(s, 0x1F73, 0x5C00).dump('c28_savemenu')            # S: [bosch] is entry 2
+    s.key('DOWN', 1000).key('ENTER', 1500).text('cd', 400).key('ENTER', 1500).key('ENTER', 4000)
+    s.srand(quiet_seed(0x5C10)).dump('c29_saved')
+    s.wait(1000).quit().write(path)
+
+
+def play4load(path):
+    """after play4 (pair.py --keep): menu, load the game saved last (entry 2:
+    SAKLA002.SAV), dumps on arrival and after one turn"""
+    s = Script(seed=1234)
+    s.at(50000).dump('l00_menu').key('DOWN', 1000).key('ENTER', 3000).dump('l01_loadmenu')
+    s.key('DOWN', 1000).key('ENTER', 1000)
+    for i, t in enumerate(range(s.t, s.t + 20000, 2000)):    # no portrait blink can start
+        s.at(t).srand(quiet_seed(0x6000 + 0x10 * i))
+    s.at(s.t + 20000).srand(quiet_seed(0x6100)).dump('l02_loaded')
+    xkey(s, 'RIGHT', 2500, 0x6200).srand(quiet_seed(0x6280)).dump('l03_turn')
+    s.wait(1000).quit().write(path)
+
+
+# the item exchange screen's zones (fr_item_exchange, read from a dump:
+# 16E0:E5F5 + 8 z): inventory slot s = 1..10 at x 7 + 17 (s - 1), y 44..59;
+# shop slot s at y 27..42; 26 exit (302..310, 3..13), 28 sell (270..282)
+def zone_xy(z):
+    """a point of zone z that is inside it with and without the cursor's
+    hot point offset (+7 for the item shapes), in driver coordinates"""
+    if 1 <= z <= 20:
+        x, y = 7 + 17 * ((z - 1) % 10) + 3, (44 if z <= 10 else 27) + 4
+    else:
+        x, y = {26: (302, 3), 28: (270, 3)}[z]
+        x, y = x + 1, y + 2
+    return 2 * x, y
+
+
+def mclick(s, z, seed, gap=1200):
+    """left click on exchange zone z (move, press, release), re-seeded"""
+    x, y = zone_xy(z)
+    s.srand(quiet_seed(seed)).mouse(x, y, 0, gap // 4).mouse(x, y, 1, gap // 4)
+    return s.mouse(x, y, 0, gap // 2)
+
+
+def shop(s, name, seed):
+    """in a shop (exchange screen mode 1/2): change the currencies (B),
+    buy by keys (I: shop slot 1, Enter: inventory row, Right Right: slot 3,
+    Enter: buy), sell by keys (I, Enter: inventory slot 1, S), buy by mouse
+    (shop slot 3, inventory slot 4), sell by mouse (inventory slot 4, the
+    sell zone), leave (Esc: the exit zone's click would reach the 3D view's
+    arrows after the panel is gone); a dump after each step"""
+    steps = [('b',), ('i',), ('ENTER',), ('RIGHT',), ('RIGHT',), ('ENTER',),
+             ('i',), ('ENTER',), ('s',),
+             ('m', 13), ('m', 4), ('m', 4), ('m', 28), ('ESC',)]
+    for i, st in enumerate(steps):
+        if st[0] == 'm':
+            mclick(s, st[1], seed + 0x10 * i)
+            tag = f'z{st[1]}'
+        else:
+            k = st[0]
+            s.srand(quiet_seed(seed + 0x10 * i)).key(key_of(k) if len(k) == 1 else k,
+                                                     0 if k == 'ESC' else 1000)
+            if k == 'ESC':      # the palette/music fade back to the 3D view (100 ms steps)
+                quiet_wait(s, 6000, seed + 0x10 * i + 1)
+            tag = k
+        s.dump(f'{name}_{i:02d}_{tag}')
+    return s.wait(XGAP)
+
+
 def probe4(path):
     """district entry: portraits every 2 s (port + original)"""
     s = Script(seed=1234)
@@ -318,6 +600,40 @@ def rate(path):
         s.wait(500).dump(f'r{i}')
     s.wait(500).quit()
     s.write(path)
+
+
+
+def bprobe2(path):
+    """probe 2's sequence, one key per group"""
+    bprobe(path, [['TAB']] * 5 + [['v', 'ENTER', 'o', 'ENTER']]
+           + [['v', 'ENTER', 'o', 'ENTER', 'ENTER', 'o', 'ENTER', 'TAB']] * 24)
+
+
+def gprobe(path):
+    """after the lost dog battle: the game over (port timeline)"""
+    s = Script(seed=1234)
+    play3_prefix(s)
+    battle_groups(s, DOG_BATTLE, 'c12_b')
+    s.after(0)
+    for i in range(30):
+        s.wait(3000).dump(f'g{i:02d}')
+        if i == 12:
+            s.key(KEY_E, 0)
+        if i == 16:
+            s.key('ENTER', 0)
+    s.quit().write(path)
+
+
+def play4man(path):
+    play4(path, 'man')
+
+
+def play4d1(path):
+    play4(path, 'd1')
+
+
+def play4food(path):
+    play4(path, 'food')
 
 
 if __name__ == '__main__':

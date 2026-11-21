@@ -160,6 +160,8 @@ CLOCK_FIELDS = [
     (0x85CE, 0x8620, 'DSMI timer service slots (tick counters)'),
     (0x86F8, 0x86FE, 'EMS page-map save (follows GFL ring streaming)'),
     (0xBA82, 0xBA84, 's3d fade time (clock low word)'),
+    (0xBBC4, 0xBBC6, 'ISOSYS turn-start timer (clock low word, iso_turn.c)'),
+    (0xD534, 0xD536, 'ISOSYS AI decision clock (low word, iso_ai.c)'),
     (0xD5F2, 0xD5F4, 'GFL frame due'),
     (0xD608, 0xD61A, 'GFL file pos/start/frame times/last frames'),
     (0xDA30, 0xDA32, 'MEMMAN current EMS mapping (follows GFL streaming)'),

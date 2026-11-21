@@ -53,8 +53,9 @@ def parse_script(path):
                 evs.append((t, 3, 0, 0, 0, f'{pre}_{t:07d}'))
                 t += st
             continue
-        rel = 0x80 if w[0].startswith('+') else 0     # +n: n counted reads after the last event
-        t = int(w[0].lstrip('+'), 0)
+        # +n: n counted reads after the last event; @n: n ms of the game clock after it
+        rel = 0x80 if w[0].startswith('+') else 0x40 if w[0].startswith('@') else 0
+        t = int(w[0].lstrip('+@'), 0)
         k = w[1]
         if k == 'key':
             evs.append((t, 1 | rel, int(w[2], 16), 0, 0, ''))

@@ -27,7 +27,8 @@
  *                    `poke addr bytes...` is split into such events
  *   Type bit 80h: t is a read count (+n): due n counted reads after the
  *   read that applied the previous event, or at a wake-up of a blocking
- *   read.  Counted reads: the entry of each function above, not the
+ *   read.  Type bit 40h: t is clock-relative (@n): due when the clock is
+ *   >= n ms past its value at the read that applied the previous event.  Counted reads: the entry of each function above, not the
  *   wake-ups; INT 16h calls made by DOS inside our INT 21h call pass.
  *     type 3 marker  VGA registers + DAC are captured to VGABUF and the
  *                    code passes MARKER_BP, where the Python side has a
@@ -68,6 +69,7 @@ in_dos:     .byte 0             /* inside our own call of the DOS/BIOS handler *
 mvalid:     .byte 0             /* mxr/myr hold the position the game/script set */
 mxr:        .word 0
 myr:        .word 0
+last_clock: .long 0             /* clock at the last applied event (@n) */
     .org 0x100
 vgabuf:     .space 829          /* misc, seq 0-4, gc 0-8, crtc 0-24, attr 0-20, dac 768 */
 
@@ -111,7 +113,7 @@ next_ev:
     mov %ax, %bx
     add $0x1000, %bx
     mov 4(%bx), %al               /* sync (5): DGROUP word a == b; syncne (6): != */
-    and $0x7F, %al
+    and $0x3F, %al
     cmp $5, %al
     je 4f
     cmp $6, %al
@@ -127,7 +129,9 @@ next_ev:
     mov %es:(%di), %ax
     cmp 8(%bx), %ax
     jne done
-5:  testb $0x80, 4(%bx)
+5:  testb $0x40, 4(%bx)
+    jnz clock_rel
+    testb $0x80, 4(%bx)
     jz clock_test
     cmpb $0, blocked
     jne due
@@ -135,6 +139,18 @@ next_ev:
     mov reads+2, %dx
     sub last_read, %ax
     sbb last_read+2, %dx
+    cmp 2(%bx), %dx
+    ja due
+    jb done
+    cmp (%bx), %ax
+    jb done
+    jmp due
+clock_rel:                        /* @n: clock - last_clock >= n */
+    mov dgseg, %es
+    mov %es:0xE74A, %ax
+    mov %es:0xE74C, %dx
+    sub last_clock, %ax
+    sbb last_clock+2, %dx
     cmp 2(%bx), %dx
     ja due
     jb done
@@ -156,8 +172,13 @@ due:
     mov %ax, last_read
     mov reads+2, %ax
     mov %ax, last_read+2
+    mov dgseg, %es
+    mov %es:0xE74A, %ax
+    mov %ax, last_clock
+    mov %es:0xE74C, %ax
+    mov %ax, last_clock+2
     mov 4(%bx), %ax
-    and $0x7F, %ax
+    and $0x3F, %ax
     cmp $1, %ax
     je ev_key
     cmp $2, %ax

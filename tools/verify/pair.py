@@ -2,13 +2,14 @@
 """
 pair.py - run one input script on both sides and compare (docs/VERIFY.md).
 
-    python -u tools/verify/pair.py <script.txt> <tag> [--only port|dbx] [--port 7777]
+    python -u tools/verify/pair.py <script.txt> <tag> [--only port|dbx] [--port 7777] [--keep]
 
 Resets the game folders (out/verify/game_port, game_dbx: files the game
 writes - GRP.DAT, saves - restored from orig/), runs the port
 (out/windows/Lale64.exe -> out/verify/p_<tag>) and the original in DOSBox-X
 (dbx_replay.py -> out/verify/d_<tag>), then vcompare.py and a byte diff of
-the files the game wrote.
+the files the game wrote.  --keep leaves the game folders as the previous
+run left them (a script that loads the saves of that run).
 """
 import argparse
 import os
@@ -43,19 +44,23 @@ def main():
     ap.add_argument('script')
     ap.add_argument('tag')
     ap.add_argument('--only')
+    ap.add_argument('--keep', action='store_true',
+                    help='keep the game folders (the saves of the previous run: load tests)')
     ap.add_argument('--port', type=int, default=7777)
     ap.add_argument('--exe', default=os.path.join(ROOT, 'out', 'windows', 'Lale64.exe'))
     a = ap.parse_args()
     gp, gd = os.path.join(V, 'game_port'), os.path.join(V, 'game_dbx')
     po, do = os.path.join(V, 'p_' + a.tag), os.path.join(V, 'd_' + a.tag)
     if a.only != 'dbx':
-        reset(gp)
+        if not a.keep:
+            reset(gp)
         shutil.rmtree(po, ignore_errors=True)
         os.makedirs(po)
         subprocess.run([a.exe, '--game-dir', gp, '--script', a.script, '--out', po],
                        timeout=1800, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     if a.only != 'port':
-        reset(gd)
+        if not a.keep:
+            reset(gd)
         shutil.rmtree(do, ignore_errors=True)
         with open(os.path.join(V, f'd_{a.tag}.log'), 'w') as log:
             subprocess.run([sys.executable, '-u', os.path.join(HERE, 'dbx_replay.py'), a.script,

@@ -352,6 +352,10 @@ static int host_open_window(void)
  *                                clock-timed state on both sides at a checkpoint
  *   +<n> <event>                 n counted input reads after the previous
  *                                event (read-count sync, below)
+ *   @<n> <event>                 n ms of the game clock after the read that
+ *                                applied the previous event (clock-relative:
+ *                                after an anchor whose clock differs between
+ *                                the runs)
  *   dumpevery <from> <to> <step> <prefix>   dump <prefix>_<ms> every step ms
  *   seed <n>                     srand() seed at start-up (time() override)
  *
@@ -372,7 +376,9 @@ static int       sc_n, sc_next;
 static char      sc_out[1024] = "out/verify/port";
 static int32_t   sc_seed = -1;
 static uint32_t  sc_reads, sc_last_read;     /* counted input reads; read of the last event */
-static int       sc_rel;                     /* sc_add: the event is read-count relative */
+static uint32_t  sc_last_clock;              /* game clock at the read of the last event */
+static int       sc_rel;                     /* sc_add: 1 read-count relative (+n), 2 clock
+                                                relative (@n) */
 
 static void sc_add(uint32_t t, int type, int a, int b, int c, const char *name)
 {
@@ -411,8 +417,8 @@ static int script_load(const char *path)
             }
             continue;
         }
-        sc_rel = w1[0] == '+';
-        uint32_t t = (uint32_t)strtoul(w1 + sc_rel, NULL, 0);
+        sc_rel = w1[0] == '+' ? 1 : w1[0] == '@' ? 2 : 0;
+        uint32_t t = (uint32_t)strtoul(w1 + (sc_rel != 0), NULL, 0);
         if (strcmp(w2, "key") == 0 && n >= 3)           sc_add(t, EV_KEY, (int)strtol(w3, NULL, 16), 0, 0, NULL);
         else if (strcmp(w2, "mouse") == 0 && n >= 5)    sc_add(t, EV_MOUSE, atoi(w3), atoi(w4), atoi(w5), NULL);
         else if (strcmp(w2, "buttons") == 0 && n >= 3) sc_add(t, EV_BUTTONS, atoi(w3), 0, 0, NULL);
@@ -552,6 +558,8 @@ static int sc_due(const ScriptEv *e, uint32_t clock, int wake)
         return 0;
     if (!e->rel)
         return e->t <= clock;
+    if (e->rel == 2)                    /* @n: n ms after the previous event */
+        return clock - sc_last_clock >= e->t;
     /* +n: n counted reads after the previous event; a blocking read that
        waits for a key takes the next relative event at once */
     return wake || sc_reads - sc_last_read >= e->t;
@@ -571,6 +579,7 @@ static void script_input_hook(int wake)
     while (sc_next < sc_n && sc_due(&sc_ev[sc_next], clock, wake)) {
         const ScriptEv *e = &sc_ev[sc_next++];
         sc_last_read = sc_reads;
+        sc_last_clock = clock;
         switch (e->type) {
         case EV_KEY:
             pc_key_push((uint16_t)e->a);
