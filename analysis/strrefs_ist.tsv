@@ -1,0 +1,1020 @@
+function	block	offset	text
+q3d_free_view_buffers	ovl2700	3B0D	T:\CODE\3DQUICK.L
+q3d_blit_view	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_blit_view	ovl2700	002F	Divide error\r\nAbnormal program termination\r\n
+q3d_blit_view	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_alloc_view_buffers	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_alloc_view_buffers	ovl2700	3B1F	T:\CODE\3DQUICK.L
+q3d_load_kor	ovl2700	3C6E	İç hata!\nKordinat dosyası versiyonu desteklenmiyor,\ndosya %s doğru mu?
+q3d_load_kor	ovl2700	3CB5	 ML(?!)
+q3d_load_kor	ovl2700	3CBD	T:\CODE\3DQUICK.L
+q3d_draw_strip_b	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_draw_strip_b	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_reset_kor	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_draw_cell_wall	ovl2700	3CFC	OrspUm[%d]   
+q3d_render_layer_far	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_far	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_far	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_far	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_far	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_far	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_mid	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_mid	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_mid	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_mid	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_mid	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_mid	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_mid	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_mid	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_mid	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_mid	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_mid	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_mid	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_mid	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_mid	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_mid	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_mid	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+F_2599_6859	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+F_2599_6859	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+F_2599_6859	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_side	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_side	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_side	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_side	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_side	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_side	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_front	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_front	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_front	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_front	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_front	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_front	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_front	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_render_layer_front	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_draw_automap	ovl2700	3D0A	x:%d  y:%d
+q3d_anim_step_forward	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_step_forward	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_step_forward	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_step_forward	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_step_forward	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_step_forward	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_step_forward	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_step_back	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_step_back	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_step_back	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_step_back	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_step_back	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_step_back	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_step_back	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_turn_a	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_turn_a	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_turn_a	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_turn_a	ovl2700	3D15	T:\CODE\3DQUICK.L
+q3d_anim_turn_a	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_turn_a	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_turn_b	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_turn_b	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_turn_b	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_door	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_door	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_door	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_door	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_door	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_door	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_door	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_dispatch	ovl2700	3D27	T:\CODE\3DQUICK.L
+q3d_anim_rotate_left	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_rotate_left	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_rotate_left	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_rotate_left	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_rotate_right	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_rotate_right	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_rotate_right	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_anim_rotate_right	ovl2700	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_try_move	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_try_move	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_try_move	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_try_move	ovl303F	3F14	T:CODE\3DSYS.L
+s3d_try_move	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_try_move	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_try_move	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_try_move	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_try_move	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_try_move	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_try_move	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_try_move	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_redraw_view	ovl303F	3F23	T:CODE\3DSYS.L
+s3d_redraw_view	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_redraw_view	ovl303F	3F32	T:CODE\3DSYS.L
+s3d_scan_cells	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_scan_cells	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_scan_cells	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_scan_cells	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_scan_cells	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_scan_cells	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_scan_cells	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_scan_cells	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_scan_cells	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_scan_cells	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_show_location	ovl303F	3E74	\n\n Su anda 
+s3d_show_location	ovl303F	3F41	har?  
+s3d_show_location	ovl303F	3F49	cmp
+s3d_show_location	ovl303F	3F4D	pal
+s3d_show_location	ovl303F	3F51	T:CODE\3DSYS.L
+s3d_show_location	ovl303F	3F60	T:CODE\3DSYS.L
+s3d_show_location	ovl303F	3F6F	\n\n                                        
+s3d_show_location	ovl303F	3F9A	 kuzeybatIsIndayIz.
+s3d_show_location	ovl303F	3FAE	 gUneybatIsIndayIz.
+s3d_show_location	ovl303F	3FC2	 batIsIndayIz.
+s3d_show_location	ovl303F	3FD1	 kuzeydoGusundayIz.
+s3d_show_location	ovl303F	3FE5	 gUneydoGusundayIz.
+s3d_show_location	ovl303F	3FF9	 doGusundayIz.
+s3d_show_location	ovl303F	4008	 kuzeyindeyiz.
+s3d_show_location	ovl303F	4017	 gUneyindeyiz.
+s3d_show_location	ovl303F	4026	 ortasInda bir yerdeyiz.
+s3d_handle_key	ovl303F	4042	Cit mod'da seyv edemezsiniz!
+s3d_handle_key	ovl303F	405F	CHEAT.CMP
+s3d_handle_key	ovl303F	4069	1111111111111111111111111111111111111
+s3d_handle_key	ovl303F	408F	bay dum
+s3d_handle_key	ovl303F	4097	insanüstü
+s3d_handle_key	ovl303F	40A1	Cit mod'a hoS geldiniz!
+s3d_handle_key	ovl303F	40B9	Cit mod'dan CIkamazsInIz!
+s3d_handle_key	ovl303F	40D3	oyundan cidden CIkIcan mI ?\n
+s3d_handle_key	ovl303F	40F6	hayyIr
+s3d_handle_key	ovl303F	40F0	evvet
+s3d_handle_key	ovl303F	40FD	Cit mod'da seyv edemezsiniz!
+s3d_load_file_error	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_load_file_error	ovl303F	4129	Dosya açılamadı!
+s3d_load_file_error	ovl303F	411A	T:CODE\3DSYS.L
+s3d_load_district	ovl303F	413A	xd.rix
+s3d_load_district	ovl303F	4141	T:CODE\3DSYS.L
+s3d_load_district	ovl303F	0478	gel babana
+s3d_load_district	ovl303F	4150	T:CODE\3DSYS.L
+s3d_load_district	ovl303F	415F	pcs%d
+s3d_load_district	ovl303F	4165	T:CODE\3DSYS.L
+s3d_load_district	ovl303F	4174	T:CODE\3DSYS.L
+s3d_load_district	ovl303F	4183	T:CODE\3DSYS.L
+s3d_load_district	ovl303F	4192	T:CODE\3DSYS.L
+s3d_load_district	ovl303F	41A1	T:CODE\3DSYS.L
+s3d_load_district	ovl303F	41B0	T:CODE\3DSYS.L
+s3d_load_district	ovl303F	41BF	T:CODE\3DSYS.L
+s3d_load_district	ovl303F	41CE	T:CODE\3DSYS.L
+s3d_load_district	ovl303F	41DD	T:CODE\3DSYS.L
+s3d_load_district	ovl303F	41EC	T:CODE\3DSYS.L
+s3d_debug_buffers	ovl303F	41FB	Buf no:%d
+s3d_debug_buffers	ovl303F	4205	T:CODE\3DSYS.L
+s3d_debug_buffers	ovl303F	4214	T:CODE\3DSYS.L
+s3d_debug_buffers	ovl303F	4223	Buf no:%d
+s3d_debug_buffers	ovl303F	422D	T:CODE\3DSYS.L
+s3d_debug_buffers	ovl303F	423C	T:CODE\3DSYS.L
+s3d_enter_view	ovl303F	424B	pal3d.pal
+s3d_enter_view	ovl303F	4255	T:CODE\3DSYS.L
+s3d_draw_party_panel	ovl303F	4264	%3d
+s3d_draw_party_panel	ovl303F	4268	%3d
+s3d_load_ui_images	ovl303F	426C	pcmainth.cmp
+s3d_load_ui_images	ovl303F	4279	trade.cmp
+s3d_load_ui_images	ovl303F	4283	merdim.cmp
+s3d_load_ui_images	ovl303F	428E	viewbuyu.cmp
+s3d_load_ui_images	ovl303F	429B	viewpc.cmp
+s3d_load_ui_images	ovl303F	42A6	itembank.cmp
+s3d_load_ui_images	ovl303F	42B3	disdunya.cmp
+s3d_write_save	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_write_save	ovl303F	42CF	Saklama dosyası açılma hatası, yer mi yoktur ne?
+s3d_write_save	ovl303F	42C0	T:CODE\3DSYS.L
+s3d_read_save	ovl303F	430F	Saklama dosyası yükleme hatası, dosya yokmudur ne?
+s3d_read_save	ovl303F	4300	T:CODE\3DSYS.L
+s3d_camp	ovl303F	4345	burada kamp yapmak Cok tehlikeli.
+s3d_camp	ovl303F	4367	yorgun deGiliz ki...
+s3d_camp	ovl303F	437C	kamp yapIyoruz...
+s3d_camp	ovl303F	438E	nooluyor yaahuu!!
+s3d_camp	ovl303F	43A0	huzur iCinde bir kamp geCirdik
+s3d_camp	ovl303F	43BF	hoop kalkIyoruz...
+s3d_camp	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_camp	ovl303F	43D2	yaa tam da gidiyoduk yaa
+s3d_make_random_phrase	ovl303F	43EB	ve 
+s3d_make_random_phrase	ovl303F	43EF	bir 
+s3d_make_random_phrase	ovl303F	43F9	ları
+s3d_make_random_phrase	ovl303F	4401	kleri
+s3d_make_random_phrase	ovl303F	4407	ler
+s3d_make_random_phrase	ovl303F	440B	lar
+s3d_make_random_phrase	ovl303F	4413	bastI
+s3d_make_random_phrase	ovl303F	441C	T:CODE\3DSYS.L
+s3d_draw_status_line	ovl303F	442B	%d %s %s, %02d:%02d
+s3d_draw_status_line	ovl303F	443F	T:CODE\3DSYS.L
+s3d_character_screen	ovl303F	444E	erkek
+s3d_character_screen	ovl303F	4454	dişi
+s3d_character_screen	ovl303F	445F	adam seçin
+s3d_character_screen	ovl303F	446A	...
+s3d_character_screen	ovl303F	446E	savaş vecizesi!
+s3d_character_screen	ovl303F	447E	eşya kullanımda!
+s3d_character_screen	ovl303F	448F	boş yer yok!
+s3d_character_screen	ovl303F	449C	bu eşyayı kullanıyor!
+s3d_character_screen	ovl303F	44B2	sol: at   sağ: atma 
+s3d_character_screen	ovl303F	44C7	T:CODE\3DSYS.L
+s3d_draw_portrait_hl	ovl303F	002F	Divide error\r\nAbnormal program termination\r\n
+s3d_leave_district	ovl303F	44D6	semtten CIkacak mIsInIz ?\n
+s3d_leave_district	ovl303F	44F7	hayIr
+s3d_leave_district	ovl303F	44F2	evet
+s3d_leave_district	ovl303F	44FD	T:CODE\3DSYS.L
+s3d_options_menu	ovl303F	45C9	var
+s3d_options_menu	ovl303F	45CD	yok
+s3d_options_menu	ovl303F	459F	kapI animasyon : %s
+s3d_options_menu	ovl303F	45B3	yUrUme animasyon : %s
+s3d_options_menu	ovl303F	45D1	savaş hızı : %s
+s3d_options_menu	ovl303F	45F4	açık
+s3d_options_menu	ovl303F	45F9	kapalı
+s3d_options_menu	ovl303F	45E1	oyun mUziGi : %5s 
+s3d_options_menu	ovl303F	4613	açık
+s3d_options_menu	ovl303F	4618	kapalı
+s3d_options_menu	ovl303F	4600	savaş müziGi : %5s
+s3d_options_menu	ovl303F	4634	açık
+s3d_options_menu	ovl303F	4639	kapalı
+s3d_options_menu	ovl303F	461F	ses effektleri : %5s
+s3d_options_menu	ovl303F	4656	orta
+s3d_options_menu	ovl303F	465B	kolay
+s3d_options_menu	ovl303F	4640	zorluk derecesi : %5s
+s3d_options_menu	ovl303F	466F	büyük
+s3d_options_menu	ovl303F	4675	küçük
+s3d_options_menu	ovl303F	4661	görüntü : %5s
+s3d_save_load_menu	ovl303F	467B	*.sav
+s3d_save_load_menu	ovl303F	4690	Saklama dosyası yazılamıyor!
+s3d_save_load_menu	ovl303F	4681	T:CODE\3DSYS.L
+s3d_save_load_menu	ovl303F	46AD	[bosch]
+s3d_save_load_menu	ovl303F	46B5	 hiC kayItlI oyun yok!
+s3d_save_load_menu	ovl303F	46CC	sakla%03u.sav
+s3d_save_load_menu	ovl303F	46DA	yeni ismi girin : 
+s3d_save_load_menu	ovl303F	46ED	T:CODE\3DSYS.L
+s3d_save_load_menu	ovl303F	46FC	T:CODE\3DSYS.L
+s3d_save_load_menu	ovl303F	470B	oyun gUzel bir Sekilde  %s\n dosyasIna saklandI!
+s3d_save_load_menu	ovl303F	473B	T:CODE\3DSYS.L
+s3d_save_load_menu	ovl303F	474A	yok Saka yaptIm saklamadIm,\nvazgeCtim...
+s3d_explore_loop	ovl303F	4773	ben acIktIm ! Cabuk gidip yemek yiyelim.
+s3d_explore_loop	ovl303F	479C	aah!! acIktIm demiStim...elveda.
+s3d_explore_loop	ovl303F	47BD	%3d
+s3d_explore_loop	ovl303F	47C1	T:CODE\3DSYS.L
+s3d_explore_loop	ovl303F	47D0	T:CODE\3DSYS.L
+s3d_explore_loop	ovl303F	47DF	zam1:\nm[h][1]:%d,i[h][1]:%d\nm[h][2]:%d,i[h][2]:%d\nm[h][0]:%d,i[h][0]:%d
+s3d_explore_loop	ovl303F	4827	zam2:\nm[h][1]:%d,i[h][1]:%d\nm[h][2]:%d,i[h][2]:%d\nm[h][0]:%d,i[h][0]:%d
+s3d_explore_loop	ovl303F	486F	zam3:\nm[h][1]:%d,i[h][1]:%d\nm[h][2]:%d,i[h][2]:%d\nm[h][0]:%d,i[h][0]:%d
+s3d_explore_loop	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+s3d_explore_loop	ovl303F	0004	Borland C++ - Copyright 1991 Borland Intl.
+cg_random_gender	ovl39E5	48F9	erkek
+cg_random_gender	ovl39E5	4900	dişi
+cg_load_char_graphics	ovl39E5	4906	T:\CODE\CHARGEN.L
+cg_load_char_graphics	ovl39E5	4918	T:\CODE\CHARGEN.L
+cg_load_char_graphics	ovl39E5	492A	T:\CODE\CHARGEN.L
+cg_load_char_graphics	ovl39E5	493C	kor
+cg_roll_misc	ovl39E5	0004	Borland C++ - Copyright 1991 Borland Intl.
+cg_roll_stats	ovl39E5	0004	Borland C++ - Copyright 1991 Borland Intl.
+cg_roll_stats	ovl39E5	0004	Borland C++ - Copyright 1991 Borland Intl.
+cg_roll_stats	ovl39E5	0004	Borland C++ - Copyright 1991 Borland Intl.
+cg_roll_stats	ovl39E5	0004	Borland C++ - Copyright 1991 Borland Intl.
+cg_roll_stats	ovl39E5	0004	Borland C++ - Copyright 1991 Borland Intl.
+cg_roll_stats	ovl39E5	0004	Borland C++ - Copyright 1991 Borland Intl.
+cg_roll_stats	ovl39E5	0004	Borland C++ - Copyright 1991 Borland Intl.
+cg_roll_stats	ovl39E5	0004	Borland C++ - Copyright 1991 Borland Intl.
+cg_roll_stats	ovl39E5	0004	Borland C++ - Copyright 1991 Borland Intl.
+cg_roll_stats	ovl39E5	0004	Borland C++ - Copyright 1991 Borland Intl.
+cg_roll_stats	ovl39E5	0004	Borland C++ - Copyright 1991 Borland Intl.
+cg_roll_stats	ovl39E5	0004	Borland C++ - Copyright 1991 Borland Intl.
+cg_roll_stats	ovl39E5	0004	Borland C++ - Copyright 1991 Borland Intl.
+cg_draw_stats	ovl39E5	0004	Borland C++ - Copyright 1991 Borland Intl.
+cg_draw_header	ovl39E5	0004	Borland C++ - Copyright 1991 Borland Intl.
+cg_draw_header	ovl39E5	0004	Borland C++ - Copyright 1991 Borland Intl.
+cg_draw_header	ovl39E5	4940	karakter  #%d
+cg_draw_header	ovl39E5	494E	erkek
+cg_draw_header	ovl39E5	4955	dişi
+cg_save_party	ovl39E5	495B	grp.dat
+cg_save_party	ovl39E5	0004	Borland C++ - Copyright 1991 Borland Intl.
+cg_save_party	ovl39E5	4975	Karakter bilgisi GRP.DAT açılamıyor.
+cg_save_party	ovl39E5	4963	T:\CODE\CHARGEN.L
+cg_save_party	ovl39E5	499A	100000000000000000000000000000000000
+cg_load_party	ovl39E5	49D1	Karakter bilgisi GRP.DAT açılamıyor.
+cg_load_party	ovl39E5	49BF	T:\CODE\CHARGEN.L
+cg_free_graphics	ovl39E5	49F6	T:\CODE\CHARGEN.L
+cg_free_graphics	ovl39E5	4A08	T:\CODE\CHARGEN.L
+cg_free_graphics	ovl39E5	4A1A	T:\CODE\CHARGEN.L
+cg_free_graphics	ovl39E5	4A2C	T:\CODE\CHARGEN.L
+cg_free_graphics	ovl39E5	4A3E	T:\CODE\CHARGEN.L
+cg_free_graphics	ovl39E5	4A50	T:\CODE\CHARGEN.L
+cg_main	ovl39E5	4A62	palbat.pal
+cg_main	ovl39E5	4A6D	sematik.cmp
+cg_main	ovl39E5	4A79	karakter.cmp
+demo_show_picture	ovl3C2D	4B55	CODE\DEMOLAR.L
+demo_show_picture	ovl3C2D	4B64	CODE\DEMOLAR.L
+demo_show_picture	ovl3C2D	4B73	CODE\DEMOLAR.L
+demo_intro_menu	ovl3C2D	4B82	intro
+demo_intro_menu	ovl3C2D	4B88	silicon
+demo_intro_menu	ovl3C2D	4B90	acilisb.cmp
+demo_intro_menu	ovl3C2D	4B9C	CODE\DEMOLAR.L
+demo_intro_menu	ovl3C2D	4BAB	acilisa.pal
+demo_intro_menu	ovl3C2D	4BB7	comp4a.pal
+demo_intro_menu	ovl3C2D	4BC2	comp4a.cmp
+demo_intro_menu	ovl3C2D	4BCD	CODE\DEMOLAR.L
+demo_intro_menu	ovl3C2D	4BDC	comp4b.cmp
+demo_intro_menu	ovl3C2D	4BE7	CODE\DEMOLAR.L
+demo_intro_menu	ovl3C2D	4BF6	istb.pal
+demo_intro_menu	ovl3C2D	4BFF	istb.cmp
+demo_intro_menu	ovl3C2D	4C08	CODE\DEMOLAR.L
+demo_intro_menu	ovl3C2D	4C17	CODE\DEMOLAR.L
+demo_intro_menu	ovl3C2D	4C26	demo.amf
+demo_intro_menu	ovl3C2D	4C3E	Müzik Dosyası bulunamadı: DEMO.AMF
+demo_intro_menu	ovl3C2D	4C2F	CODE\DEMOLAR.L
+demo_intro_menu	ovl3C2D	4C70	Müzik icin hafıza yetmedi : DEMO.AMF
+demo_intro_menu	ovl3C2D	4C61	CODE\DEMOLAR.L
+demo_intro_menu	ovl3C2D	4C95	acilisa.pal
+demo_intro_menu	ovl3C2D	4CA1	xdintro.rix
+demo_intro_menu	ovl3C2D	4CAD	acilisa.cmp
+demo_intro_menu	ovl3C2D	4CB9	acilisb.cmp
+demo_intro_menu	ovl3C2D	4CC5	CODE\DEMOLAR.L
+demo_intro_menu	ovl3C2D	4CD4	CODE\DEMOLAR.L
+demo_intro_menu	ovl3C2D	4CE3	CODE\DEMOLAR.L
+demo_intro_menu	ovl3C2D	4CF2	CODE\DEMOLAR.L
+demo_intro_menu	ovl3C2D	4D01	    yeni oyuna başla
+demo_intro_menu	ovl3C2D	4D16	eski oyuna devam et
+demo_intro_menu	ovl3C2D	4D2A	       çabuk başla
+demo_intro_menu	ovl3C2D	4D3D	           dos'a çık
+demo_intro_menu	ovl3C2D	0004	Borland C++ - Copyright 1991 Borland Intl.
+demo_intro_menu	ovl3C2D	0004	Borland C++ - Copyright 1991 Borland Intl.
+demo_intro_menu	ovl3C2D	4D52	CODE\DEMOLAR.L
+demo_story_scene	ovl3C2D	555C	sbd00.cmp
+demo_story_scene	ovl3C2D	5566	para00.snd
+demo_story_scene	ovl3C2D	5571	xdemo.rix
+demo_story_scene	ovl3C2D	557B	CODE\DEMOLAR.L
+demo_story_scene	ovl3C2D	558A	demo.amf
+demo_story_scene	ovl3C2D	55A2	Müzik dosyası bulunamadı: DEMO.AMF
+demo_story_scene	ovl3C2D	5593	CODE\DEMOLAR.L
+demo_story_scene	ovl3C2D	55C5	demo1.pal
+demo_story_scene	ovl3C2D	55DE	Ses dosyası hatası!
+demo_story_scene	ovl3C2D	55F2	Sesler için yetersiz hafıza olabilir.
+demo_story_scene	ovl3C2D	5618	Ses dosyasıni okuyamıyom!
+demo_story_scene	ovl3C2D	55CF	CODE\DEMOLAR.L
+demo_story_scene	ovl3C2D	5632	CODE\DEMOLAR.L
+demo_story_scene	ovl3C2D	5650	Ses dosyası hatası!
+demo_story_scene	ovl3C2D	5664	Sesler için yetersiz hafıza olabilir.
+demo_story_scene	ovl3C2D	568A	Ses dosyasını okuyamıyom!
+demo_story_scene	ovl3C2D	5641	CODE\DEMOLAR.L
+demo_story_scene	ovl3C2D	56A4	CODE\DEMOLAR.L
+demo_story_scene	ovl3C2D	56B3	CODE\DEMOLAR.L
+demo_story_scene	ovl3C2D	56C2	CODE\DEMOLAR.L
+demo_story_scene	ovl3C2D	56D1	CODE\DEMOLAR.L
+demo_story_scene	ovl3C2D	56E0	CODE\DEMOLAR.L
+demo_story_scene	ovl3C2D	56EF	xd.rix
+demo_game_over	ovl3C2D	56F6	nIhahahaha!!! artIk istanbul'daki ÂbUtUn emellerimi gerCekleStirebilirim.
+demo_game_over	ovl3C2D	5740	eski bir oyuna devam edecek misiniz?\n
+demo_game_over	ovl3C2D	576B	hayIr
+demo_game_over	ovl3C2D	5766	evet
+demo_ending	ovl3C2D	5771	son
+demo_ending	ovl3C2D	5775	xdson.rix
+demo_ending	ovl3C2D	577F	soon.cmp
+demo_ending	ovl3C2D	5788	devam.cmp
+demo_ending	ovl3C2D	5792	soon.pal
+demo_ending	ovl3C2D	579B	sooon.pal
+demo_ending	ovl3C2D	57A5	devam.pal
+demo_ending	ovl3C2D	57AF	CODE\DEMOLAR.L
+demo_ending	ovl3C2D	57BE	CODE\DEMOLAR.L
+demo_ending	ovl3C2D	57CD	CODE\DEMOLAR.L
+demo_ending	ovl3C2D	57DC	CODE\DEMOLAR.L
+demo_ending	ovl3C2D	57EB	kayIt yapIlacak dosyayI seCin : 
+demo_play_music	ovl3C2D	580C	CODE\DEMOLAR.L
+demo_play_music	ovl3C2D	582A	Müzik hafızası yetersiz!
+demo_play_music	ovl3C2D	581B	CODE\DEMOLAR.L
+demo_play_music	ovl3C2D	5852	Müzik dosyası bulunamadı!
+demo_play_music	ovl3C2D	5843	CODE\DEMOLAR.L
+demo_credits_exit	ovl3C2D	586C	thanx.doc
+demo_credits_exit	ovl3C2D	5885	Oyun dosyalarından THANX.DOC bulunamadı...
+demo_credits_exit	ovl3C2D	5876	CODE\DEMOLAR.L
+demo_credits_exit	ovl3C2D	58B0	grup.pal
+demo_credits_exit	ovl3C2D	58B9	grup.cmp
+demo_credits_exit	ovl3C2D	58C2	CODE\DEMOLAR.L
+demo_credits_exit	ovl3C2D	0004	Borland C++ - Copyright 1991 Borland Intl.
+demo_credits_exit	ovl3C2D	0004	Borland C++ - Copyright 1991 Borland Intl.
+demo_credits_exit	ovl3C2D	58D1	fun
+demo_credits_exit	ovl3C2D	58E4	İşte bu...
+demo_credits_exit	ovl3C2D	58D5	CODE\DEMOLAR.L
+demo_credits_exit	ovl3C2D	58EF	CODE\DEMOLAR.L
+demo_credits_exit	ovl3C2D	58FE	CODE\DEMOLAR.L
+demo_credits_exit	ovl3C2D	590D	CODE\DEMOLAR.L
+demo_credits_exit	ovl3C2D	592B	İSTANBUL EFSANELERİ I - Lale Savaşçıları, sorunsuz bitti!
+demo_credits_exit	ovl3C2D	591C	CODE\DEMOLAR.L
+demo_stub_2D3E	ovl3C2D	0004	Borland C++ - Copyright 1991 Borland Intl.
+demo_city_map_travel	ovl3C2D	59C9	isthar2.pal
+demo_city_map_travel	ovl3C2D	59D5	isthar.pal
+demo_city_map_travel	ovl3C2D	59E0	isthara.cmp
+demo_city_map_travel	ovl3C2D	59EC	CODE\DEMOLAR.L
+demo_city_map_travel	ovl3C2D	59FB	istharb.cmp
+demo_city_map_travel	ovl3C2D	5A07	CODE\DEMOLAR.L
+demo_city_map_travel	ovl3C2D	5A16	CODE\DEMOLAR.L
+demo_city_map_travel	ovl3C2D	5A25	isthar2.pal
+demo_city_map_travel	ovl3C2D	5A31	isthar.pal
+demo_city_map_travel	ovl3C2D	5A3F	CODE\DEMOLAR.L
+demo_city_map_travel	ovl3C2D	5A4E	trafik tIkalI, gidemiyoruz.
+demo_city_map_travel	ovl3C2D	5A6A	trafik tIkalI, gidemiyoruz.
+demo_city_map_travel	ovl3C2D	5A86	trafik tIkalI, gidemiyoruz.
+demo_city_map_travel	ovl3C2D	5AA2	trafik tIkalI, gidemiyoruz.
+demo_city_map_travel	ovl3C2D	5ABE	%s girecek miyiz? ...(e/h) 
+demo_city_map_travel	ovl3C2D	5ADA	CODE\DEMOLAR.L
+demo_city_map_travel	ovl3C2D	5AE9	  Sehire mi? kanalizasyona mI? (s/k)
+demo_city_map_travel	ovl3C2D	5B0E	  Sehire mi? kanalizasyona mI? (s/k)
+demo_city_map_travel	ovl3C2D	5B33	  Sehire mi? kanalizasyona mI? (s/k)
+demo_city_map_travel	ovl3C2D	5B58	  Sehire mi? kanalizasyona mI? (s/k)
+demo_city_map_travel	ovl3C2D	5B7D	CODE\DEMOLAR.L
+demo_load_sounds	ovl3C2D	002F	Divide error\r\nAbnormal program termination\r\n
+demo_load_sounds	ovl3C2D	5B8C	buun.pur
+demo_load_sounds	ovl3C2D	002F	Divide error\r\nAbnormal program termination\r\n
+demo_load_sounds	ovl3C2D	5B95	seq1
+demo_load_sounds	ovl3C2D	5B9A	seq2
+demo_load_sounds	ovl3C2D	5B9F	seq3
+demo_load_sounds	ovl3C2D	5BA4	seq4
+demo_load_sounds	ovl3C2D	5BA9	seq5
+demo_load_sounds	ovl3C2D	5BAE	CODE\DEMOLAR.L
+fr_run_event	ovl3FD1	5C53	%d, %d, %d, %d; 
+fr_run_event	ovl3FD1	5C64	T:CODE\FRPOS.L
+fr_run_event	ovl3FD1	5C73	T:CODE\FRPOS.L
+fr_run_event	ovl3FD1	5C82	00000000
+fr_run_event	ovl3FD1	5C8B	31313129
+fr_run_event	ovl3FD1	5C94	silahCI
+fr_run_event	ovl3FD1	5C9C	31313130
+fr_run_event	ovl3FD1	5CA5	gerekli Seyler
+fr_run_event	ovl3FD1	5CB4	31313128
+fr_run_event	ovl3FD1	5CBD	yimmekCi
+fr_run_event	ovl3FD1	5CC6	adam baSI %d $ tan yimmek\n istermisiniz?\n
+fr_run_event	ovl3FD1	5CF1	T:CODE\FRPOS.L
+fr_run_event	ovl3FD1	5D05	hayIr
+fr_run_event	ovl3FD1	5D00	evet
+fr_run_event	ovl3FD1	5D0B	hey dostum bu para yetmez
+fr_run_event	ovl3FD1	5D25	afiyet olsun
+fr_run_event	ovl3FD1	5D32	31313127
+fr_run_event	ovl3FD1	5D3B	havalI mehtap
+fr_run_event	ovl3FD1	5D49	visite : %d\n
+fr_run_event	ovl3FD1	5D5B	hayIr
+fr_run_event	ovl3FD1	5D56	evet
+fr_run_event	ovl3FD1	5D61	bu para yetmez!
+fr_run_event	ovl3FD1	5D71	kim servis istiyor ?
+fr_run_event	ovl3FD1	5D86	bu adam OlU deGil. baSkasInI seCin
+fr_run_event	ovl3FD1	5DA9	mehtap, `arkadaSla biraz iSim var!'\n diyip iCeri girdi. 
+fr_run_event	ovl3FD1	5DE2	On dakika sonra...
+fr_run_event	ovl3FD1	5DF5	oolum Cok iyi bee!
+fr_run_event	ovl3FD1	5E08	iyi gUnler, hayatta baSarIlar. \n yine bekleriz
+fr_run_event	ovl3FD1	5E37	31313131
+thunk_FUN_4595_a3fc	ovl3FD1	5E40	FRPOS name:%s, no:%d\n
+thunk_FUN_4595_a3fc	ovl3FD1	5E56	T:CODE\FRPOS.L
+thunk_FUN_4595_a3fc	ovl3FD1	5E65	T:CODE\FRPOS.L
+thunk_FUN_4595_a3fc	ovl3FD1	5E74	..baslik:%d Tarz:%d..
+thunk_FUN_4595_a3fc	ovl3FD1	5E8A	T:CODE\FRPOS.L
+thunk_FUN_4595_a3fc	ovl3FD1	5E99	T:CODE\FRPOS.L
+FUN_3fd1_08d9	ovl3FD1	5EA8	Komut no:%d, 
+FUN_3fd1_08d9	ovl3FD1	5EC9	olmus
+FUN_3fd1_08d9	ovl3FD1	5ECF	olmamis
+FUN_3fd1_08d9	ovl3FD1	5EB6	.eger olay %d->%s,
+FUN_3fd1_08d9	ovl3FD1	5EFA	olay[%d].
+FUN_3fd1_08d9	ovl3FD1	5F04	T:CODE\FRPOS.L
+FUN_3fd1_08d9	ovl3FD1	5F13	am1:\nm[h][1]:%d,i[h][1]:%d\nm[h][2]:%d,i[h][2]:%d\nm[h][0]:%d,i[h][0]:%d
+FUN_3fd1_08d9	ovl3FD1	5F5A	am2:\nm[h][1]:%d,i[h][1]:%d\nm[h][2]:%d,i[h][2]:%d\nm[h][0]:%d,i[h][0]:%d
+FUN_3fd1_08d9	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+FUN_3fd1_08d9	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+FUN_3fd1_08d9	ovl3FD1	5FA1	.kom1:%d, adamno:%d..
+FUN_3fd1_08d9	ovl3FD1	5FB7	T:CODE\FRPOS.L
+FUN_3fd1_08d9	ovl3FD1	5FC6	Biz size CD'yi sUrUcUden CIkarmayIn\ndemedik mi? Cabuk onu tekrar\nsUrUcUye takIp bir tuSa basIn,\nyoksa aramIz bozulur haa...
+FUN_3fd1_08d9	ovl3FD1	6042	CD'yi takmIyacaksanIz size\nanimasyon falan yok!!!
+FUN_3fd1_08d9	ovl3FD1	6074	FRPOS komutu: random(ilk deneme)..
+FUN_3fd1_08d9	ovl3FD1	6097	adambul(0,%d,%d)=%d..
+FUN_3fd1_08d9	ovl3FD1	60AD	bir adam seCiniz...
+FUN_3fd1_08d9	ovl3FD1	60C1	bu adam baygIn. baSkasInI seCin
+FUN_3fd1_08d9	ovl3FD1	60E1	T:CODE\FRPOS.L
+FUN_3fd1_08d9	ovl3FD1	60F1	T:CODE\FRPOS.L
+FUN_3fd1_08d9	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+FUN_3fd1_08d9	ovl3FD1	6100	T:CODE\FRPOS.L
+FUN_3fd1_08d9	ovl3FD1	610F	FRPOS komutu: wait(ilk deneme)..
+FUN_3fd1_2031	ovl3FD1	03BE	anten
+FUN_3fd1_2031	ovl3FD1	6133	T:CODE\FRPOS.L
+fr_teach_aphorism	ovl3FD1	6142	vecize istemediGinden emin misin ?\n\n
+fr_teach_aphorism	ovl3FD1	6177	ver bi daha seciim
+fr_teach_aphorism	ovl3FD1	6167	I-Ih, istemiyom
+fr_teach_aphorism	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_teach_aphorism	ovl3FD1	618A	kim OGrenecek ?
+fr_teach_aphorism	ovl3FD1	619A	OGrenmezseniz OGrenmeyin bana ne...
+fr_teach_aphorism	ovl3FD1	61BE	bu adam OlU yaa...
+fr_teach_aphorism	ovl3FD1	61D1	bu adam kendinde diil ki...
+fr_shop_buy	ovl3FD1	61ED	para kalmadI!!!
+fr_shop_draw_prices	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_shop_draw_prices	ovl3FD1	61FD	%d %s
+fr_shop_draw_prices	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_shop_draw_prices	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_shop_draw_prices	ovl3FD1	6203	%d %s
+fr_shop_draw_prices	ovl3FD1	6209	T:CODE\FRPOS.L
+fr_item_exchange	ovl3FD1	6218	hazine bulduk
+fr_item_exchange	ovl3FD1	6226	T:CODE\FRPOS.L
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_find_character	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_show_icon	ovl3FD1	6235	ikon%d.cmp
+fr_show_icon	ovl3FD1	6240	.pal
+fr_show_icon	ovl3FD1	6245	T:CODE\FRPOS.L
+fr_show_icon	ovl3FD1	6254	T:CODE\FRPOS.L
+fr_show_icon	ovl3FD1	6263	T:CODE\FRPOS.L
+fr_show_icon	ovl3FD1	6272	T:CODE\FRPOS.L
+fr_fetch_byte	ovl3FD1	6281	T:CODE\FRPOS.L
+fr_skip_commands	ovl3FD1	6290	Atla:%d=> 
+fr_skip_commands	ovl3FD1	629B	.%d.
+fr_skip_commands	ovl3FD1	62A0	counter=%d, komut=%d
+fr_skip_commands	ovl3FD1	0760	sena öl
+fr_skip_commands	ovl3FD1	62B5	T:CODE\FRPOS.L
+fr_skip_commands	ovl3FD1	62C4	T:CODE\FRPOS.L
+fr_fetch_string	ovl3FD1	62D3	T:CODE\FRPOS.L
+fr_item_name	ovl3FD1	62E4	 kIvrIk
+fr_draw_money	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_draw_money	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_draw_money	ovl3FD1	62F1	%s%5d
+fr_draw_money	ovl3FD1	62F7	T:CODE\FRPOS.L
+fr_draw_money	ovl3FD1	0004	Borland C++ - Copyright 1991 Borland Intl.
+fr_shop_free_gfx	ovl3FD1	6306	T:CODE\FRPOS.L
+iso_free_battle_gfx	ovl4595	642F	T:CODE\ISOSYS.L
+iso_free_battle_gfx	ovl4595	643F	T:CODE\ISOSYS.L
+iso_free_battle_gfx	ovl4595	644F	T:CODE\ISOSYS.L
+iso_free_battle_gfx	ovl4595	645F	T:CODE\ISOSYS.L
+iso_draw_sprite	ovl4595	646F	T:CODE\ISOSYS.L
+iso_draw_sprite	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_load_battle_gfx	ovl4595	647F	anakes.cmp
+iso_load_battle_gfx	ovl4595	648A	yericon.cmp
+iso_load_battle_gfx	ovl4595	6496	tabletur.cmp
+iso_load_battle_gfx	ovl4595	64A3	karafa.cmp
+iso_load_battle_gfx	ovl4595	64AE	karafa.kor
+iso_load_battle_gfx	ovl4595	64B9	kor
+iso_load_battle_gfx	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_load_battle_gfx	ovl4595	64BD	.cmp
+iso_load_battle_gfx	ovl4595	64C3	.cmp
+iso_load_battle_gfx	ovl4595	2185	bosch
+iso_load_battle_gfx	ovl4595	64C9	kor
+iso_load_battle_gfx	ovl4595	64CD	duvarica.cmp
+iso_load_battle_gfx	ovl4595	64DB	T:CODE\ISOSYS.L
+iso_load_battle_gfx	ovl4595	64EB	duvaricb.cmp
+iso_load_battle_gfx	ovl4595	64F9	T:CODE\ISOSYS.L
+iso_load_battle_gfx	ovl4595	6509	duvaric%d.cmp
+iso_load_battle_gfx	ovl4595	6518	T:CODE\ISOSYS.L
+iso_show_message	ovl4595	633F	naneli
+iso_show_message	ovl4595	6528	bu ciklet 
+iso_show_message	ovl4595	6533	...
+iso_face_anim_tick	ovl4595	6537	tip=%d
+iso_face_anim_tick	ovl4595	654E	İç hata:\nLoop-Surat animasyonu hatası.
+iso_face_anim_tick	ovl4595	653E	T:CODE\ISOSYS.L
+iso_apply_dot_damage	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_speak_vecize	ovl4595	6575	T:CODE\ISOSYS.L
+iso_speak_vecize	ovl4595	039F	üzüm
+iso_speak_vecize	ovl4595	6595	Ses dosyası hatası!
+iso_speak_vecize	ovl4595	65A9	Sesler için yetersiz hafıza olabilir.
+iso_speak_vecize	ovl4595	65CF	Ses dosyasını okuyamıyom!
+iso_speak_vecize	ovl4595	6585	T:CODE\ISOSYS.L
+iso_voice_filename	ovl4595	65E9	vecize%.2d.pur
+iso_voice_filename	ovl4595	65F8	fecize%.2d.pur
+iso_voice_filename	ovl4595	6607	vecize%.2d.pur
+iso_voice_filename	ovl4595	6616	fecize%.2d.pur
+iso_voice_filename	ovl4595	6625	cevap%.2d.pur
+iso_voice_filename	ovl4595	6633	fevap%.2d.pur
+iso_voice_filename	ovl4595	6641	cevap%.2d.pur
+iso_voice_filename	ovl4595	664F	fevap%.2d.pur
+iso_move_step	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_move_step	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_move_step	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_move_step	ovl4595	002F	Divide error\r\nAbnormal program termination\r\n
+iso_attack	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_attack	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_cmd_attack	ovl4595	665D	vuramam ki !!
+iso_cmd_attack	ovl4595	666B	T:CODE\ISOSYS.L
+iso_cmd_attack	ovl4595	667B	çok uzakta be anam !
+iso_cmd_attack	ovl4595	6690	T:CODE\ISOSYS.L
+iso_cmd_attack	ovl4595	66A0	kim uğraşacak şimdi yaa ?!
+iso_cmd_attack	ovl4595	66BB	T:CODE\ISOSYS.L
+iso_cmd_vecize	ovl4595	66CD	Bu adam vecize okuyamaz!
+iso_cmd_vecize	ovl4595	66E6	vecize bilmiyor!
+iso_cmd_vecize	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_cmd_vecize	ovl4595	66F7	T:CODE\ISOSYS.L
+iso_vecize_reaction	ovl4595	6707	bana mı dedin ?
+iso_vecize_reaction	ovl4595	6717	yok abicim, ne haddimize
+iso_vecize_reaction	ovl4595	6730	sana dedim, n'olcek ?
+iso_build_battlefield	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_draw_name	ovl4595	6748	T:CODE\ISOSYS.L
+iso_draw_char_info	ovl4595	6758	%d/%d
+iso_draw_char_info	ovl4595	675E	%d/%d
+iso_draw_char_info	ovl4595	6773	erkek
+iso_draw_char_info	ovl4595	6779	dişi
+iso_draw_char_info	ovl4595	677E	%s %s
+iso_use_item	ovl4595	678B	T:CODE\ISOSYS.L
+iso_draw_textbox	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_eval_param	ovl4595	67A4	T:CODE\ISOSYS.L
+iso_cast_vecize	ovl4595	67B4	T:CODE\ISOSYS.L
+iso_cast_vecize	ovl4595	67C6	......!!!
+iso_vecize_effect	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_vecize_effect	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_vecize_effect	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_vecize_effect	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_vecize_effect	ovl4595	67D0	ohh!
+iso_vecize_effect	ovl4595	67D6	geliyorum babacığım!
+iso_vecize_effect	ovl4595	67EB	ben gariban bir antenim!
+iso_after_hit	ovl4595	6805	bi korum bir de yer kor!
+iso_after_hit	ovl4595	681E	dokunmıyacaktın bana!
+iso_ai_turn	ovl4595	6834	teslim, teslim!
+iso_ai_turn	ovl4595	6844	İç hata!\nBöyle bir büyü bulunmamaktadır: %d
+iso_ai_turn	ovl4595	6870	T:CODE\ISOSYS.L
+FUN_4595_a5bc	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+FUN_4595_a5bc	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_battle	ovl4595	6880	palbat.pal
+iso_battle	ovl4595	688B	T:CODE\ISOSYS.L
+iso_battle	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_battle	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_battle	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_battle	ovl4595	689B	desem de duyamaz ki!
+iso_battle	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+iso_battle	ovl4595	68B0	kim uğraşacak şimdi yaa ?!
+iso_battle	ovl4595	0004	Borland C++ - Copyright 1991 Borland Intl.
+gfl_ring_read_far	ovl5313	68CC	T:\CODE\GFLCODE\GFLALT.H
+gfl_ring_read_far	ovl5313	68E5	T:\CODE\GFLCODE\GFLALT.H
+gfl_alloc_sample_slot	ovl5313	68FE	T:\CODE\GFLCODE\GFLALT.H
+gfl_alloc_sample_slot	ovl5313	6917	T:\CODE\GFLCODE\GFLALT.H
+gfl_load_ghd	ovl5313	6949	GHD dosyası açılamadı.
+gfl_load_ghd	ovl5313	6930	T:\CODE\GFLCODE\GFLSTR.H
+gfl_load_ghd	ovl5313	6979	GHD dosyası okunamadı.
+gfl_load_ghd	ovl5313	6960	T:\CODE\GFLCODE\GFLSTR.H
+gfl_load_ghd	ovl5313	69A9	GFL versiyon hatası.
+gfl_load_ghd	ovl5313	6990	T:\CODE\GFLCODE\GFLSTR.H
+gfl_load_ghd	ovl5313	69D7	Hafıza yetersiz. (GHD)
+gfl_load_ghd	ovl5313	69BE	T:\CODE\GFLCODE\GFLSTR.H
+gfl_load_ghd	ovl5313	69EE	T:\CODE\GFLCODE\GFLSTR.H
+gfl_load_ghd	ovl5313	6A20	GHD dosyası okunamadı.
+gfl_load_ghd	ovl5313	6A07	T:\CODE\GFLCODE\GFLSTR.H
+gfl_load_ghd	ovl5313	6A50	GHD dosyası okunamadı.
+gfl_load_ghd	ovl5313	6A37	T:\CODE\GFLCODE\GFLSTR.H
+gfl_open_gfl	ovl5313	6A80	GFL dosyası açılamadı.
+gfl_open_gfl	ovl5313	6A67	T:\CODE\GFLCODE\GFLSTR.H
+gfl_open_gfl	ovl5313	6AB0	Hafıza yetersiz. (GFL)
+gfl_open_gfl	ovl5313	6A97	T:\CODE\GFLCODE\GFLSTR.H
+gfl_open_gfl	ovl5313	6AC7	T:\CODE\GFLCODE\GFLSTR.H
+gfl_open_gfl	ovl5313	6AF9	GFL dosyası okunamadı.
+gfl_open_gfl	ovl5313	6AE0	T:\CODE\GFLCODE\GFLSTR.H
+gfl_close	ovl5313	6B10	T:\CODE\GFLCODE\GFLSTR.H
+gfl_close	ovl5313	6B29	T:\CODE\GFLCODE\GFLSTR.H
+gfl_close	ovl5313	6B42	T:\CODE\GFLCODE\GFLSTR.H
+gfl_close	ovl5313	6B5B	T:\CODE\GFLCODE\GFLSTR.H
+gfl_show_frame	ovl5313	6B74	T:\CODE\GFLCODE\GFLMAIN.H
+gfl_stream_fill	ovl5313	6B8E	T:\CODE\GFLCODE\GFLMAIN.H
+gfl_stream_fill	ovl5313	6BC2	GFL dosyası okunamadı.
+gfl_stream_fill	ovl5313	6BA8	T:\CODE\GFLCODE\GFLMAIN.H
+gfl_play	ovl5313	6BD9	01234567.012
+gfl_play	ovl5313	6BFA	İç hata!\nDosya ismi yanlış.
+gfl_play	ovl5313	6BE7	CODE\GFLCODE\GFL.C
+gfl_play	ovl5313	6C16	CODE\GFLCODE\GFL.C
+gfl_play	ovl5313	6C29	%s.GHD
+gfl_play	ovl5313	6C30	%s.GFL
+fm_cmp_decode_huge	ovl5447	8762	compteur:%lu, k:%lu, EMSav:%lu..\n
+fm_cmp_decode_huge	ovl5447	8784	1: %d, %d, %d, %d\n
+fm_cmp_decode_huge	ovl5447	8797	T:ALTDUZEY\FILEMAN.L
+fm_cmp_decode_huge	ovl5447	87AC	T:ALTDUZEY\FILEMAN.L
+fm_cmp_decode_huge	ovl5447	87C1	EMSLock->NULL!\n
+fm_cmp_decode_huge	ovl5447	87D1	compteur:%lu, k:%lu, EMSav:%lu..\n
+fm_cmp_decode_huge	ovl5447	87F3	1: %d, %d, %d, %d\n
+fm_cmp_decode_huge	ovl5447	8806	T:ALTDUZEY\FILEMAN.L
+fm_cmp_decode_huge	ovl5447	881B	EMSLock->NULL!\n
+fm_cmp_decode_huge	ovl5447	882B	compteur:%lu, k:%lu, EMSav:%lu..\n
+fm_cmp_decode_huge	ovl5447	884D	1: %d, %d, %d, %d\n
+fm_cmp_decode_huge	ovl5447	8860	T:ALTDUZEY\FILEMAN.L
+fm_load_cmp	ovl5447	8875	T:ALTDUZEY\FILEMAN.L
+fm_load_cmp	ovl5447	889F	Resim Dosyası Bulunamadı!
+fm_load_cmp	ovl5447	888A	T:ALTDUZEY\FILEMAN.L
+fm_load_cmp	ovl5447	88B9	T:ALTDUZEY\FILEMAN.L
+fm_load_cmp	ovl5447	88CE	T:ALTDUZEY\FILEMAN.L
+fm_load_cmp	ovl5447	88E3	T:ALTDUZEY\FILEMAN.L
+fm_load_cmp	ovl5447	0004	Borland C++ - Copyright 1991 Borland Intl.
+fm_load_pal	ovl5447	88F8	T:ALTDUZEY\FILEMAN.L
+fm_load_pal	ovl5447	890D	T:ALTDUZEY\FILEMAN.L
+fm_load_file	ovl5447	8922	T:ALTDUZEY\FILEMAN.L
+fm_load_file	ovl5447	894C	Dosya açma hatası!
+fm_load_file	ovl5447	8937	T:ALTDUZEY\FILEMAN.L
+fm_load_file	ovl5447	8974	Yetersiz Konvansiyonel DOS hafızası
+fm_load_file	ovl5447	895F	T:ALTDUZEY\FILEMAN.L
+fm_load_file	ovl5447	89AD	Dosya açma hatası!
+fm_load_file	ovl5447	8998	T:ALTDUZEY\FILEMAN.L
+fm_load_file	ovl5447	89C0	T:ALTDUZEY\FILEMAN.L
+ogr_init	ovl5511	89F3	VGA kartı bulunamadı!
+ogr_init	ovl5511	89DE	T:ALTDUZEY\OGRAPHS.L
+ogr_init	ovl5511	8A09	T:ALTDUZEY\OGRAPHS.L
+ogr_init	ovl5511	8A1E	T:ALTDUZEY\OGRAPHS.L
+o559A_fatal	ovl559A	8CDD	Çift hata: 
+o559A_fatal	ovl559A	8CE9	(%d) numaralı iç hata: (%s->%u)\n
+o559A_fatal	ovl559A	8D0A	%s\n
+o559A_fatal	ovl559A	8D0F	\n%s\n
+o559A_fatal	ovl559A	8D14	Oyunda %d numaralı iç hata çıktı. (Çıkış: %s->%u)\n
+o559A_fatal	ovl559A	8D47	%s\n
+o559A_fatal	ovl559A	8D4C	%s\n\n
+o559A_fatal	ovl559A	8D51	\nHerhangi bir problemle karşılaştığınızda 'RAKS NEWMEDIA'yı ararsanız\nmemnun oluruz...\n\n
+o559A_load_trdos_font	ovl559A	8DAA	TRDOS.DAT
+o559A_load_trdos_font	ovl559A	8DB7	Turkce Dos Fontu bulunamadi.\n
+oses_init	ovl55CC	8DDC	Ses.CFG
+oses_init	ovl55CC	8DE4	MCPSampleRealAddress
+oses_init	ovl55CC	8DF9	MCPEnableVirtualSamples
+oses_init	ovl55CC	8E11	MCPDisableVirtualSamples
+oses_init	ovl55CC	8E2A	GetEnvString
+oses_init	ovl55CC	8E37	SetVector
+oses_init	ovl55CC	8E41	SDIInitDevice
+oses_init	ovl55CC	8E4F	SDIStartOutput
+oses_init	ovl55CC	8E5E	SDIStopOutput
+oses_load_sample	ovl55CC	8E6C	T:ALTDUZEY\OSES.L
+oses_load_sample	ovl55CC	8E7E	T:ALTDUZEY\OSES.L
+oses_load_sample	ovl55CC	8E90	T:ALTDUZEY\OSES.L
+oses_load_sample	ovl55CC	8EA2	T:ALTDUZEY\OSES.L
+oses_load_sample	ovl55CC	8EB4	T:ALTDUZEY\OSES.L
+oses_load_sample	ovl55CC	8EC6	T:ALTDUZEY\OSES.L
+o5646_init	ovl5646	0004	Borland C++ - Copyright 1991 Borland Intl.
+o5737_cd_track_info	ovl5737	0004	Borland C++ - Copyright 1991 Borland Intl.
+o5737_cd_vtoc_ok	ovl5737	002F	Divide error\r\nAbnormal program termination\r\n
+o5737_cd_status	ovl5737	0004	Borland C++ - Copyright 1991 Borland Intl.
+o5737_cd_status	ovl5737	0004	Borland C++ - Copyright 1991 Borland Intl.
+o5737_cd_play_track	ovl5737	0004	Borland C++ - Copyright 1991 Borland Intl.
+o5737_cd_play_track	ovl5737	0004	Borland C++ - Copyright 1991 Borland Intl.
+FUN_5784_0138	ovl5784	0004	Borland C++ - Copyright 1991 Borland Intl.
+FUN_5784_06d8	ovl5784	8F65	T:ALTDUZEY\GRTEXT.L
+grt_draw_text	ovl5784	8F79	T:ALTDUZEY\GRTEXT.L
+grt_draw_text_alt	ovl5784	0004	Borland C++ - Copyright 1991 Borland Intl.
+start	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+_terminate	seg0000	002F	Divide error\r\nAbnormal program termination\r\n
+abort	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+_fperror	seg0000	90B5	Floating point error: %s.\n
+__matherr	seg0000	915C	%s: %s error\n
+_dos_findfirst	seg0000	002F	Divide error\r\nAbnormal program termination\r\n
+_dos_findnext	seg0000	002F	Divide error\r\nAbnormal program termination\r\n
+F_PCMP	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+N_PADA	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+N_PADA	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+F_PADD	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+F_PSUB	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+N_PSBP	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+__mkname	seg0000	94BA	TMP
+__mkname	seg0000	94BE	.$$$
+N_PCMP	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+__vprinter_body	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+_crtinit	seg0000	9545	COMPAQ
+__create_heap	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+__create_heap	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+__extend_heap	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+__extend_heap	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+__allocate_split	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+farmalloc	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+farmalloc	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+__realloc_grow	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+__realloc_grow	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+__realloc_shrink	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+__realloc_shrink	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+farrealloc	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+farrealloc	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+__sbrk	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+unixtodos	seg0000	88F8	T:ALTDUZEY\FILEMAN.L
+unixtodos	seg0000	88F8	T:ALTDUZEY\FILEMAN.L
+tzset	seg0000	95D7	EST
+tzset	seg0000	95DB	EDT
+tzset	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+_xfflush	seg0000	0004	Borland C++ - Copyright 1991 Borland Intl.
+ist_main	seg0546	338E	\n\nİstanbul Efsaneleri - Bölüm I\n    LALE SAVAŞÇILARI\n\n Versiyon 0.12.96\n
+ist_main	seg0546	33D7	CODE\ISTANBUL.C
+ist_main	seg0546	33E7	Dosya sistemi hazır...
+ist_main	seg0546	340E	Bilgisayarınızda oyunun çalışması için gerekli EMS hafızası\nbulunamadı.
+ist_main	seg0546	33FE	CODE\ISTANBUL.C
+ist_main	seg0546	3456	Overlay sistemi tamam...
+ist_main	seg0546	346F	Dinamik sürücü sistemi hazır...
+ist_main	seg0546	348F	\nDİKKAT: SES.CFG dosyası bulunamadı.\nKUR.EXE'yi çalıştırmanız gerekmektedir.\nDevam ederseniz animasyon ve seslerde eksiklik olacaktır, hı (E/H)? 
+ist_main	seg0546	3531	Oyunu çalıştırmadan önce KUR.EXE'yi çalıştırınız...
+ist_main	seg0546	3521	CODE\ISTANBUL.C
+ist_main	seg0546	3571	var
+ist_main	seg0546	3575	yok
+ist_main	seg0546	3566	Ses %s...\n
+ist_main	seg0546	3579	Animasyon kalitesi: %d\n
+ist_main	seg0546	3591	%ld byte EMS ayrıldı.\n
+ist_main	seg0546	35B8	EMS bulunamadı ya da DDSInit yapılmamış. 'EMM386.EXE'yı yüklemeniz veya oyunu diğer bir\nEMM Manager içinden çalıştırmanız gerekiyor.
+ist_main	seg0546	35A8	CODE\ISTANBUL.C
+ist_main	seg0546	363D	Yetersiz EMS hafızası.\nOyunun çalışması için bilgisayarınızda %lu byte EMS bulunması gerekmektedir.
+ist_main	seg0546	36A1	CODE\ISTANBUL.C
+ist_main	seg0546	36B1	\nDİKKAT: DOS hafızanız gerekenden az. (%ld byte eksik)\nOyun sırasında problemlerle karşılaşabilirsiniz...\nTavsiye: 'H' tuşuna basın ve bilgisayarınızın düşük belleğini arttirin.\nGerekli bilgi için Teknik Destek Kitapçığına başvurabilirsiniz.\nDevam edecek misiniz (E/H)?
+ist_main	seg0546	37CF	Yetersiz Konvansiyonel DOS hafızası.\nNOT : TSR'leri kaldırın. 
+ist_main	seg0546	37BF	CODE\ISTANBUL.C
+ist_main	seg0546	380F	CODE\ISTANBUL.C
+ist_main	seg0546	382F	Ses kartı hatası.
+ist_main	seg0546	381F	CODE\ISTANBUL.C
+ist_main	seg0546	3841	0gfl.ckd
+ist_main	seg0546	384A	muzik.ckd
+ist_main	seg0546	3854	sounds.ckd
+ist_main	seg0546	385F	frpos.ckd
+ist_main	seg0546	3869	ikon.ckd
+ist_main	seg0546	3872	ivir.ckd
+ist_main	seg0546	387B	savas.ckd
+ist_main	seg0546	3885	3d.ckd
+ist_main	seg0546	389C	Oyun dosyalarından biri bulunamıyor veya\nCONFIG.SYS (sistem) dosyası 'FILES=25' satırını içermiyor,\nveya bilgisayarınızın DOS hafızası çok düşük.
+ist_main	seg0546	388C	CODE\ISTANBUL.C
+ist_main	seg0546	392E	Oyun dosyalarına erişildi...
+ist_main	seg0546	394B	deneyx.cmp
+ist_main	seg0546	0004	Borland C++ - Copyright 1991 Borland Intl.
+ist_main	seg0546	3956	gocuk.cmp
+ist_main	seg0546	3960	irem6.cmp
+ist_main	seg0546	396A	irem62.cmp
+ist_main	seg0546	3975	Yazı fontları yüklendi...
+ist_main	seg0546	398F	xdintro.rix
+ist_main	seg0546	399B	Anti-alias tamponu yüklendi...
+ist_main	seg0546	39BA	Bitler resetlendi, pireler set edilmeliydi...
+ist_main	seg0546	39E8	3D ön kordinat hesapları tamam...
+ist_main	seg0546	3A0A	EMS statik bloklar yüklendi...
+ist_main	seg0546	3A29	Fare bulundu...
+ist_main	seg0546	3A39	\nDİKKAT: Bilgisayarınızda fare bulunamadı, devam edecek misiniz ? (E/E) 
+ist_main	seg0546	3A83	grphazir.dat
+ist_main	seg0546	3A90	grp.dat
+ist_main	seg0546	3AAB	...SON...
+ist_main	seg0546	3A9B	CODE\ISTANBUL.C
+ist_main	seg0546	3AB5	grp.dat
+ist_main	seg0546	3AC0	Buggy code, buggy code, BC BC satir:%d
+ist_main	seg0546	3AE7	CODE\ISTANBUL.C
+ui_free_panel	seg05DC	6C38	T:CODE\INTRFACE.L
+ui_cd_music	seg05DC	6C4A	T:CODE\INTRFACE.L
+ui_init_voices	seg05DC	6C8A	dosya hatası
+ui_init_voices	seg05DC	6C97	EMS kalmadı
+ui_init_voices	seg05DC	6C5C	İç hata!\ninitvoices->%s %d'ye yüklenirken %s!
+ui_init_voices	seg05DC	6CA3	T:CODE\INTRFACE.L
+ui_init_voices	seg05DC	6CB5	T:CODE\INTRFACE.L
+ui_load_voice	seg05DC	6CE9	dosya hatasi
+ui_load_voice	seg05DC	6CF6	EMS kalmadi
+ui_load_voice	seg05DC	6CC7	İç hata!\n%s %d'ye yüklenirken %s!
+ui_load_voice	seg05DC	6D02	T:CODE\INTRFACE.L
+ui_play_voice	seg05DC	6D14	T:CODE\INTRFACE.L
+ui_play_voice	seg05DC	6D26	T:CODE\INTRFACE.L
+ui_restore_background	seg05DC	6D38	T:CODE\INTRFACE.L
+ui_message_box	seg05DC	0004	Borland C++ - Copyright 1991 Borland Intl.
+ui_message_box	seg05DC	0004	Borland C++ - Copyright 1991 Borland Intl.
+ui_message_box	seg05DC	6D50	T:CODE\INTRFACE.L
+ui_message_box	seg05DC	6D62	T:CODE\INTRFACE.L
+ui_ask_evet_hayir	seg05DC	0004	Borland C++ - Copyright 1991 Borland Intl.
+q3d_draw_quad	seg08D0	6D7C	T:ALTDUZEY\PERPEC.L
+q3d_draw_quad	seg08D0	6D90	len=%u < membuffer[%d]->length=%lu
+q3d_draw_quad	seg08D0	6DB3	T:ALTDUZEY\PERPEC.L
+q3d_draw_quad	seg08D0	6DC7	len=%u < membuffer[%d]->length=%lu
+q3d_draw_quad	seg08D0	6DEA	T:ALTDUZEY\PERPEC.L
+mm_alloc	seg09D4	6E0E	T:ALTDUZEY\MEMMAN.L
+mm_alloc	seg09D4	6E22	T:ALTDUZEY\MEMMAN.L
+mm_alloc	seg09D4	6E36	T:ALTDUZEY\MEMMAN.L
+mm_alloc	seg09D4	6E55	EMS
+mm_alloc	seg09D4	6E59	CONV
+mm_alloc	seg09D4	6E4A	y:%s,l:%lu
+mm_alloc	seg09D4	6E5E	T:ALTDUZEY\MEMMAN.L
+mm_alloc	seg09D4	6E7D	EMS
+mm_alloc	seg09D4	6E81	CONV
+mm_alloc	seg09D4	6E72	y:%s,l:%lu
+mm_alloc	seg09D4	6E9A	Yetersiz Konvansiyonel DOS hafızası.\nNOT : TSR'leri kaldırın. 
+mm_alloc	seg09D4	6E86	T:ALTDUZEY\MEMMAN.L
+mm_free	seg09D4	6ED9	T:ALTDUZEY\MEMMAN.L
+mm_free	seg09D4	6EED	%s, satir %d'den cagrilmis
+mm_free	seg09D4	6F08	+(BUG in MESLEN def)
+mm_free	seg09D4	6F1D	T:ALTDUZEY\MEMMAN.L
+mm_check_type	seg09D4	6F31	T:ALTDUZEY\MEMMAN.L
+mm_duplicate	seg09D4	6F45	T:ALTDUZEY\MEMMAN.L
+mm_duplicate	seg09D4	6F59	T:ALTDUZEY\MEMMAN.L
+mm_change_type	seg09D4	6F6D	T:ALTDUZEY\MEMMAN.L
+mm_change_type	seg09D4	6F81	T:ALTDUZEY\MEMMAN.L
+mm_change_type	seg09D4	6F95	T:ALTDUZEY\MEMMAN.L
+mm_copy_block	seg09D4	6FA9	T:ALTDUZEY\MEMMAN.L
+mm_copy_block	seg09D4	6FBD	T:ALTDUZEY\MEMMAN.L
+mm_copy_range	seg09D4	6FD1	T:ALTDUZEY\MEMMAN.L
+mm_copy_range	seg09D4	6FE5	T:ALTDUZEY\MEMMAN.L
+mm_copy_range	seg09D4	6FF9	T:ALTDUZEY\MEMMAN.L
+mm_shutdown	seg09D4	700D	T:ALTDUZEY\MEMMAN.L
+mm_ems_lock	seg09D4	7021	Once line: %d, file: %s'dan simdi de line: %d, file: %s
+mm_ems_lock	seg09D4	7059	 +(BUGG in MESLEN def)
+mm_ems_lock	seg09D4	7070	T:ALTDUZEY\MEMMAN.L
+mm_ems_unlock	seg09D4	7084	_emsMapPages=%d, while mapping page:%d, 
+mm_ems_unlock	seg09D4	70AD	T:ALTDUZEY\MEMMAN.L
+mm_map	seg09D4	70C1	1: %d, %d, %d, %d\n
+mm_map	seg09D4	70D4	T:ALTDUZEY\MEMMAN.L
+mm_map	seg09D4	0004	Borland C++ - Copyright 1991 Borland Intl.
+mm_map	seg09D4	70E8	T:ALTDUZEY\MEMMAN.L
+FUN_09d4_0d8d	seg09D4	70FC	T:ALTDUZEY\MEMMAN.L
+mm_surface_alloc	seg09D4	7124	Yetersiz hafıza
+mm_surface_alloc	seg09D4	7110	T:ALTDUZEY\MEMMAN.L
+sys_blit_cb	seg0AC6	7134	T:ALTDUZEY\SYSTEMS.L
+sys_blit_cb	seg0AC6	715E	İç hata!\n???'de sınırlar hatası! (_4bitp_copyshell)
+sys_blit_cb	seg0AC6	7149	T:ALTDUZEY\SYSTEMS.L
+sys_blit	seg0AC6	7192	T:ALTDUZEY\SYSTEMS.L
+sys_blit_0615	seg0AC6	71A7	T:ALTDUZEY\SYSTEMS.L
+sys_blit_recolor	seg0AC6	71BC	T:ALTDUZEY\SYSTEMS.L
+sys_fill_rect	seg0AC6	71D1	T:ALTDUZEY\SYSTEMS.L
+sys_fill_rect	seg0AC6	71E6	T:ALTDUZEY\SYSTEMS.L
+sys_fill_rect_checked	seg0AC6	71FB	T:ALTDUZEY\SYSTEMS.L
+sys_blit_scaled	seg0AC6	7210	T:ALTDUZEY\SYSTEMS.L
+sys_blit_scaled	seg0AC6	7225	T:ALTDUZEY\SYSTEMS.L
+sys_blit_0F21	seg0AC6	723A	T:ALTDUZEY\SYSTEMS.L
+sys_fill_slot_rect	seg0AC6	724F	T:ALTDUZEY\SYSTEMS.L
+sys_fill_slot_rect	seg0AC6	7264	T:ALTDUZEY\SYSTEMS.L
+sys_fill_slot	seg0AC6	7279	T:ALTDUZEY\SYSTEMS.L
+sys_fill_slot	seg0AC6	728E	T:ALTDUZEY\SYSTEMS.L
+sys_fill_slot	seg0AC6	72A3	T:ALTDUZEY\SYSTEMS.L
+sys_fill_slot	seg0AC6	72B8	T:ALTDUZEY\SYSTEMS.L
+sys_find_glyph	seg0AC6	72CD	bulamadim!!!
+sys_find_color	seg0AC6	72DA	bulamadim!!!
+sys_load_rix	seg0AC6	72E7	T:ALTDUZEY\SYSTEMS.L
+gr_blend3	seg0C7F	7326	T:ALTDUZEY\NGRAPHS.L
+gr_blend3	seg0C7F	733B	T:ALTDUZEY\NGRAPHS.L
+gr_draw_strip	seg0C7F	7350	İç hata!\nSınır taşması: (%d,%d,%d,%d,%d) (RenkFiltre)
+gr_draw_strip	seg0C7F	7386	ML(?!)
+gr_draw_strip	seg0C7F	738D	T:ALTDUZEY\NGRAPHS.L
+gr_draw_strip	seg0C7F	73A2	T:ALTDUZEY\NGRAPHS.L
+gr_draw_strip	seg0C7F	73B7	T:ALTDUZEY\NGRAPHS.L
+snd_play_sample	seg0D42	73DE	İc hata!\n%d. kanaldan %d. s_membuffer'daki sample %lu frekans ve %lu volüm ile çalınayazdı.
+snd_play_sample	seg0D42	743A	T:ALTDUZEY\NSES.L
+snd_load_sound	seg0D42	744C	%s. ses dosyası bulunamadı! (playlongsample)
+snd_load_sound	seg0D42	7479	T:ALTDUZEY\NSES.L
+snd_load_sound	seg0D42	748B	T:ALTDUZEY\NSES.L
+snd_load_sound	seg0D42	749D	T:ALTDUZEY\NSES.L
+snd_load_sample_ems	seg0D42	74AF	T:ALTDUZEY\NSES.L
+snd_load_sample_ems	seg0D42	74C1	T:ALTDUZEY\NSES.L
+snd_load_sample_ems	seg0D42	74D3	T:ALTDUZEY\NSES.L
+snd_load_sample_ems	seg0D42	74E5	T:ALTDUZEY\NSES.L
+snd_load_sample_ems	seg0D42	74F7	T:ALTDUZEY\NSES.L
+ctl_install	seg0DB7	7529	ALTDUZEY\NKONTROL.L
+ctl_int23_isr	seg0DB7	7551	Hımm, birisi bilgisayarı resetlemeye çalıştı galiba!
+ctl_int23_isr	seg0DB7	7586	Tamam abi breyk, breyk, sitop !!!
+ctl_int23_isr	seg0DB7	753D	ALTDUZEY\NKONTROL.L
+ctl_free_checked	seg0DB7	75BC	İç hata!\nBlokun 'free handle'ı serbestlenmek isteniyor. (bufree)
+ctl_free_checked	seg0DB7	75A8	ALTDUZEY\NKONTROL.L
+DDSInit	seg0DF2	75FE	DDSRegisterFunction
+DDSInit	seg0DF2	7612	DDSRegisterResource
+DDSInit	seg0DF2	7626	DDSAccessFunction
+DDSInit	seg0DF2	7638	DDSAccessResource
+DDSInit	seg0DF2	764A	DDSRemoveFunction
+DDSInit	seg0DF2	765C	DDSRemoveResource
+DDSInit	seg0DF2	766E	MemAlloc
+DDSInit	seg0DF2	7677	MemCalloc
+DDSInit	seg0DF2	7681	MemRealloc
+DDSInit	seg0DF2	768C	MemFree
+DDSGetDriverInfo	seg0DF2	0004	Borland C++ - Copyright 1991 Borland Intl.
+DDSLoadDriver	seg0DF2	0004	Borland C++ - Copyright 1991 Borland Intl.
+DDSLoadDriver	seg0DF2	0004	Borland C++ - Copyright 1991 Borland Intl.
+DDSLoadDriver	seg0DF2	0004	Borland C++ - Copyright 1991 Borland Intl.
+cdiInit	seg0EAE	7AD7	cdiRegister
+ampCmdPortamento	seg0EF6	0004	Borland C++ - Copyright 1991 Borland Intl.
+ampGetTickLength	seg0EF6	2710	lavuk1.cmp
+ampLoadAMF	seg105B	85C3	EMSCopyTo
+ampLoadAMF	seg105B	0004	Borland C++ - Copyright 1991 Borland Intl.
+ampLoadAMF	seg105B	85AA	┴??┴┴??┴┴??┴┴??┴EMSAlloc
+ampLoadAMF	seg105B	0004	Borland C++ - Copyright 1991 Borland Intl.
+ampLoadModule	seg105B	0004	Borland C++ - Copyright 1991 Borland Intl.
+ampLoadModule	seg105B	85AA	┴??┴┴??┴┴??┴┴??┴EMSAlloc
+ampLoadModule	seg105B	0004	Borland C++ - Copyright 1991 Borland Intl.
+tsInit	seg10EF	2508	D¼#
+tsClose	seg10EF	2508	D¼#
+ampFreeModule	seg111B	86B4	EMSFree
+ampFreeModule	seg111B	0004	Borland C++ - Copyright 1991 Borland Intl.
+ampFreeModule	seg111B	0004	Borland C++ - Copyright 1991 Borland Intl.
+dsmiTimeInit	seg1145	86C4	GetDSMITime
+dsmiTimeInit	seg1145	86D0	LockDSMITime
+dsmiTimeInit	seg1145	86DD	UnlockDSMITime
+emsHeapInit	seg1154	8704	EMMXXXX0
+emsHeapInit	seg1154	870D	EMSAlloc
+emsHeapInit	seg1154	8716	EMSFree
+emsHeapInit	seg1154	871E	EMSCopyTo
+emsHeapInit	seg1154	8728	EMSCopyFrom
+emsHeapInit	seg1154	8734	EMSCopy
+emsHeapInit	seg1154	873C	EMSLock
+emsHeapInit	seg1154	8744	EMSRestoreState
+emsHeapInit	seg1154	0BF4	haaa!
+emsHeapInit	seg1154	8754	EMSSaveState
+emsHeapClose	seg1154	870D	EMSAlloc
+emsHeapClose	seg1154	8716	EMSFree
+emsHeapClose	seg1154	871E	EMSCopyTo
+emsHeapClose	seg1154	8728	EMSCopyFrom
+emsHeapClose	seg1154	8734	EMSCopy
+emsHeapClose	seg1154	873C	EMSLock
+emsHeapClose	seg1154	870D	EMSAlloc
+emsHeapClose	seg1154	8744	EMSRestoreState
+o122B_ovr_load_segment	seg122B	0004	Borland C++ - Copyright 1991 Borland Intl.
+o122B_ovr_helper_07A5	seg122B	0004	Borland C++ - Copyright 1991 Borland Intl.
+o122B_ovr_helper_07B1	seg122B	0004	Borland C++ - Copyright 1991 Borland Intl.
+o122B_ems_detect	seg122B	4407	ler
+o122B_ext_detect	seg122B	4300	T:CODE\3DSYS.L
+emu_mul_mantissa	seg1351	0004	Borland C++ - Copyright 1991 Borland Intl.
+emu_bcd_word	seg1351	0004	Borland C++ - Copyright 1991 Borland Intl.
+emu_fbld	seg1351	0004	Borland C++ - Copyright 1991 Borland Intl.
+emu_fbld	seg1351	2710	lavuk1.cmp
+emu_fbld	seg1351	2710	lavuk1.cmp
+emu_bin_to_bcd	seg1351	0004	Borland C++ - Copyright 1991 Borland Intl.
+emu_fbstp	seg1351	2710	lavuk1.cmp
+emu_fbstp	seg1351	0004	Borland C++ - Copyright 1991 Borland Intl.
+fp87_reexec_on_stack	seg15C9	269B	bosch.cmp

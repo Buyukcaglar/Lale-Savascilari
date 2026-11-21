@@ -1,0 +1,88 @@
+# Sources that are finished and verified; every private test DLL includes them
+# (tools/testlib.sh) and CMake's lale_testlib is built from exactly this list.
+src/gen/dgroup_init.c
+src/engine/dgroup.c
+src/platform/vga.c
+src/platform/cdrom.c
+src/platform/options.c
+src/platform/pc.c
+src/platform/audio.c
+src/platform/speaker.c
+src/rtl/bc_rand.c
+src/rtl/bc_farheap.c
+src/rtl/bc_stdio.c
+src/game/cd5737.c
+src/engine/fatal.c
+src/engine/fileman.c
+src/engine/systems.c
+src/dsmi/dsmistr.c
+src/dsmi/dds.c
+src/dsmi/timer.c
+src/dsmi/dsmitime.c
+src/engine/vfile.c
+src/engine/vfs.c
+src/dsmi/ems.c
+src/dsmi/emsheap.c
+src/dsmi/memalloc.c
+src/engine/memman.c
+src/engine/nkontrol.c
+src/engine/blit386.c
+src/engine/ngraphs.c
+src/engine/ographs.c
+src/game/q3d.c
+src/dsmi/cdi.c
+src/dsmi/amp.c
+src/dsmi/amfload.c
+src/dsmi/mcp.c
+src/engine/nses.c
+src/engine/oses.c
+src/game/gfl.c
+# test-only recording CDI device + fake DDS exports for test_amp/test_gfl:
+tests/stubs/wp5_stubs.c
+# test-only scripted clock/keys pump for test_gfl:
+tests/stubs/wp9_stubs.c
+src/engine/grtext.c
+src/engine/intrface.c
+# ---- game modules (wave WP13-17, integrated 2026-11-21) ----
+# ISTANBUL main + DEMOLAR (WP13)
+src/game/istanbul.c
+src/game/demolar.c
+# CHARGEN (WP14)
+src/game/chargen.c
+# FRPOS (WP15)
+src/game/frpos.c
+src/game/frpos_shop.c
+src/game/frpos_util.c
+# 3DQUICK first-person view (WP12)
+src/game/q3dview.c
+src/game/q3dview_anim.c
+src/game/q3dview_map.c
+src/game/q3dview_render.c
+# 3DSYS exploration (WP16)
+src/game/s3d_camp.c
+src/game/s3d_charscr.c
+src/game/s3d_district.c
+src/game/s3d_keys.c
+src/game/s3d_loop.c
+src/game/s3d_menu.c
+src/game/s3d_move.c
+src/game/s3d_panel.c
+src/game/s3d_save.c
+# ISOSYS battles (WP17, in progress: add each iso_*.c as it lands)
+src/game/iso_util.c
+src/game/iso_map.c
+src/game/iso_turn.c
+src/game/iso_draw.c
+src/game/iso_combat.c
+src/game/iso_field.c
+src/game/iso_spell.c
+src/game/iso_char.c
+src/game/iso_ai.c
+src/game/iso_battle.c
+# test-only: call interception helpers for lale.patch (run-until / stop)
+tests/stubs/testhook.c
+# test-only: 100 Hz clock pump for test_q3dview_anim
+tests/stubs/wp12_anim_stubs.c
+# test-only: WP17c call recorder (test_iso_c.py); only
+# wp17?_-prefixed symbols, no duplicates of game functions
+tests/stubs/wp17c_stubs.c

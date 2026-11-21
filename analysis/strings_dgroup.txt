@@ -1,0 +1,1369 @@
+16E0:0004  Borland C++ - Copyright 1991 Borland Intl.
+16E0:002F  Divide error
+Abnormal program termination
+
+16E0:039F  üzüm
+16E0:03BE  anten
+16E0:03DD  kelle
+16E0:03FC  sen bir ceviz ağacısın
+16E0:041B  uyu da büyü hırbo
+16E0:043A  lale
+16E0:0459  sus! ağzına biber sürerim
+16E0:0478  gel babana
+16E0:0497  aslan gibisin maşallah
+16E0:04B6  allah nazardan saklasın
+16E0:04D5  önüm arkam sağım solum sobe
+16E0:04F4  allah belanızı versin
+16E0:0513  kalın kafalı
+16E0:0532  dokunmayın şabanıma
+16E0:0551  takıl yaa boşver
+16E0:0570  allah sizi bildiği gibi yapsın
+16E0:058F  piştogli
+16E0:05AE  bi korsun bir de yer kor
+16E0:05CD  hasta mısın oolum sen
+16E0:05EC  körolasıca
+16E0:062A  ben anlamam
+16E0:0649  gıpraşmayın
+16E0:0668  bana mı dedin
+16E0:0687  zıkkımın kökünü ye
+16E0:06A6  lan hipinelaaar
+16E0:06C5  koşun laan koşuun
+16E0:06E4  şerefsizler
+16E0:0703  de get
+16E0:0722  iaaarggghh
+16E0:0741  sena dur
+16E0:0760  sena öl
+16E0:077F  susun laaaan
+16E0:079E  aah!
+16E0:07C3  aah!
+16E0:07E8  ben gariban bir antenim!
+16E0:080D  ne kelle biriyim ben yaa!
+16E0:0832  ben bir ceviz ağacıyım!
+16E0:0857  eh! uyuyalım bari!
+16E0:087C  aah!
+16E0:08A1  ..........!
+16E0:08C6  geliyorum babacığım!
+16E0:08EB  öyleyim di mi?
+16E0:0910  sağolasın
+16E0:0935  aah!
+16E0:097F  höynk!!!
+16E0:09A4  dokunmayın lan bana!
+16E0:09C9  terslik var hata!!!!
+16E0:09EE  terslik var hata!!!!
+16E0:0A13  hııııaah!
+16E0:0A38  hınaaaaar!
+16E0:0A5D  ya ben iyi deyilim yaa!
+16E0:0A82  aman tanrım kör oldum,göremiyorum!!!
+16E0:0AA7  anneeee!!!
+16E0:0AF1  tammam!
+16E0:0B3B  şapır şupur.
+16E0:0B60  aah!
+16E0:0B85  koşalıım, koşalıım!
+16E0:0BAA  aah!
+16E0:0BCF  gettiiim !
+16E0:0BF4  haaa!
+16E0:0C63  ....!
+16E0:0CE2  cengöt
+16E0:0CF1  zopa
+16E0:0D00  sivri daş
+16E0:0D0F  kısa zopa
+16E0:0D1E  lale
+16E0:0D2D  şişe
+16E0:0D3C  levye
+16E0:0D4B  levrek
+16E0:0D5A  cetvel
+16E0:0D69  t-cetvel
+16E0:0D78  mezura
+16E0:0D87  galvanometre
+16E0:0D96  terlik
+16E0:0DA5  baçemak
+16E0:0DB4  kırık şişe
+16E0:0DC3  tornavida
+16E0:0DD2  yıldız torn.
+16E0:0DE1  ing. anahtarı
+16E0:0DF0  fra. anahtarı
+16E0:0DFF  kazma
+16E0:0E0E  çatal
+16E0:0E2C  tüftüf
+16E0:0E3B  sapan
+16E0:0E4A  tebeşir
+16E0:0E59  fıstık
+16E0:0E68  kılıçartıbeş
+16E0:106A  %$ .çötek
+16E0:107E  megadeth tişört
+16E0:108E  deryjacket
+16E0:109E  ekose ceket
+16E0:10AE  oduncu göyneği
+16E0:10BE  yün yelek
+16E0:10CE  fanila
+16E0:10EC  sperm
+16E0:10FB  simit
+16E0:1119  padişah macunu
+16E0:1128  dondurma
+16E0:1137  bira
+16E0:1146  hıyar
+16E0:1155  leblebi tozu
+16E0:1164  pul biber
+16E0:1173  zeytinyağı
+16E0:1182  ciklet
+16E0:195B  0010000101000000000000000000000000000100001010000000000000000000000000010010000100000000000000000000000000101011100000000000000000000000000000000010110001000000000000000000000010000100000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000000000010010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000001000001000000000000000000000000000010000010000100000000000000000110010101001000000000000000000000000011110110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000100000100000000000000000000000100001101000100000000000000000000000000000010010000110000000010000000000001100100000001000000000000000000000011001000000010000000000000000000000000000000000000000000110000000
+16E0:1EB3  beyaz böcük
+16E0:1EC6  irospa
+16E0:1ED9  ipna
+16E0:1EEC  lavuk
+16E0:1EFF  maganda
+16E0:1F12  hırgız
+16E0:1F25  bahçıvan
+16E0:1F38  lale savaşçısı
+16E0:1F4B  dadaş
+16E0:1F5E  meycik yuzır
+16E0:1F71  faytır
+16E0:1F84  kılerik
+16E0:1FAA  köpek
+16E0:1FD0  fare
+16E0:1FE3  yarasa
+16E0:1FF6  ömürcek böcüğü
+16E0:2009  dev ömürcek
+16E0:201C  yobaz ograten
+16E0:202F  yobaz beşamel
+16E0:2042  yobaz bolonez
+16E0:2055  yobaz napoliten
+16E0:2068  kelp
+16E0:207B  karafatma
+16E0:208E  çembersakal
+16E0:20A1  fanatik
+16E0:20B4  leş gargası
+16E0:20C7  dellenmiş öğrenci
+16E0:20DA  dellenmiş öğretmen
+16E0:20ED  balgam
+16E0:2100  afakan
+16E0:2113  barut hüsam
+16E0:2126  haşmet maap
+16E0:2139  şeyh cehalet
+16E0:214C  kıl sıtkı
+16E0:215F  kıl sıtkı
+16E0:2172  belediye dragonu
+16E0:2185  bosch
+16E0:218E  irospa
+16E0:2197  ipna
+16E0:21A0  lavuk
+16E0:21A9  maganda
+16E0:21B2  hirgiz
+16E0:21BB  bahcivan
+16E0:21C4  lale
+16E0:21CD  dadas
+16E0:21D6  meycik
+16E0:21DF  faytir
+16E0:21E8  kilerik
+16E0:21FA  kopek
+16E0:220C  fare
+16E0:2215  yarasa
+16E0:221E  omurcek
+16E0:2227  devomur
+16E0:2230  ograten
+16E0:2239  besamel
+16E0:2242  bolonez
+16E0:224B  napolit
+16E0:2254  kelp
+16E0:225D  karafa
+16E0:2266  cember
+16E0:226F  fanati
+16E0:2278  garga
+16E0:2281  delogren
+16E0:228A  delogret
+16E0:2293  balgam
+16E0:229C  afakan
+16E0:22A5  husam
+16E0:22AE  hasmet
+16E0:22B7  cehalet
+16E0:22C0  sitki
+16E0:22C9  sitki
+16E0:22D2  dragon
+16E0:22DB  kufurbuf
+16E0:22EC  adim1.pur
+16E0:22FD  olum.pur
+16E0:230E  vurus.pur
+16E0:231F  vurama.pur
+16E0:2330  iska.pur
+16E0:2341  adim2.pur
+16E0:2352  adim3.pur
+16E0:2363  uzmen.pur
+16E0:2374  bhasar.pur
+16E0:2385  bosch.pur
+16E0:2396  adim5.pur
+16E0:23A7  adim8.pur
+16E0:23B8  viyk.pur
+16E0:23C9  kapi1.pur
+16E0:23DA  kapi2.pur
+16E0:23EB  kapi1.pur
+16E0:23FC  kapi4.pur
+16E0:240D  kapi5.pur
+16E0:241E  kapi6.pur
+16E0:242F  kapi7.pur
+16E0:2440  merdalt.pur
+16E0:2451  merdust.pur
+16E0:2462  kanat.pur
+16E0:2473  surt.pur
+16E0:2484  sw1.pur
+16E0:2495  sw2.pur
+16E0:24A6  sw3.pur
+16E0:24B7  sw4.pur
+16E0:24C8  fw1.pur
+16E0:24D9  fw2.pur
+16E0:24EA  fw3.pur
+16E0:24FB  fw4.pur
+16E0:261C  ğöË¸▒¯èòÜÂ╠±±±
+16E0:2643  insan
+16E0:264E  öğrenci
+16E0:2659  öğretmen
+16E0:2664  maganda
+16E0:266F  lavuk
+16E0:267A  memur
+16E0:2685  irospa
+16E0:2690  siliconian
+16E0:269B  bosch.cmp
+16E0:26A8  insan1.cmp
+16E0:26B5  insan2.cmp
+16E0:26C2  ogren1.cmp
+16E0:26CF  ogren2.cmp
+16E0:26DC  ogret1.cmp
+16E0:26E9  ogret2.cmp
+16E0:26F6  maga1.cmp
+16E0:2703  maga2.cmp
+16E0:2710  lavuk1.cmp
+16E0:271D  lavuk2.cmp
+16E0:272A  memur1.cmp
+16E0:2737  memur2.cmp
+16E0:2744  irosp1.cmp
+16E0:2751  irosp2.cmp
+16E0:275E  sili1.cmp
+16E0:276B  sili2.cmp
+16E0:2985  duvar1.cmp
+16E0:2992  duvar2.cmp
+16E0:299F  duvar3.cmp
+16E0:29AC  duvar4.cmp
+16E0:29B9  duvar5.cmp
+16E0:29C6  duvar6.cmp
+16E0:29D3  duvar7.cmp
+16E0:29E0  duvar8.cmp
+16E0:29ED  merdust.cmp
+16E0:2A07  kapi1.cmp
+16E0:2A14  kapi2.cmp
+16E0:2A21  kapi3.cmp
+16E0:2A2E  kapi4.cmp
+16E0:2A3B  kapi5.cmp
+16E0:2A48  kapi6.cmp
+16E0:2A55  kapi7.cmp
+16E0:2A62  kapi8.cmp
+16E0:2A6F  merdalt.cmp
+16E0:2A89  kapian1.cmp
+16E0:2A96  kapian2.cmp
+16E0:2AA3  kapian3.cmp
+16E0:2AB0  kapian4.cmp
+16E0:2ABD  kapian5.cmp
+16E0:2ACA  kapian6.cmp
+16E0:2AD7  kapian7.cmp
+16E0:2AE4  bosch.cmp
+16E0:2AF1  bosch.cmp
+16E0:2AFE  goty0.cmp
+16E0:2B0B  goty1.cmp
+16E0:2B18  yer3.cmp
+16E0:2B25  yer2.cmp
+16E0:2B32  yer4a.cmp
+16E0:2B3F  yer5.cmp
+16E0:2B4C  yer6.cmp
+16E0:2B66  yer1.cmp
+16E0:2BB4  yer4b.cmp
+16E0:2BF5  yer4b.cmp
+16E0:2C1C  tav1a.cmp
+16E0:2C29  tav2a.cmp
+16E0:2C36  tav1b.cmp
+16E0:2C43  tav2b.cmp
+16E0:2C9E  3d.amf
+16E0:2CB8  3.amf
+16E0:2CC5  4.amf
+16E0:2CD2  5.amf
+16E0:2CDF  6.amf
+16E0:2CEC  7.amf
+16E0:2CF9  8.amf
+16E0:2D06  9.amf
+16E0:2D13  TheEnd.amf
+16E0:2D20  Istanbul.amf
+16E0:2D2D  Savas.Amf
+16E0:2D3A  Demox.Amf
+16E0:2D47  nightmar.AmF
+16E0:2D54  pain.amf
+16E0:2D61  uni.amf
+16E0:2D7B  heykel
+16E0:2D88  kovalson
+16E0:2F18  w¨1Ó
+16E0:2F35  762Ó
+16E0:2F52  1P2Ó
+16E0:2F8C  <é2Ó
+16E0:3000  <%3Ó
+16E0:3079  otoparkIn
+16E0:3083  ufuk1.cmp
+16E0:3091  mecidiyekOy'Un
+16E0:30A0  mec-d-in
+16E0:30A9  mec-n-in
+16E0:30B2  mec-d-ot
+16E0:30BB  mec-n-ot
+16E0:30C4  ufuk1.cmp
+16E0:30D2  beSiktaS'In
+16E0:30DE  bes-d-in
+16E0:30E7  bes-n-in
+16E0:30F0  bes-d-ot
+16E0:30F9  bes-n-ot
+16E0:3102  ufuk1.cmp
+16E0:3110  eminOnU'nUn
+16E0:311C  emi-n-in
+16E0:3125  emi-n-ot
+16E0:312E  ufuk1.cmp
+16E0:313C  UskUdar'In
+16E0:3147  ufuk1.cmp
+16E0:3155  Umraniye'nin
+16E0:3162  umr-d-in
+16E0:316B  umr-d-ot
+16E0:3174  ufuk2.cmp
+16E0:3182  kadIkOy'Un
+16E0:318D  kad-d-in
+16E0:3196  kad-n-in
+16E0:319F  kad-d-ot
+16E0:31A8  kad-n-ot
+16E0:31B1  ufuk1.cmp
+16E0:31BF  beyoGlu'nun
+16E0:31CB  bey-d-in
+16E0:31D4  bey-n-in
+16E0:31DD  bey-d-ot
+16E0:31E6  bey-n-ot
+16E0:31EF  ufuk1.cmp
+16E0:31FD  ortakOy'Un
+16E0:3208  ort-d-in
+16E0:3211  ort-n-in
+16E0:321A  ort-d-ot
+16E0:3223  ort-n-ot
+16E0:322C  ufuk1.cmp
+16E0:3236  pc10
+16E0:323B  beyazIt'In
+16E0:3246  ufuk1.cmp
+16E0:3250  pc11
+16E0:3255  fatih'in
+16E0:325E  ufuk1.cmp
+16E0:3268  pc12
+16E0:326D  sarIyer'in
+16E0:3278  ufuk1.cmp
+16E0:3282  pc13
+16E0:3287  kadIkOy kanalizasyonlarInIn
+16E0:32A3  ufuk1.cmp
+16E0:32AD  pc14
+16E0:32B2  UskUdar kanalizasyonlarInIn
+16E0:32CE  ufuk1.cmp
+16E0:32D8  pc15
+16E0:32DD  topkapI sarayI'nIn
+16E0:32F0  ufuk1.cmp
+16E0:32FA  pc16
+16E0:32FF  sarIyer kanalizasyonlarInIn
+16E0:331B  ufuk1.cmp
+16E0:3325  pc17
+16E0:332A  kIz kulesi'nin
+16E0:3339  ufuk1.cmp
+16E0:3343  pc18
+16E0:3348  cehalet tapInaGInIn
+16E0:335C  ufuk1.cmp
+16E0:3366  pc19
+16E0:336B  pc19
+16E0:3370  ufuk1.cmp
+16E0:337A  pc20
+16E0:337F  pc20
+16E0:3384  ufuk1.cmp
+16E0:338E  
+
+İstanbul Efsaneleri - Bölüm I
+    LALE SAVAŞÇILARI
+
+ Versiyon 0.12.96
+
+16E0:33D7  CODE\ISTANBUL.C
+16E0:33E7  Dosya sistemi hazır...
+16E0:33FE  CODE\ISTANBUL.C
+16E0:340E  Bilgisayarınızda oyunun çalışması için gerekli EMS hafızası
+bulunamadı.
+16E0:3456  Overlay sistemi tamam...
+16E0:346F  Dinamik sürücü sistemi hazır...
+16E0:348F  
+DİKKAT: SES.CFG dosyası bulunamadı.
+KUR.EXE'yi çalıştırmanız gerekmektedir.
+Devam ederseniz animasyon ve seslerde eksiklik olacaktır, hı (E/H)? 
+16E0:3521  CODE\ISTANBUL.C
+16E0:3531  Oyunu çalıştırmadan önce KUR.EXE'yi çalıştırınız...
+16E0:3566  Ses %s...
+
+16E0:3579  Animasyon kalitesi: %d
+
+16E0:3591  %ld byte EMS ayrıldı.
+
+16E0:35A8  CODE\ISTANBUL.C
+16E0:35B8  EMS bulunamadı ya da DDSInit yapılmamış. 'EMM386.EXE'yı yüklemeniz veya oyunu diğer bir
+EMM Manager içinden çalıştırmanız gerekiyor.
+16E0:363D  Yetersiz EMS hafızası.
+Oyunun çalışması için bilgisayarınızda %lu byte EMS bulunması gerekmektedir.
+16E0:36A1  CODE\ISTANBUL.C
+16E0:36B1  
+DİKKAT: DOS hafızanız gerekenden az. (%ld byte eksik)
+Oyun sırasında problemlerle karşılaşabilirsiniz...
+Tavsiye: 'H' tuşuna basın ve bilgisayarınızın düşük belleğini arttirin.
+Gerekli bilgi için Teknik Destek Kitapçığına başvurabilirsiniz.
+Devam edecek misiniz (E/H)?
+16E0:37BF  CODE\ISTANBUL.C
+16E0:37CF  Yetersiz Konvansiyonel DOS hafızası.
+NOT : TSR'leri kaldırın. 
+16E0:380F  CODE\ISTANBUL.C
+16E0:381F  CODE\ISTANBUL.C
+16E0:382F  Ses kartı hatası.
+16E0:3841  0gfl.ckd
+16E0:384A  muzik.ckd
+16E0:3854  sounds.ckd
+16E0:385F  frpos.ckd
+16E0:3869  ikon.ckd
+16E0:3872  ivir.ckd
+16E0:387B  savas.ckd
+16E0:3885  3d.ckd
+16E0:388C  CODE\ISTANBUL.C
+16E0:389C  Oyun dosyalarından biri bulunamıyor veya
+CONFIG.SYS (sistem) dosyası 'FILES=25' satırını içermiyor,
+veya bilgisayarınızın DOS hafızası çok düşük.
+16E0:392E  Oyun dosyalarına erişildi...
+16E0:394B  deneyx.cmp
+16E0:3956  gocuk.cmp
+16E0:3960  irem6.cmp
+16E0:396A  irem62.cmp
+16E0:3975  Yazı fontları yüklendi...
+16E0:398F  xdintro.rix
+16E0:399B  Anti-alias tamponu yüklendi...
+16E0:39BA  Bitler resetlendi, pireler set edilmeliydi...
+16E0:39E8  3D ön kordinat hesapları tamam...
+16E0:3A0A  EMS statik bloklar yüklendi...
+16E0:3A29  Fare bulundu...
+16E0:3A39  
+DİKKAT: Bilgisayarınızda fare bulunamadı, devam edecek misiniz ? (E/E) 
+16E0:3A83  grphazir.dat
+16E0:3A90  grp.dat
+16E0:3A9B  CODE\ISTANBUL.C
+16E0:3AAB  ...SON...
+16E0:3AB5  grp.dat
+16E0:3AC0  Buggy code, buggy code, BC BC satir:%d
+16E0:3AE7  CODE\ISTANBUL.C
+16E0:3B0D  T:\CODE\3DQUICK.L
+16E0:3B1F  T:\CODE\3DQUICK.L
+16E0:3B3F  └@Îúp=
+Î
+16E0:3B48  @zÃ):Æï
+16E0:3B53  @AÅ┬§(\Å
+@ÈÁ÷>UU
+16E0:3B67   Affffffµ?
+16E0:3B74  AÈÁ÷>UU!@«Gßz
+16E0:3B84  @ñp=
+Îú
+16E0:3B8C  @333333$@®kÿ}¬¬
+@F]k´SUÕ?═╠╠╠╠╠
+16E0:3C68  C.kor
+16E0:3C6E  İç hata!
+Kordinat dosyası versiyonu desteklenmiyor,
+dosya %s doğru mu?
+16E0:3CB5   ML(?!)
+16E0:3CBD  T:\CODE\3DQUICK.L
+16E0:3CD1  ÏABeklenmedik duvar!!!!; Harita offset: %d
+16E0:3CFC  OrspUm[%d]   
+16E0:3D0A  x:%d  y:%d
+16E0:3D15  T:\CODE\3DQUICK.L
+16E0:3D27  T:\CODE\3DQUICK.L
+16E0:3D3F  I@T:\CODE\3DQUICK.L
+16E0:3D77  saldIrIyor
+16E0:3D88  karSIdan geliyor
+16E0:3D99  Uzerimize atladI
+16E0:3DAA  bize saldIrIyor
+16E0:3DBB  geliyor
+16E0:3DCC  ocak
+16E0:3DD4  Subat
+16E0:3DDC  mart
+16E0:3DE4  nisan
+16E0:3DEC  mayIs
+16E0:3DF4  haziran
+16E0:3DFC  temmuz
+16E0:3E04  aGustos
+16E0:3E0C  eylUl
+16E0:3E14  ekim
+16E0:3E1C  kasIm
+16E0:3E24  aralIk
+16E0:3E2C  pazartesi
+16E0:3E36  salI
+16E0:3E40  CarSamba
+16E0:3E4A  perSembe
+16E0:3E54  cuma
+16E0:3E5E  cumartesi
+16E0:3E68  pazar
+16E0:3E74  
+
+ Su anda 
+16E0:3F14  T:CODE\3DSYS.L
+16E0:3F23  T:CODE\3DSYS.L
+16E0:3F32  T:CODE\3DSYS.L
+16E0:3F41  har?  
+16E0:3F51  T:CODE\3DSYS.L
+16E0:3F60  T:CODE\3DSYS.L
+16E0:3F6F  
+
+                                        
+16E0:3F9A   kuzeybatIsIndayIz.
+16E0:3FAE   gUneybatIsIndayIz.
+16E0:3FC2   batIsIndayIz.
+16E0:3FD1   kuzeydoGusundayIz.
+16E0:3FE5   gUneydoGusundayIz.
+16E0:3FF9   doGusundayIz.
+16E0:4008   kuzeyindeyiz.
+16E0:4017   gUneyindeyiz.
+16E0:4026   ortasInda bir yerdeyiz.
+16E0:4042  Cit mod'da seyv edemezsiniz!
+16E0:405F  CHEAT.CMP
+16E0:4069  1111111111111111111111111111111111111
+16E0:408F  bay dum
+16E0:4097  insanüstü
+16E0:40A1  Cit mod'a hoS geldiniz!
+16E0:40B9  Cit mod'dan CIkamazsInIz!
+16E0:40D3  oyundan cidden CIkIcan mI ?
+
+16E0:40F0  evvet
+16E0:40F6  hayyIr
+16E0:40FD  Cit mod'da seyv edemezsiniz!
+16E0:411A  T:CODE\3DSYS.L
+16E0:4129  Dosya açılamadı!
+16E0:413A  xd.rix
+16E0:4141  T:CODE\3DSYS.L
+16E0:4150  T:CODE\3DSYS.L
+16E0:415F  pcs%d
+16E0:4165  T:CODE\3DSYS.L
+16E0:4174  T:CODE\3DSYS.L
+16E0:4183  T:CODE\3DSYS.L
+16E0:4192  T:CODE\3DSYS.L
+16E0:41A1  T:CODE\3DSYS.L
+16E0:41B0  T:CODE\3DSYS.L
+16E0:41BF  T:CODE\3DSYS.L
+16E0:41CE  T:CODE\3DSYS.L
+16E0:41DD  T:CODE\3DSYS.L
+16E0:41EC  T:CODE\3DSYS.L
+16E0:41FB  Buf no:%d
+16E0:4205  T:CODE\3DSYS.L
+16E0:4214  T:CODE\3DSYS.L
+16E0:4223  Buf no:%d
+16E0:422D  T:CODE\3DSYS.L
+16E0:423C  T:CODE\3DSYS.L
+16E0:424B  pal3d.pal
+16E0:4255  T:CODE\3DSYS.L
+16E0:426C  pcmainth.cmp
+16E0:4279  trade.cmp
+16E0:4283  merdim.cmp
+16E0:428E  viewbuyu.cmp
+16E0:429B  viewpc.cmp
+16E0:42A6  itembank.cmp
+16E0:42B3  disdunya.cmp
+16E0:42C0  T:CODE\3DSYS.L
+16E0:42CF  Saklama dosyası açılma hatası, yer mi yoktur ne?
+16E0:4300  T:CODE\3DSYS.L
+16E0:430F  Saklama dosyası yükleme hatası, dosya yokmudur ne?
+16E0:4345  burada kamp yapmak Cok tehlikeli.
+16E0:4367  yorgun deGiliz ki...
+16E0:437C  kamp yapIyoruz...
+16E0:438E  nooluyor yaahuu!!
+16E0:43A0  huzur iCinde bir kamp geCirdik
+16E0:43BF  hoop kalkIyoruz...
+16E0:43D2  yaa tam da gidiyoduk yaa
+16E0:43EF  bir 
+16E0:43F9  ları
+16E0:4401  kleri
+16E0:4413  bastI
+16E0:441C  T:CODE\3DSYS.L
+16E0:442B  %d %s %s, %02d:%02d
+16E0:443F  T:CODE\3DSYS.L
+16E0:444E  erkek
+16E0:4454  dişi
+16E0:445F  adam seçin
+16E0:446E  savaş vecizesi!
+16E0:447E  eşya kullanımda!
+16E0:448F  boş yer yok!
+16E0:449C  bu eşyayı kullanıyor!
+16E0:44B2  sol: at   sağ: atma 
+16E0:44C7  T:CODE\3DSYS.L
+16E0:44D6  semtten CIkacak mIsInIz ?
+
+16E0:44F2  evet
+16E0:44F7  hayIr
+16E0:44FD  T:CODE\3DSYS.L
+16E0:450C  ISIk hIzIyla
+16E0:4519  ses hIzIyla
+16E0:4525  bayaGI hIzlI
+16E0:4532  araba hIzlI
+16E0:453E  yUrUme hIzlI
+16E0:454B  otobUs hIzlI
+16E0:4558  hafiften yavaS
+16E0:4567  daha yavaS
+16E0:4572  cengo yerkenki kadar yavaS 
+16E0:458E  OkUz kadar yavaS
+16E0:459F  kapI animasyon : %s
+16E0:45B3  yUrUme animasyon : %s
+16E0:45D1  savaş hızı : %s
+16E0:45E1  oyun mUziGi : %5s 
+16E0:45F4  açık
+16E0:45F9  kapalı
+16E0:4600  savaş müziGi : %5s
+16E0:4613  açık
+16E0:4618  kapalı
+16E0:461F  ses effektleri : %5s
+16E0:4634  açık
+16E0:4639  kapalı
+16E0:4640  zorluk derecesi : %5s
+16E0:4656  orta
+16E0:465B  kolay
+16E0:4661  görüntü : %5s
+16E0:466F  büyük
+16E0:4675  küçük
+16E0:467B  *.sav
+16E0:4681  T:CODE\3DSYS.L
+16E0:4690  Saklama dosyası yazılamıyor!
+16E0:46AD  [bosch]
+16E0:46B5   hiC kayItlI oyun yok!
+16E0:46CC  sakla%03u.sav
+16E0:46DA  yeni ismi girin : 
+16E0:46ED  T:CODE\3DSYS.L
+16E0:46FC  T:CODE\3DSYS.L
+16E0:470B  oyun gUzel bir Sekilde  %s
+ dosyasIna saklandI!
+16E0:473B  T:CODE\3DSYS.L
+16E0:474A  yok Saka yaptIm saklamadIm,
+vazgeCtim...
+16E0:4773  ben acIktIm ! Cabuk gidip yemek yiyelim.
+16E0:479C  aah!! acIktIm demiStim...elveda.
+16E0:47C1  T:CODE\3DSYS.L
+16E0:47D0  T:CODE\3DSYS.L
+16E0:47DF  zam1:
+m[h][1]:%d,i[h][1]:%d
+m[h][2]:%d,i[h][2]:%d
+m[h][0]:%d,i[h][0]:%d
+16E0:4827  zam2:
+m[h][1]:%d,i[h][1]:%d
+m[h][2]:%d,i[h][2]:%d
+m[h][0]:%d,i[h][0]:%d
+16E0:486F  zam3:
+m[h][1]:%d,i[h][1]:%d
+m[h][2]:%d,i[h][2]:%d
+m[h][0]:%d,i[h][0]:%d
+16E0:48F9  erkek
+16E0:4900  dişi
+16E0:4906  T:\CODE\CHARGEN.L
+16E0:4918  T:\CODE\CHARGEN.L
+16E0:492A  T:\CODE\CHARGEN.L
+16E0:4940  karakter  #%d
+16E0:494E  erkek
+16E0:4955  dişi
+16E0:495B  grp.dat
+16E0:4963  T:\CODE\CHARGEN.L
+16E0:4975  Karakter bilgisi GRP.DAT açılamıyor.
+16E0:499A  100000000000000000000000000000000000
+16E0:49BF  T:\CODE\CHARGEN.L
+16E0:49D1  Karakter bilgisi GRP.DAT açılamıyor.
+16E0:49F6  T:\CODE\CHARGEN.L
+16E0:4A08  T:\CODE\CHARGEN.L
+16E0:4A1A  T:\CODE\CHARGEN.L
+16E0:4A2C  T:\CODE\CHARGEN.L
+16E0:4A3E  T:\CODE\CHARGEN.L
+16E0:4A50  T:\CODE\CHARGEN.L
+16E0:4A62  palbat.pal
+16E0:4A6D  sematik.cmp
+16E0:4A79  karakter.cmp
+16E0:4B46  CODE\DEMOLAR.L
+16E0:4B55  CODE\DEMOLAR.L
+16E0:4B64  CODE\DEMOLAR.L
+16E0:4B73  CODE\DEMOLAR.L
+16E0:4B82  intro
+16E0:4B88  silicon
+16E0:4B90  acilisb.cmp
+16E0:4B9C  CODE\DEMOLAR.L
+16E0:4BAB  acilisa.pal
+16E0:4BB7  comp4a.pal
+16E0:4BC2  comp4a.cmp
+16E0:4BCD  CODE\DEMOLAR.L
+16E0:4BDC  comp4b.cmp
+16E0:4BE7  CODE\DEMOLAR.L
+16E0:4BF6  istb.pal
+16E0:4BFF  istb.cmp
+16E0:4C08  CODE\DEMOLAR.L
+16E0:4C17  CODE\DEMOLAR.L
+16E0:4C26  demo.amf
+16E0:4C2F  CODE\DEMOLAR.L
+16E0:4C3E  Müzik Dosyası bulunamadı: DEMO.AMF
+16E0:4C61  CODE\DEMOLAR.L
+16E0:4C70  Müzik icin hafıza yetmedi : DEMO.AMF
+16E0:4C95  acilisa.pal
+16E0:4CA1  xdintro.rix
+16E0:4CAD  acilisa.cmp
+16E0:4CB9  acilisb.cmp
+16E0:4CC5  CODE\DEMOLAR.L
+16E0:4CD4  CODE\DEMOLAR.L
+16E0:4CE3  CODE\DEMOLAR.L
+16E0:4CF2  CODE\DEMOLAR.L
+16E0:4D01      yeni oyuna başla
+16E0:4D16  eski oyuna devam et
+16E0:4D2A         çabuk başla
+16E0:4D3D             dos'a çık
+16E0:4D52  CODE\DEMOLAR.L
+16E0:4D61  bosfor savaSIndan elli billah kadar
+Onceydi. o zamanlar rIdvan ve
+adamlarI istanbul'a kol kanat gerer,
+Sehir halkI da magandasI, insanI,
+lavuGuyla barIS iCinde yaSardI. bizler 
+CocukluGumuzu bOyle temiz ve gUzel bir
+istanbul'da yaSadIk...
+16E0:4E50  
+
+
+taa ki yabgu adInda bir daGlI, rIdvan'In
+edirne'de olmasInI fIrsat bilip, binlerce
+adamIyla altaylar'dan
+gelip istanbul'u iSgal edene kadar...
+16E0:4EE2  Sehri iSgal eden ilkeller, tUm
+bUyUklerimizi kIlICtan geCirdikten
+sonra, eli ayaGI tutanlarI askere alIp,
+sakatlarI da kImIz yapmakta kullandIlar.
+bir gUn iCinde ne olduGunu anlayamadan,
+Sehrimizi alevler iCinde bulmuS, kendimiz
+de yabgu'nun esiri olmuStuk.
+16E0:4FE4  ertesi sabah rIdvan'In edirne'den
+dOndUGUnU ve halktan gOnUllUlerle 
+birlikte savaSa girdiGini gOrdUk.
+ordusunun baSInda kahramanca savaSan
+askerlerin yanInda son Care askere
+alInan eSekarIlarIndan biri de
+CarpISIyordu... barbaros!
+16E0:50CC  barbaros'un da yardImIyla savaSI tam 
+kazanmak Uzereyken, o korkunC Sey oldu.
+rIdvan'In en yakIn arkadaSI hUsnU,
+eski silah arkadaSI, kan kardeSi rIdvan'I
+arkadan bICakladI. allahtan barbaros
+komutayI aldI, zaferi biz kazandIk...
+16E0:51B2  bundan sonraki gUnlerimiz, barbaros
+OnderliGinde toplanma CabasI iCinde
+geCti, ancak bu kez, rIdvan'In yokluGunu
+fIrsat bilen eski dUSmanlar ortaya
+CIktI. bunlarIn baSInda da, cehalet
+yaydIGI iCin Sehir dISIna sUrUlen
+gavur imam vardI.
+16E0:529E  geri Cekilen yabgu, toparlanmak iCin
+ Once sUrgUndeki gavur imamla anlaStI,
+sonra da ihanet ederek, ona da arkadan
+saldIrdI ve bosfor savaSI dediGimiz
+deniz savaSI, bu ilkellerle,
+karanlIk yobazlar arasInda oldu.
+16E0:5373  
+
+sonunda yabgu OldU ve gavur imam
+periSan halde ortadan kayboldu.
+bundan sonraki yIllarImIz daha rahat
+iCinde geCti. hele gavur imam'In
+OldUGUnU OGrenince iyice rahatlamIStIk...
+16E0:5426  taa ki barbaros, dUn akSam yemeGinde
+hainin biri tarafIndan zehirlenene kadar.
+16E0:5475  CocuklarIm, OnUmUzde zor gUnler var...
+karanlIk gUnler... yeni rIdvanlara,
+yeni barbaroslara ihtiyacImIz
+var. sizde bu gUcU hissediyorum. iyiliGi
+koruyun ve kOtUlUkle savaSIn...
+iSte o zaman vecd ile bin secde eder,
+varsa taSIm...
+16E0:555C  sbd00.cmp
+16E0:5566  para00.snd
+16E0:5571  xdemo.rix
+16E0:557B  CODE\DEMOLAR.L
+16E0:558A  demo.amf
+16E0:5593  CODE\DEMOLAR.L
+16E0:55A2  Müzik dosyası bulunamadı: DEMO.AMF
+16E0:55C5  demo1.pal
+16E0:55CF  CODE\DEMOLAR.L
+16E0:55DE  Ses dosyası hatası!
+16E0:55F2  Sesler için yetersiz hafıza olabilir.
+16E0:5618  Ses dosyasıni okuyamıyom!
+16E0:5632  CODE\DEMOLAR.L
+16E0:5641  CODE\DEMOLAR.L
+16E0:5650  Ses dosyası hatası!
+16E0:5664  Sesler için yetersiz hafıza olabilir.
+16E0:568A  Ses dosyasını okuyamıyom!
+16E0:56A4  CODE\DEMOLAR.L
+16E0:56B3  CODE\DEMOLAR.L
+16E0:56C2  CODE\DEMOLAR.L
+16E0:56D1  CODE\DEMOLAR.L
+16E0:56E0  CODE\DEMOLAR.L
+16E0:56EF  xd.rix
+16E0:56F6  nIhahahaha!!! artIk istanbul'daki ÂbUtUn emellerimi gerCekleStirebilirim.
+16E0:5740  eski bir oyuna devam edecek misiniz?
+
+16E0:5766  evet
+16E0:576B  hayIr
+16E0:5775  xdson.rix
+16E0:577F  soon.cmp
+16E0:5788  devam.cmp
+16E0:5792  soon.pal
+16E0:579B  sooon.pal
+16E0:57A5  devam.pal
+16E0:57AF  CODE\DEMOLAR.L
+16E0:57BE  CODE\DEMOLAR.L
+16E0:57CD  CODE\DEMOLAR.L
+16E0:57DC  CODE\DEMOLAR.L
+16E0:57EB  kayIt yapIlacak dosyayI seCin : 
+16E0:580C  CODE\DEMOLAR.L
+16E0:581B  CODE\DEMOLAR.L
+16E0:582A  Müzik hafızası yetersiz!
+16E0:5843  CODE\DEMOLAR.L
+16E0:5852  Müzik dosyası bulunamadı!
+16E0:586C  thanx.doc
+16E0:5876  CODE\DEMOLAR.L
+16E0:5885  Oyun dosyalarından THANX.DOC bulunamadı...
+16E0:58B0  grup.pal
+16E0:58B9  grup.cmp
+16E0:58C2  CODE\DEMOLAR.L
+16E0:58D5  CODE\DEMOLAR.L
+16E0:58E4  İşte bu...
+16E0:58EF  CODE\DEMOLAR.L
+16E0:58FE  CODE\DEMOLAR.L
+16E0:590D  CODE\DEMOLAR.L
+16E0:591C  CODE\DEMOLAR.L
+16E0:592B  İSTANBUL EFSANELERİ I - Lale Savaşçıları, sorunsuz bitti!
+16E0:5965  otopark
+16E0:596D  mecidiyekOy
+16E0:5979  beSiktaS
+16E0:5982  eminOnU
+16E0:598A  UskUdar
+16E0:5992  Umraniye
+16E0:599B  kadIkOy
+16E0:59A3  beyoGlu
+16E0:59AB  ortakOy
+16E0:59B3  beyazIt
+16E0:59BB  fatih
+16E0:59C1  sarIyer
+16E0:59C9  isthar2.pal
+16E0:59D5  isthar.pal
+16E0:59E0  isthara.cmp
+16E0:59EC  CODE\DEMOLAR.L
+16E0:59FB  istharb.cmp
+16E0:5A07  CODE\DEMOLAR.L
+16E0:5A16  CODE\DEMOLAR.L
+16E0:5A25  isthar2.pal
+16E0:5A31  isthar.pal
+16E0:5A3F  CODE\DEMOLAR.L
+16E0:5A4E  trafik tIkalI, gidemiyoruz.
+16E0:5A6A  trafik tIkalI, gidemiyoruz.
+16E0:5A86  trafik tIkalI, gidemiyoruz.
+16E0:5AA2  trafik tIkalI, gidemiyoruz.
+16E0:5ABE  %s girecek miyiz? ...(e/h) 
+16E0:5ADA  CODE\DEMOLAR.L
+16E0:5AE9    Sehire mi? kanalizasyona mI? (s/k)
+16E0:5B0E    Sehire mi? kanalizasyona mI? (s/k)
+16E0:5B33    Sehire mi? kanalizasyona mI? (s/k)
+16E0:5B58    Sehire mi? kanalizasyona mI? (s/k)
+16E0:5B7D  CODE\DEMOLAR.L
+16E0:5B8C  buun.pur
+16E0:5B95  seq1
+16E0:5B9A  seq2
+16E0:5B9F  seq3
+16E0:5BA4  seq4
+16E0:5BA9  seq5
+16E0:5BAE  CODE\DEMOLAR.L
+16E0:5BC3  dolar
+16E0:5BCA  mark
+16E0:5BD1  kIvrIk
+16E0:5C53  %d, %d, %d, %d; 
+16E0:5C64  T:CODE\FRPOS.L
+16E0:5C73  T:CODE\FRPOS.L
+16E0:5C82  00000000
+16E0:5C8B  31313129
+16E0:5C94  silahCI
+16E0:5C9C  31313130
+16E0:5CA5  gerekli Seyler
+16E0:5CB4  31313128
+16E0:5CBD  yimmekCi
+16E0:5CC6  adam baSI %d $ tan yimmek
+ istermisiniz?
+
+16E0:5CF1  T:CODE\FRPOS.L
+16E0:5D00  evet
+16E0:5D05  hayIr
+16E0:5D0B  hey dostum bu para yetmez
+16E0:5D25  afiyet olsun
+16E0:5D32  31313127
+16E0:5D3B  havalI mehtap
+16E0:5D49  visite : %d
+
+16E0:5D56  evet
+16E0:5D5B  hayIr
+16E0:5D61  bu para yetmez!
+16E0:5D71  kim servis istiyor ?
+16E0:5D86  bu adam OlU deGil. baSkasInI seCin
+16E0:5DA9  mehtap, `arkadaSla biraz iSim var!'
+ diyip iCeri girdi. 
+16E0:5DE2  On dakika sonra...
+16E0:5DF5  oolum Cok iyi bee!
+16E0:5E08  iyi gUnler, hayatta baSarIlar. 
+ yine bekleriz
+16E0:5E37  31313131
+16E0:5E40  FRPOS name:%s, no:%d
+
+16E0:5E56  T:CODE\FRPOS.L
+16E0:5E65  T:CODE\FRPOS.L
+16E0:5E74  ..baslik:%d Tarz:%d..
+16E0:5E8A  T:CODE\FRPOS.L
+16E0:5E99  T:CODE\FRPOS.L
+16E0:5EA8  Komut no:%d, 
+16E0:5EB6  .eger olay %d->%s,
+16E0:5EC9  olmus
+16E0:5ECF  olmamis
+16E0:5ED7  .eger %d(akum)==%d,
+16E0:5EEB  T:CODE\FRPOS.L
+16E0:5EFA  olay[%d].
+16E0:5F04  T:CODE\FRPOS.L
+16E0:5F13  am1:
+m[h][1]:%d,i[h][1]:%d
+m[h][2]:%d,i[h][2]:%d
+m[h][0]:%d,i[h][0]:%d
+16E0:5F5A  am2:
+m[h][1]:%d,i[h][1]:%d
+m[h][2]:%d,i[h][2]:%d
+m[h][0]:%d,i[h][0]:%d
+16E0:5FA1  .kom1:%d, adamno:%d..
+16E0:5FB7  T:CODE\FRPOS.L
+16E0:5FC6  Biz size CD'yi sUrUcUden CIkarmayIn
+demedik mi? Cabuk onu tekrar
+sUrUcUye takIp bir tuSa basIn,
+yoksa aramIz bozulur haa...
+16E0:6042  CD'yi takmIyacaksanIz size
+animasyon falan yok!!!
+16E0:6074  FRPOS komutu: random(ilk deneme)..
+16E0:6097  adambul(0,%d,%d)=%d..
+16E0:60AD  bir adam seCiniz...
+16E0:60C1  bu adam baygIn. baSkasInI seCin
+16E0:60E1  T:CODE\FRPOS.L
+16E0:60F1  T:CODE\FRPOS.L
+16E0:6100  T:CODE\FRPOS.L
+16E0:610F  FRPOS komutu: wait(ilk deneme)..
+16E0:6133  T:CODE\FRPOS.L
+16E0:6142  vecize istemediGinden emin misin ?
+
+
+16E0:6167  I-Ih, istemiyom
+16E0:6177  ver bi daha seciim
+16E0:618A  kim OGrenecek ?
+16E0:619A  OGrenmezseniz OGrenmeyin bana ne...
+16E0:61BE  bu adam OlU yaa...
+16E0:61D1  bu adam kendinde diil ki...
+16E0:61ED  para kalmadI!!!
+16E0:61FD  %d %s
+16E0:6203  %d %s
+16E0:6209  T:CODE\FRPOS.L
+16E0:6218  hazine bulduk
+16E0:6226  T:CODE\FRPOS.L
+16E0:6235  ikon%d.cmp
+16E0:6240  .pal
+16E0:6245  T:CODE\FRPOS.L
+16E0:6254  T:CODE\FRPOS.L
+16E0:6263  T:CODE\FRPOS.L
+16E0:6272  T:CODE\FRPOS.L
+16E0:6281  T:CODE\FRPOS.L
+16E0:6290  Atla:%d=> 
+16E0:629B  .%d.
+16E0:62A0  counter=%d, komut=%d
+16E0:62B5  T:CODE\FRPOS.L
+16E0:62C4  T:CODE\FRPOS.L
+16E0:62D3  T:CODE\FRPOS.L
+16E0:62E4   kIvrIk
+16E0:62F1  %s%5d
+16E0:62F7  T:CODE\FRPOS.L
+16E0:6306  T:CODE\FRPOS.L
+16E0:633F  naneli
+16E0:634B  limonlu
+16E0:6357  ahududulu
+16E0:6363  muzlu
+16E0:636F  böğürtlenli
+16E0:637B  ananaslı
+16E0:6387  arpa aromalıne?
+16E0:63AD  kim?
+16E0:63BA  kim konuştu?
+16E0:63C7  ben mi?
+16E0:63D4  efenim?
+16E0:63E1  buyur?
+16E0:63EE  ne beee!
+16E0:63FB  nasıl yani?
+16E0:6408  pardon?
+16E0:642F  T:CODE\ISOSYS.L
+16E0:643F  T:CODE\ISOSYS.L
+16E0:644F  T:CODE\ISOSYS.L
+16E0:645F  T:CODE\ISOSYS.L
+16E0:646F  T:CODE\ISOSYS.L
+16E0:647F  anakes.cmp
+16E0:648A  yericon.cmp
+16E0:6496  tabletur.cmp
+16E0:64A3  karafa.cmp
+16E0:64AE  karafa.kor
+16E0:64BD  .cmp
+16E0:64C3  .cmp
+16E0:64CD  duvarica.cmp
+16E0:64DB  T:CODE\ISOSYS.L
+16E0:64EB  duvaricb.cmp
+16E0:64F9  T:CODE\ISOSYS.L
+16E0:6509  duvaric%d.cmp
+16E0:6518  T:CODE\ISOSYS.L
+16E0:6528  bu ciklet 
+16E0:6537  tip=%d
+16E0:653E  T:CODE\ISOSYS.L
+16E0:654E  İç hata:
+Loop-Surat animasyonu hatası.
+16E0:6575  T:CODE\ISOSYS.L
+16E0:6585  T:CODE\ISOSYS.L
+16E0:6595  Ses dosyası hatası!
+16E0:65A9  Sesler için yetersiz hafıza olabilir.
+16E0:65CF  Ses dosyasını okuyamıyom!
+16E0:65E9  vecize%.2d.pur
+16E0:65F8  fecize%.2d.pur
+16E0:6607  vecize%.2d.pur
+16E0:6616  fecize%.2d.pur
+16E0:6625  cevap%.2d.pur
+16E0:6633  fevap%.2d.pur
+16E0:6641  cevap%.2d.pur
+16E0:664F  fevap%.2d.pur
+16E0:665D  vuramam ki !!
+16E0:666B  T:CODE\ISOSYS.L
+16E0:667B  çok uzakta be anam !
+16E0:6690  T:CODE\ISOSYS.L
+16E0:66A0  kim uğraşacak şimdi yaa ?!
+16E0:66BB  T:CODE\ISOSYS.L
+16E0:66CD  Bu adam vecize okuyamaz!
+16E0:66E6  vecize bilmiyor!
+16E0:66F7  T:CODE\ISOSYS.L
+16E0:6707  bana mı dedin ?
+16E0:6717  yok abicim, ne haddimize
+16E0:6730  sana dedim, n'olcek ?
+16E0:6748  T:CODE\ISOSYS.L
+16E0:6758  %d/%d
+16E0:675E  %d/%d
+16E0:6773  erkek
+16E0:6779  dişi
+16E0:677E  %s %s
+16E0:678B  T:CODE\ISOSYS.L
+16E0:67A4  T:CODE\ISOSYS.L
+16E0:67B4  T:CODE\ISOSYS.L
+16E0:67C6  ......!!!
+16E0:67D0  ohh!
+16E0:67D6  geliyorum babacığım!
+16E0:67EB  ben gariban bir antenim!
+16E0:6805  bi korum bir de yer kor!
+16E0:681E  dokunmıyacaktın bana!
+16E0:6834  teslim, teslim!
+16E0:6844  İç hata!
+Böyle bir büyü bulunmamaktadır: %d
+16E0:6870  T:CODE\ISOSYS.L
+16E0:6880  palbat.pal
+16E0:688B  T:CODE\ISOSYS.L
+16E0:689B  desem de duyamaz ki!
+16E0:68B0  kim uğraşacak şimdi yaa ?!
+16E0:68CC  T:\CODE\GFLCODE\GFLALT.H
+16E0:68E5  T:\CODE\GFLCODE\GFLALT.H
+16E0:68FE  T:\CODE\GFLCODE\GFLALT.H
+16E0:6917  T:\CODE\GFLCODE\GFLALT.H
+16E0:6930  T:\CODE\GFLCODE\GFLSTR.H
+16E0:6949  GHD dosyası açılamadı.
+16E0:6960  T:\CODE\GFLCODE\GFLSTR.H
+16E0:6979  GHD dosyası okunamadı.
+16E0:6990  T:\CODE\GFLCODE\GFLSTR.H
+16E0:69A9  GFL versiyon hatası.
+16E0:69BE  T:\CODE\GFLCODE\GFLSTR.H
+16E0:69D7  Hafıza yetersiz. (GHD)
+16E0:69EE  T:\CODE\GFLCODE\GFLSTR.H
+16E0:6A07  T:\CODE\GFLCODE\GFLSTR.H
+16E0:6A20  GHD dosyası okunamadı.
+16E0:6A37  T:\CODE\GFLCODE\GFLSTR.H
+16E0:6A50  GHD dosyası okunamadı.
+16E0:6A67  T:\CODE\GFLCODE\GFLSTR.H
+16E0:6A80  GFL dosyası açılamadı.
+16E0:6A97  T:\CODE\GFLCODE\GFLSTR.H
+16E0:6AB0  Hafıza yetersiz. (GFL)
+16E0:6AC7  T:\CODE\GFLCODE\GFLSTR.H
+16E0:6AE0  T:\CODE\GFLCODE\GFLSTR.H
+16E0:6AF9  GFL dosyası okunamadı.
+16E0:6B10  T:\CODE\GFLCODE\GFLSTR.H
+16E0:6B29  T:\CODE\GFLCODE\GFLSTR.H
+16E0:6B42  T:\CODE\GFLCODE\GFLSTR.H
+16E0:6B5B  T:\CODE\GFLCODE\GFLSTR.H
+16E0:6B74  T:\CODE\GFLCODE\GFLMAIN.H
+16E0:6B8E  T:\CODE\GFLCODE\GFLMAIN.H
+16E0:6BA8  T:\CODE\GFLCODE\GFLMAIN.H
+16E0:6BC2  GFL dosyası okunamadı.
+16E0:6BD9  01234567.012
+16E0:6BE7  CODE\GFLCODE\GFL.C
+16E0:6BFA  İç hata!
+Dosya ismi yanlış.
+16E0:6C16  CODE\GFLCODE\GFL.C
+16E0:6C29  %s.GHD
+16E0:6C30  %s.GFL
+16E0:6C38  T:CODE\INTRFACE.L
+16E0:6C4A  T:CODE\INTRFACE.L
+16E0:6C5C  İç hata!
+initvoices->%s %d'ye yüklenirken %s!
+16E0:6C8A  dosya hatası
+16E0:6C97  EMS kalmadı
+16E0:6CA3  T:CODE\INTRFACE.L
+16E0:6CB5  T:CODE\INTRFACE.L
+16E0:6CC7  İç hata!
+%s %d'ye yüklenirken %s!
+16E0:6CE9  dosya hatasi
+16E0:6CF6  EMS kalmadi
+16E0:6D02  T:CODE\INTRFACE.L
+16E0:6D14  T:CODE\INTRFACE.L
+16E0:6D26  T:CODE\INTRFACE.L
+16E0:6D38  T:CODE\INTRFACE.L
+16E0:6D50  T:CODE\INTRFACE.L
+16E0:6D62  T:CODE\INTRFACE.L
+16E0:6D7C  T:ALTDUZEY\PERPEC.L
+16E0:6D90  len=%u < membuffer[%d]->length=%lu
+16E0:6DB3  T:ALTDUZEY\PERPEC.L
+16E0:6DC7  len=%u < membuffer[%d]->length=%lu
+16E0:6DEA  T:ALTDUZEY\PERPEC.L
+16E0:6E0E  T:ALTDUZEY\MEMMAN.L
+16E0:6E22  T:ALTDUZEY\MEMMAN.L
+16E0:6E36  T:ALTDUZEY\MEMMAN.L
+16E0:6E4A  y:%s,l:%lu
+16E0:6E59  CONV
+16E0:6E5E  T:ALTDUZEY\MEMMAN.L
+16E0:6E72  y:%s,l:%lu
+16E0:6E81  CONV
+16E0:6E86  T:ALTDUZEY\MEMMAN.L
+16E0:6E9A  Yetersiz Konvansiyonel DOS hafızası.
+NOT : TSR'leri kaldırın. 
+16E0:6ED9  T:ALTDUZEY\MEMMAN.L
+16E0:6EED  %s, satir %d'den cagrilmis
+16E0:6F08  +(BUG in MESLEN def)
+16E0:6F1D  T:ALTDUZEY\MEMMAN.L
+16E0:6F31  T:ALTDUZEY\MEMMAN.L
+16E0:6F45  T:ALTDUZEY\MEMMAN.L
+16E0:6F59  T:ALTDUZEY\MEMMAN.L
+16E0:6F6D  T:ALTDUZEY\MEMMAN.L
+16E0:6F81  T:ALTDUZEY\MEMMAN.L
+16E0:6F95  T:ALTDUZEY\MEMMAN.L
+16E0:6FA9  T:ALTDUZEY\MEMMAN.L
+16E0:6FBD  T:ALTDUZEY\MEMMAN.L
+16E0:6FD1  T:ALTDUZEY\MEMMAN.L
+16E0:6FE5  T:ALTDUZEY\MEMMAN.L
+16E0:6FF9  T:ALTDUZEY\MEMMAN.L
+16E0:700D  T:ALTDUZEY\MEMMAN.L
+16E0:7021  Once line: %d, file: %s'dan simdi de line: %d, file: %s
+16E0:7059   +(BUGG in MESLEN def)
+16E0:7070  T:ALTDUZEY\MEMMAN.L
+16E0:7084  _emsMapPages=%d, while mapping page:%d, 
+16E0:70AD  T:ALTDUZEY\MEMMAN.L
+16E0:70C1  1: %d, %d, %d, %d
+
+16E0:70D4  T:ALTDUZEY\MEMMAN.L
+16E0:70E8  T:ALTDUZEY\MEMMAN.L
+16E0:70FC  T:ALTDUZEY\MEMMAN.L
+16E0:7110  T:ALTDUZEY\MEMMAN.L
+16E0:7124  Yetersiz hafıza
+16E0:7134  T:ALTDUZEY\SYSTEMS.L
+16E0:7149  T:ALTDUZEY\SYSTEMS.L
+16E0:715E  İç hata!
+???'de sınırlar hatası! (_4bitp_copyshell)
+16E0:7192  T:ALTDUZEY\SYSTEMS.L
+16E0:71A7  T:ALTDUZEY\SYSTEMS.L
+16E0:71BC  T:ALTDUZEY\SYSTEMS.L
+16E0:71D1  T:ALTDUZEY\SYSTEMS.L
+16E0:71E6  T:ALTDUZEY\SYSTEMS.L
+16E0:71FB  T:ALTDUZEY\SYSTEMS.L
+16E0:7210  T:ALTDUZEY\SYSTEMS.L
+16E0:7225  T:ALTDUZEY\SYSTEMS.L
+16E0:723A  T:ALTDUZEY\SYSTEMS.L
+16E0:724F  T:ALTDUZEY\SYSTEMS.L
+16E0:7264  T:ALTDUZEY\SYSTEMS.L
+16E0:7279  T:ALTDUZEY\SYSTEMS.L
+16E0:728E  T:ALTDUZEY\SYSTEMS.L
+16E0:72A3  T:ALTDUZEY\SYSTEMS.L
+16E0:72B8  T:ALTDUZEY\SYSTEMS.L
+16E0:72CD  bulamadim!!!
+16E0:72DA  bulamadim!!!
+16E0:72E7  T:ALTDUZEY\SYSTEMS.L
+16E0:72FC  T:ALTDUZEY\SYSTEMS.L
+16E0:7326  T:ALTDUZEY\NGRAPHS.L
+16E0:733B  T:ALTDUZEY\NGRAPHS.L
+16E0:7350  İç hata!
+Sınır taşması: (%d,%d,%d,%d,%d) (RenkFiltre)
+16E0:7386  ML(?!)
+16E0:738D  T:ALTDUZEY\NGRAPHS.L
+16E0:73A2  T:ALTDUZEY\NGRAPHS.L
+16E0:73B7  T:ALTDUZEY\NGRAPHS.L
+16E0:73DE  İc hata!
+%d. kanaldan %d. s_membuffer'daki sample %lu frekans ve %lu volüm ile çalınayazdı.
+16E0:743A  T:ALTDUZEY\NSES.L
+16E0:744C  %s. ses dosyası bulunamadı! (playlongsample)
+16E0:7479  T:ALTDUZEY\NSES.L
+16E0:748B  T:ALTDUZEY\NSES.L
+16E0:749D  T:ALTDUZEY\NSES.L
+16E0:74AF  T:ALTDUZEY\NSES.L
+16E0:74C1  T:ALTDUZEY\NSES.L
+16E0:74D3  T:ALTDUZEY\NSES.L
+16E0:74E5  T:ALTDUZEY\NSES.L
+16E0:74F7  T:ALTDUZEY\NSES.L
+16E0:7512  ISTANBUL EFSANELERI I
+16E0:7529  ALTDUZEY\NKONTROL.L
+16E0:753D  ALTDUZEY\NKONTROL.L
+16E0:7551  Hımm, birisi bilgisayarı resetlemeye çalıştı galiba!
+16E0:7586  Tamam abi breyk, breyk, sitop !!!
+16E0:75A8  ALTDUZEY\NKONTROL.L
+16E0:75BC  İç hata!
+Blokun 'free handle'ı serbestlenmek isteniyor. (bufree)
+16E0:75FE  DDSRegisterFunction
+16E0:7612  DDSRegisterResource
+16E0:7626  DDSAccessFunction
+16E0:7638  DDSAccessResource
+16E0:764A  DDSRemoveFunction
+16E0:765C  DDSRemoveResource
+16E0:766E  MemAlloc
+16E0:7677  MemCalloc
+16E0:7681  MemRealloc
+16E0:768C  MemFree
+16E0:7AD7  cdiRegister
+16E0:85AA  ┴??┴┴??┴┴??┴┴??┴EMSAlloc
+16E0:85C3  EMSCopyTo
+16E0:86B4  EMSFree
+16E0:86C4  GetDSMITime
+16E0:86D0  LockDSMITime
+16E0:86DD  UnlockDSMITime
+16E0:8704  EMMXXXX0
+16E0:870D  EMSAlloc
+16E0:8716  EMSFree
+16E0:871E  EMSCopyTo
+16E0:8728  EMSCopyFrom
+16E0:8734  EMSCopy
+16E0:873C  EMSLock
+16E0:8744  EMSRestoreState
+16E0:8754  EMSSaveState
+16E0:8762  compteur:%lu, k:%lu, EMSav:%lu..
+
+16E0:8784  1: %d, %d, %d, %d
+
+16E0:8797  T:ALTDUZEY\FILEMAN.L
+16E0:87AC  T:ALTDUZEY\FILEMAN.L
+16E0:87C1  EMSLock->NULL!
+
+16E0:87D1  compteur:%lu, k:%lu, EMSav:%lu..
+
+16E0:87F3  1: %d, %d, %d, %d
+
+16E0:8806  T:ALTDUZEY\FILEMAN.L
+16E0:881B  EMSLock->NULL!
+
+16E0:882B  compteur:%lu, k:%lu, EMSav:%lu..
+
+16E0:884D  1: %d, %d, %d, %d
+
+16E0:8860  T:ALTDUZEY\FILEMAN.L
+16E0:8875  T:ALTDUZEY\FILEMAN.L
+16E0:888A  T:ALTDUZEY\FILEMAN.L
+16E0:889F  Resim Dosyası Bulunamadı!
+16E0:88B9  T:ALTDUZEY\FILEMAN.L
+16E0:88CE  T:ALTDUZEY\FILEMAN.L
+16E0:88E3  T:ALTDUZEY\FILEMAN.L
+16E0:88F8  T:ALTDUZEY\FILEMAN.L
+16E0:890D  T:ALTDUZEY\FILEMAN.L
+16E0:8922  T:ALTDUZEY\FILEMAN.L
+16E0:8937  T:ALTDUZEY\FILEMAN.L
+16E0:894C  Dosya açma hatası!
+16E0:895F  T:ALTDUZEY\FILEMAN.L
+16E0:8974  Yetersiz Konvansiyonel DOS hafızası
+16E0:8998  T:ALTDUZEY\FILEMAN.L
+16E0:89AD  Dosya açma hatası!
+16E0:89C0  T:ALTDUZEY\FILEMAN.L
+16E0:89DE  T:ALTDUZEY\OGRAPHS.L
+16E0:89F3  VGA kartı bulunamadı!
+16E0:8A09  T:ALTDUZEY\OGRAPHS.L
+16E0:8A1E  T:ALTDUZEY\OGRAPHS.L
+16E0:8C0C  Dosya okuma hatası! (compsizepicload)
+16E0:8C32  Resmi tutacak yeterli hafıza yok! (compsizepicload)
+16E0:8C66  Dosya açma hatası!!! (loadpal)
+16E0:8C85  Hafıza yetmez... (loadfile)
+16E0:8CA1  Müzik dosyası bulunamadi ya da hafıza yetersiz! (FRPOS_oku)
+16E0:8CDD  Çift hata: 
+16E0:8CE9  (%d) numaralı iç hata: (%s->%u)
+
+16E0:8D0F  
+%s
+
+16E0:8D14  Oyunda %d numaralı iç hata çıktı. (Çıkış: %s->%u)
+
+16E0:8D4C  %s
+
+
+16E0:8D51  
+Herhangi bir problemle karşılaştığınızda 'RAKS NEWMEDIA'yı ararsanız
+memnun oluruz...
+
+
+16E0:8DAA  TRDOS.DAT
+16E0:8DB7  Turkce Dos Fontu bulunamadi.
+
+16E0:8DDC  Ses.CFG
+16E0:8DE4  MCPSampleRealAddress
+16E0:8DF9  MCPEnableVirtualSamples
+16E0:8E11  MCPDisableVirtualSamples
+16E0:8E2A  GetEnvString
+16E0:8E37  SetVector
+16E0:8E41  SDIInitDevice
+16E0:8E4F  SDIStartOutput
+16E0:8E5E  SDIStopOutput
+16E0:8E6C  T:ALTDUZEY\OSES.L
+16E0:8E7E  T:ALTDUZEY\OSES.L
+16E0:8E90  T:ALTDUZEY\OSES.L
+16E0:8EA2  T:ALTDUZEY\OSES.L
+16E0:8EB4  T:ALTDUZEY\OSES.L
+16E0:8EC6  T:ALTDUZEY\OSES.L
+16E0:8F65  T:ALTDUZEY\GRTEXT.L
+16E0:8F79  T:ALTDUZEY\GRTEXT.L
+16E0:8FF2  DOMAIN
+16E0:8FF9  SING
+16E0:8FFE  OVERFLOW
+16E0:9007  UNDERFLOW
+16E0:9011  TLOSS
+16E0:9017  PLOSS
+16E0:9060  Domain
+16E0:9067  Denormal
+16E0:9070  Divide by 0
+16E0:907C  Overflow
+16E0:9085  Underflow
+16E0:908F  Partial loss of precision
+16E0:90A9  Stack fault
+16E0:90B5  Floating point error: %s.
+
+16E0:90E9  $tIÇû
+16E0:90EF  K ╝¥L
+16E0:90F5  ÇÓ7y├ACŞÁp+¿¡┼Øi@�Ğ¤
+16E0:910C  x┬Ë@ÓîÚÇ╔G║ô¿AÄÌ¨Ø¹Ù~¬QCÃæ
+16E0:9130  uüåuv╔HMÕ]=┼];ïŞÆZøù è
+16E0:9147  R`─%u
+16E0:915C  %s: %s error
+
+16E0:9176  5┬h!ó┌
+16E0:9188  atan2
+16E0:9191           !!!!!                  
+16E0:91B2  @@@@@@@@@@@@@@@
+16E0:91CB  @@@@@@@
+16E0:91EC  @@@@@@
+16E0:920C  @@@@ 
+16E0:94BE  .$$$
+16E0:94CA  (null)
+16E0:9545  COMPAQ
+16E0:954C  print scanf : floating point formats not linked
+
+16E0:95E6  [
+S
+╦"╦"╦"

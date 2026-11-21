@@ -1,0 +1,9 @@
+; lale.ini - port options (copy to lale.ini next to where you run lale)
+; Defaults reproduce the original IST.EXE exactly.
+
+; Play the game CD's audio tracks (track 2: intro/menu, track 3: story).
+; The 2005 IST.EXE never does this; see docs/DISC.md.
+cd_music = 0
+
+; The game CD as a cue/bin image (real dump, or build/cd/... from tools/cdsim.py)
+cd_image =

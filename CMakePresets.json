@@ -1,0 +1,24 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "windows",
+      "displayName": "Windows x64 (llvm-mingw + SDL3)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/windows",
+      "toolchainFile": "${sourceDir}/cmake/llvm-mingw.cmake",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+    },
+    {
+      "name": "macos",
+      "displayName": "macOS arm64 (Apple clang + Homebrew SDL3)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/macos",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo", "CMAKE_OSX_ARCHITECTURES": "arm64" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "windows", "configurePreset": "windows" },
+    { "name": "macos", "configurePreset": "macos" }
+  ]
+}

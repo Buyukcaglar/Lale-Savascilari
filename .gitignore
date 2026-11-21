@@ -1,0 +1,22 @@
+# Original game material (kept locally; see docs/PLAN.md "Inputs")
+/_references/
+/orig/
+/extracted/
+
+# Downloaded tooling (Ghidra, llvm-mingw, SDL3) - see tools/README.md
+/.tools/
+
+# Generated: build outputs, Ghidra project, regenerable drafts
+/build/
+/analysis/ghidra_*/
+/out/
+
+# Editor / OS noise
+.vs/
+.vscode/
+*.swp
+Thumbs.db
+.DS_Store
+/lale.ini
+/src/gen/
+/export/

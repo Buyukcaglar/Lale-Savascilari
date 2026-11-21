@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+"""
+pair.py - run one input script on both sides and compare (docs/VERIFY.md).
+
+    python -u tools/verify/pair.py <script.txt> <tag> [--only port|dbx] [--port 7777]
+
+Resets the game folders (out/verify/game_port, game_dbx: files the game
+writes - GRP.DAT, saves - restored from orig/), runs the port
+(out/windows/Lale64.exe -> out/verify/p_<tag>) and the original in DOSBox-X
+(dbx_replay.py -> out/verify/d_<tag>), then vcompare.py and a byte diff of
+the files the game wrote.
+"""
+import argparse
+import os
+import shutil
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.dirname(HERE))
+V = os.path.join(ROOT, 'out', 'verify')
+WRITTEN = ('GRP.DAT',)
+
+
+def reset(game):
+    for f in os.listdir(game):
+        if f.lower().endswith('.sav'):
+            os.remove(os.path.join(game, f))
+    for f in WRITTEN:
+        shutil.copyfile(os.path.join(ROOT, 'orig', f), os.path.join(game, f))
+
+
+def written(game):
+    out = {}
+    for f in os.listdir(game):
+        if f.lower().endswith('.sav') or f.upper() in WRITTEN:
+            out[f.upper()] = open(os.path.join(game, f), 'rb').read()
+    return out
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('script')
+    ap.add_argument('tag')
+    ap.add_argument('--only')
+    ap.add_argument('--port', type=int, default=7777)
+    ap.add_argument('--exe', default=os.path.join(ROOT, 'out', 'windows', 'Lale64.exe'))
+    a = ap.parse_args()
+    gp, gd = os.path.join(V, 'game_port'), os.path.join(V, 'game_dbx')
+    po, do = os.path.join(V, 'p_' + a.tag), os.path.join(V, 'd_' + a.tag)
+    if a.only != 'dbx':
+        reset(gp)
+        shutil.rmtree(po, ignore_errors=True)
+        os.makedirs(po)
+        subprocess.run([a.exe, '--game-dir', gp, '--script', a.script, '--out', po],
+                       timeout=1800, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if a.only != 'port':
+        reset(gd)
+        shutil.rmtree(do, ignore_errors=True)
+        with open(os.path.join(V, f'd_{a.tag}.log'), 'w') as log:
+            subprocess.run([sys.executable, '-u', os.path.join(HERE, 'dbx_replay.py'), a.script,
+                            '--out', do, '--game-dir', gd, '--port', str(a.port)],
+                           timeout=3600, stdout=log, stderr=subprocess.STDOUT)
+    subprocess.run([sys.executable, '-u', os.path.join(HERE, 'vcompare.py'), po, do], timeout=1800)
+    wp, wd = written(gp), written(gd)
+    for f in sorted(set(wp) | set(wd)):
+        x, y = wp.get(f), wd.get(f)
+        if x is None or y is None:
+            print(f'{f}: only on the {"original" if x is None else "port"} side')
+        elif x != y:
+            d = [i for i in range(min(len(x), len(y))) if x[i] != y[i]]
+            print(f'{f}: {len(d)} bytes differ (len {len(x)}/{len(y)}) at {[hex(i) for i in d[:16]]}')
+        else:
+            print(f'{f}: identical')
+
+
+if __name__ == '__main__':
+    main()

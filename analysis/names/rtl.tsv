@@ -1,0 +1,240 @@
+0000:0000	start	[high] Borland c0 startup (c0l): DOS version, PSP/env, stack/heap setup (_stklen 16E0:94C8=0x1000), BSS clear 962C-EA7C, SaveVectors, BIOS midnight flag, run #pragma startup table 95F0-9620, call main (0546:0001) with argc/argv/envp, exit()
+0000:0154	_cleanup	[high] c0: run #pragma exit table (16E0:9620-962C) in priority order
+0000:0167	_checknull	[high] c0: null-pointer check stub (empty RETF in this build)
+0000:0168	_terminate	[high] c0: INT 21h AH=4Ch terminate with exit code (bytes from 0171 are the INT 0 divide-error handler -> ErrorExit "Divide error")
+0000:017A	SaveVectors	[high] c0: save INT 0/4/5/6 vectors to 16E0:005B-0069 and hook INT 0 (divide error) to 0000:0171
+0000:01BD	_restorezero	[high] c0: restore INT 0/4/5/6 vectors saved by SaveVectors
+0000:01EA	c0_StartExit	[med] c0: walk startup/exit table (6-byte entries: callType,prio,addr) picking next entry by priority; init table ascending, exit table descending
+0000:01F6	c0_ExitLoop	[med] c0: body of the startup/exit table walker (xref from 0EF6 is a bogus mid-instruction hit)
+0000:0241	ErrorDisplay	[high] c0: write DS:DX (CX bytes) to stderr via INT 21h AH=40h
+0000:0249	abort	[high] abort(): print "Abnormal program termination" and _exit(3); 024F is ErrorExit (also tail of divide-error handler). Bytes 02FC/04B6 inside this range are the emulator install/uninstall startup/exit routines
+0000:04ED	_fpu_stub_ret2	[low] far stub returning AX=2, called by the 8087 emulator (1351:2751) during vector setup
+0000:04F1	__ldtrunc	[med] FP helper: clamp long double to float/double range (exp limits 0x407E/0x43FE); errno=ERANGE(0x22) on over/underflow; used by _scanrslt
+0000:0585	__ldtrunc_epilog	[low] epilogue fragment of __ldtrunc (RET 14h); xref from 0EF6 is bogus
+0000:058B	__realcvt_trim	[med] __realcvt helper: strip trailing zeros (for %g) and trailing '.'
+0000:05AE	__realcvt	[high] printf FP conversion (%e %f %g %E %G), reached via _realcvt vector 16E0:95E0 (thunk 0000:2F09); precision clamped to 40
+0000:0743	__scan_nop	[low] empty near function (scanf FP linkage stub)
+0000:0748	_scantod	[high] scanf/atof FP engine: parse number via get/unget callbacks: sign, digits, '.', exponent, INF/NAN; uses pow10
+0000:0A53	_scanpop	[med] scanf FP helper: discard ST(0)
+0000:0A5B	_scanrslt	[med] scanf FP helper: store scanned long double as float/double/long double (flags) via __ldtrunc
+0000:0AD8	__fp_far_nop	[low] empty far function (FP linkage stub)
+0000:0ADD	__xcvt	[med] FP -> decimal digit string conversion core used by __realcvt
+0000:0CE5	_fperror	[med] SIGFPE dispatcher: call signal() handler (16E0:EA60) or fprintf(stderr,"Floating point error: %s.") and abort()
+0000:0D94	__pow10	[high] near: 10^n as long double from tables 16E0:90D0-9142 (n<-4932 -> 0, n>4932 -> INF)
+0000:0E5D	pow10	[high] double pow10(int p)
+0000:0E68	matherr	[high] default matherr(): UNDERFLOW(4) -> retval 0, return 1; TLOSS(5) -> return 1; else 0
+0000:0E92	sin	[high] double sin(double): FSIN if _8087 (16E0:8FA0)>=3 else emulator INT 3Eh; huge |x| -> __matherr(TLOSS,"sin")
+0000:0EE2	__matherr	[high] math error dispatcher: struct exception, call matherr, else fprintf(stderr,"%s: %s error"), errno=EDOM(0x21)/ERANGE(0x22)
+0000:0F8B	cos	[high] double cos(double): FCOS if _8087>=3 else emulator; TLOSS -> __matherr
+0000:0FDB	atan2	[high] double atan2(double y,double x); atan2(0,0) -> __matherr(DOMAIN,"atan2")
+0000:1099	F_FTOL	[high] FTOL@: x87 ST(0) -> long with truncation (temporarily sets RC=chop)
+0000:10C5	atexit	[high] atexit(): register far func in table 16E0:E9D2 (max 32, count 16E0:918E)
+0000:10F2	_dos_getfileattr	[high] _dos_getfileattr(path, unsigned *attr) INT 21h 4300h
+0000:1112	_dos_setfileattr	[high] _dos_setfileattr(path, attr) INT 21h 4301h
+0000:112F	_dos_findfirst	[high] _dos_findfirst(path, attrib, struct find_t*): temporary DTA swap, INT 21h 4Eh
+0000:1162	_dos_findnext	[high] _dos_findnext(struct find_t*) INT 21h 4Fh
+0000:118F	_dos_getvect	[high] _dos_getvect(intno) INT 21h 35h
+0000:119E	_dos_setvect	[high] _dos_setvect(intno, handler) INT 21h 25h
+0000:11B0	__exit	[high] internal __exit(code, dontexit, quick): atexit funcs, _cleanup, (*_exitbuf)(), _restorezero, _checknull, (*_exitfopen)(), (*_exitopen)(), _terminate
+0000:1207	exit	[high] exit(status)
+0000:1216	_exit	[high] _exit(status) (quick: no atexit, no stream flush)
+0000:1242	F_LXMUL	[high] LXMUL@: 32x32 long multiply DX:AX * CX:BX (far)
+0000:1259	F_PCMP	[high] PCMP@: compare two huge pointers after normalisation (far)
+0000:127A	F_SCOPY	[high] SCOPY@: struct copy of CX bytes, far src -> far dst (RETF 8)
+0000:1296	getdate	[high] getdate(struct date*) INT 21h 2Ah
+0000:12A9	gettime	[high] gettime(struct time*) INT 21h 2Ch
+0000:12BC	getvect	[high] getvect(intno) INT 21h 35h
+0000:12CB	setvect	[high] setvect(intno, handler) INT 21h 25h
+0000:12DC	N_LDIV	[high] N_LDIV@: near-call shim into F_LDIV
+0000:12DF	F_LDIV	[high] LDIV@: signed 32-bit divide, truncating (shared core at 12F9, mode in CX)
+0000:12E6	F_LUDIV	[high] LUDIV@: unsigned 32-bit divide
+0000:12EB	N_LMOD	[high] N_LMOD@: near-call shim into F_LMOD
+0000:12EE	F_LMOD	[high] LMOD@: signed 32-bit modulo (sign of dividend)
+0000:12F6	F_LUMOD	[high] LUMOD@: unsigned 32-bit modulo
+0000:138A	N_LXLSH	[high] N_LXLSH@: near shim into F_LXLSH
+0000:138D	F_LXLSH	[high] LXLSH@: long shift left DX:AX by CL
+0000:13AE	F_LXRSH	[high] LXRSH@: long arithmetic shift right
+0000:13CE	F_LXURSH	[high] LXURSH@: long logical shift right
+0000:13EC	N_PADA	[high] N_PADA@: huge pointer (in memory at DX:AX) += long, normalised
+0000:1474	N_PADD	[high] N_PADD@: near shim into F_PADD
+0000:1477	F_PADD	[high] PADD@: huge pointer + long, normalised (offset 0-15)
+0000:14A6	F_PSUB	[high] PSUB@: huge pointer - long, normalised
+0000:14D4	N_PSBP	[high] N_PSBP@: huge pointer difference -> long
+0000:1502	F_SPUSH	[high] SPUSH@: copy CX-byte struct onto stack (struct passed by value)
+0000:1523	__IOerror	[high] __IOerror(code): set _doserrno (16E0:945E) and errno (16E0:007F) via _dosErrorToSV 16E0:9460; returns -1
+0000:155C	__DOSerror	[high] __DOSerror(code): __IOerror then return DOS code
+0000:156E	isatty	[high] isatty(fd) INT 21h 4400h, returns DX&0x80
+0000:157F	__longtoa	[high] __longtoa(val,buf,radix,maybeSigned,hexStyle): long -> ASCII (radix 2..36); core of itoa/ltoa/ultoa/printf
+0000:1601	__utoa	[high] __utoa(unsigned, buf): unsigned decimal -> string (used by __mkname)
+0000:1621	lseek	[high] lseek(fd, long off, whence) INT 21h 42h; clears O_EOF(0x200) in _openfd
+0000:164A	__mkname	[high] __mkname(num, prefix, buf): build "TMP<num>.$$$" (default buffer 16E0:EA52)
+0000:16A7	__tmpnam	[high] __tmpnam(buf, int *num): next nonexistent temp file name (probes with _dos_getfileattr)
+0000:16FE	N_LXMUL	[high] N_LXMUL@: near 32x32 long multiply
+0000:1715	N_PCMP	[high] N_PCMP@: near huge-pointer compare
+0000:1736	outport	[high] outport(port, int) OUT DX,AX
+0000:1742	outportb	[high] outportb(port, byte) OUT DX,AL
+0000:174E	outpw	[high] outpw(port, word), returns word
+0000:175A	outp	[high] outp(port, byte), returns byte
+0000:1768	srand	[high] srand(seed): seed lo (16E0:94C4) = seed, seed hi (16E0:94C6) = 0
+0000:1779	rand	[high] rand(): seed = seed*0x015A4E35 + 1 (32-bit at 16E0:94C4/94C6, initial 1); return (seed>>16)&0x7FFF
+0000:179F	_read	[high] _read(fd,buf,len) raw INT 21h 3Fh; EACCES if fd opened write-only
+0000:17CE	segread	[high] segread(struct SREGS*): store ES,CS,SS,DS
+0000:17EE	setdate	[high] setdate(struct date*) INT 21h 2Bh
+0000:1803	settime	[high] settime(struct time*) INT 21h 2Dh (code following at 1818 is _setupio)
+0000:1818	_setupio	[high] #pragma startup prio 2: init _openfd[]/_streams[] for handles 5.._nfile-1 (no Ghidra function)
+0000:18CE	stime	[high] stime(time_t*): unixtodos + setdate + settime
+0000:190E	time	[high] time(time_t*): getdate + gettime -> dostounix (tzset defaults EST5EDT)
+0000:1966	tell	[high] tell(fd) = lseek(fd, 0, SEEK_CUR)
+0000:197E	unlink	[high] unlink(path) INT 21h 41h
+0000:1996	__vp_hex4	[med] __vprinter helper: emit DX as 4 hex digits (%p)
+0000:199D	__vp_hex2	[med] __vprinter helper: emit AL as 2 hex digits
+0000:19A6	__vp_hexdigit	[med] __vprinter helper: nibble -> hex char (DAA trick) and STOSB
+0000:19AE	__vprinter	[high] __vprinter(putter, outP, fmt, args): Borland printf engine entry (80-byte local buffer)
+0000:19C8	__vp_strlen	[med] __vprinter helper: strlen of ES:DI
+0000:19D5	__vp_putc	[med] __vprinter helper: buffer one char, flush when 80 are queued
+0000:19DE	__vp_flush	[med] __vprinter helper: flush local buffer through putter callback; records error
+0000:1A12	__vprinter_body	[high] __vprinter main loop: '%' parsing, flags - + space # 0, width/precision/*, F N h l modifiers, d i o u x X c s p n e f g E G; "(null)" for NULL %s
+0000:1E6C	__vptr	[med] conio: (row,col) -> far video address (16E0:953F offset, 9541 segment)
+0000:1E91	__vram	[med] conio: copy cells to/from video RAM with CGA snow avoidance (port 3DAh) when 16E0:953E set
+0000:1F0B	_stpcpy	[high] stpcpy(dst,src) via strlen+memcpy, returns dst+len
+0000:1F3F	bioskey	[high] bioskey(cmd) INT 16h (cmd&1: 0 if no key, -1 if key code is 0)
+0000:1F64	calloc	[high] calloc(n,size): malloc(n*size) (fails if >64K) then setmem 0
+0000:1FC3	__cputn	[med] conio: write n chars to the text window (BEL/BS/LF/CR, wrap, scroll; direct video or BIOS)
+0000:210F	__crt_romcmp	[low] _crtinit helper: compare a string with ROM bytes (F000:FFEA vs "COMPAQ")
+0000:213C	__crt_egacheck	[low] _crtinit helper: INT 10h AH=12h BL=10h EGA presence test
+0000:214A	_VideoInt	[med] conio: INT 10h wrapper with mode-set special cases (C4350 = 0x40, cursor shape)
+0000:21CE	_c0crtinit	[med] #pragma startup prio 16: _crtinit(current mode) and read default text attribute (no Ghidra function)
+0000:21EB	_crtinit	[med] conio: initialise _video struct 16E0:9532-9543 (mode, rows, cols, graphics, snow, segment B000/B800)
+0000:22E5	__delay_nop	[low] empty near RET used as I/O delay by readtimer
+0000:22E6	readtimer	[med] read PIT channel 0 count (inverted)
+0000:2300	_initdelay	[med] #pragma startup prio 16: calibrate delay(): per-ms multiplier 16E0:957E = 0x4A9 or default 0x952 (no Ghidra function)
+0000:2321	delay	[high] delay(ms): busy-wait on PIT channel 0 counts
+0000:238E	__free_last	[med] farheap: release last block (shrink heap via brk)
+0000:23F1	__free_join	[med] farheap: free inner block, merge with neighbours
+0000:2462	__pull_free_block	[med] farheap: unlink block from free list
+0000:248B	__insert_free_block	[med] farheap: link block into free list (rover CS:2386)
+0000:24C2	farfree	[high] farfree(void far*) (= free() in large model); heap state in CS:2382-238C
+0000:24EB	__create_heap	[med] farheap: first allocation (sbrk, paragraph align)
+0000:254F	__extend_heap	[med] farheap: grow heap with sbrk for a new block
+0000:25A9	__allocate_split	[med] farheap: carve block from the end of a larger free block
+0000:25CC	malloc	[high] malloc(size_t): farmalloc with high word 0
+0000:25D6	farmalloc	[high] farmalloc(unsigned long): (n+19)>>4 paragraphs, first fit from rover, 4-byte header, 16-byte aligned
+0000:2653	__realloc_grow	[med] farrealloc helper: allocate new block, copy (MOVSW in 64K chunks), free old
+0000:26CF	__realloc_shrink	[med] farrealloc helper: split block in place
+0000:2733	realloc	[high] realloc(void*, size_t) -> farrealloc
+0000:273A	farrealloc	[high] farrealloc(void far*, unsigned long)
+0000:27B4	__brk_setblock	[med] heap: resize DOS program block via setblock in 64-paragraph steps
+0000:282A	__brk	[med] brk(): set heap top 16E0:008B/008D (checked against _heapbase/_heaptop)
+0000:2869	__sbrk	[med] sbrk(long incr): grow heap, return old break
+0000:28F7	farcalloc	[high] farcalloc(n,size): farmalloc + setmem in 0xFA00-byte chunks
+0000:2987	farcoreleft	[high] farcoreleft(): bytes between heap break and top, minus 16, paragraph-rounded
+0000:29D7	getch	[high] getch(): ungetch buffer (16E0:9584 flag, 9585 char) else INT 21h 07h
+0000:2A33	gettext	[high] gettext(l,t,r,b,buf)
+0000:2A89	puttext	[high] puttext(l,t,r,b,buf)
+0000:2ACC	harderr	[med] harderr(handler) wrapper
+0000:2ADE	hardresume	[med] hardresume(axret)
+0000:2AEC	hardretn	[med] hardretn(retn)
+0000:2B4E	__harderr_install	[low] install INT 24h ISR (0000:2AFA) with C handler 16E0:EA6A (flag EA64=0)
+0000:2B7A	_harderr	[med] _harderr(handler): INT 24h ISR with far handler 16E0:EA66 (flag EA64=1)
+0000:2BA6	_hardresume	[low] return from INT 24h ISR to DOS with AL=result (SP from 16E0:EA6E)
+0000:2BC1	_hardretn	[low] abort the DOS call from INT 24h: bdos(0x54), set CF and error code in caller frame
+0000:2C20	int86	[high] int86(intno, in, out) via segread + int86x
+0000:2C51	int86x	[high] int86x(intno, in, out, sregs): builds INT n / RETF thunk on stack (INT 25h/26h pop flags)
+0000:2CEA	intdos	[high] intdos(in, out)
+0000:2D18	intdosx	[high] intdosx(in, out, sregs) INT 21h; CF -> __IOerror
+0000:2D78	intr	[high] intr(intno, struct REGPACK*)
+0000:2DBE	__intr_iret	[low] IRET helper inside intr (restores flags)
+0000:2E1C	ioctl	[high] ioctl(fd, func, argdx, argcx) INT 21h 44h
+0000:2E37	__ioctl_frag	[low] mid-function fragment of ioctl (xref from 0EF6 is bogus)
+0000:2E45	kbhit	[high] kbhit(): ungetch pending or INT 21h 0Bh
+0000:2E57	movetext	[high] movetext(l,t,r,b,dl,dt)
+0000:2EF4	putch	[high] putch(c) -> __cputn(1)
+0000:2F09	__realcvt_thunk	[high] JMP [_realcvt 16E0:95E0] (= 0000:05AE)
+0000:2F0D	__scr_off2xy	[low] conio BIOS path: video offset -> (row,col)
+0000:2F45	__scr_gotoxy	[low] conio BIOS path: set cursor if changed, advance position
+0000:2F79	__scr_bioscopy	[low] conio BIOS path: copy cells via INT 10h AH=08h/09h
+0000:3043	__screenio	[low] conio: move count cells between buffer and screen (direct __vram or BIOS)
+0000:307F	__validxy	[low] conio: validate rectangle against screen size
+0000:30C2	__fillblank	[low] conio: fill row buffer with blanks in current attribute
+0000:30E4	__scroll	[med] conio: scroll window up/down (direct video or INT 10h 06h/07h)
+0000:3252	_setargv	[med] #pragma startup prio 16: parse PSP command tail into argv (no Ghidra function)
+0000:3377	setblock	[high] setblock(seg, newsize) INT 21h 4Ah, -1 on success else max size
+0000:3393	_setenvp	[med] #pragma startup prio 16: build environ[] (16E0:9596) from env block (no Ghidra function)
+0000:33EB	sound	[high] sound(freq): PIT ch2 divisor 1193181/freq, speaker on
+0000:3417	nosound	[high] nosound(): speaker off (port 61h)
+0000:341E	textmode	[high] textmode(mode) (-1 = LASTMODE) -> _crtinit, reset attribute
+0000:343D	__wherexy	[med] conio: get cursor position via INT 10h AH=03h
+0000:3469	atol	[high] atol(s): skip isspace (_ctype 16E0:9191), sign, decimal digits, no overflow check
+0000:34DE	atoi	[high] atoi(s) = (int)atol(s)
+0000:34EF	bdos	[high] bdos(dosfun, dosdx, dosal)
+0000:34FF	_chmod	[high] _chmod(path, func, attrib) INT 21h 43h
+0000:351C	close	[high] close(fd): range check vs _nfile, clear _openfd, _close
+0000:3544	_close	[high] _close(fd) INT 21h 3Eh
+0000:3562	eof	[high] eof(fd): O_EOF flag, device check, compare position with size
+0000:35D9	fclose	[high] fclose(fp): fflush, free buffer, close, delete temp file
+0000:3684	fflush	[high] fflush(fp) (NULL -> flushall)
+0000:3751	flushall	[high] flushall(): fflush every open stream, return count
+0000:3793	__getmode	[med] fopen helper: parse mode r/w/a, +, t/b -> open flags (default _fmode 16E0:9458 = O_TEXT); sets _exitfopen=_xfclose
+0000:384F	__openfp	[high] __openfp(fp,name,mode,share): open, isatty -> _F_TERM, setvbuf(512)
+0000:391E	__getfp	[high] __getfp(): find free FILE in _streams (16E0:929E, _nfile=20 entries of 20 bytes)
+0000:3968	fopen	[high] fopen(name, mode)
+0000:399D	fprintf	[high] fprintf(fp, fmt, ...)
+0000:39B9	__fread_n	[med] fread helper: bulk _read for whole buffer multiples, else per-char via _fgetc
+0000:3AAD	fread	[high] fread(ptr, size, n, fp)
+0000:3B3B	__nlcount	[med] ftell/fseek helper: count '\n' in buffer for text-mode position correction
+0000:3BBD	fseek	[high] fseek(fp, long, whence)
+0000:3C3D	ftell	[high] ftell(fp) (text mode: +1 per buffered '\n')
+0000:3C95	fwrite	[high] fwrite(ptr, size, n, fp)
+0000:3D20	__flushterm	[med] flush all streams that are _F_TERM|_F_LBUF before a terminal read
+0000:3D5E	__ffill	[med] fill FILE buffer via read(); sets _F_EOF/_F_ERR
+0000:3DD6	_fgetc	[high] _fgetc(fp): getc() slow path (level++ then fgetc)
+0000:3DEE	fgetc	[high] fgetc(fp): buffered read; unbuffered path reads 1 byte, skips '\r' in text mode
+0000:3EE8	getenv	[high] getenv(name) over environ (16E0:9596)
+0000:3F58	itoa	[high] itoa(int, buf, radix): signed only for radix 10
+0000:3F83	ultoa	[high] ultoa(unsigned long, buf, radix)
+0000:3FA0	ltoa	[high] ltoa(long, buf, radix): signed only for radix 10
+0000:3FC8	memccpy	[high] memccpy(dst, src, c, n)
+0000:4001	memcpy	[high] memcpy(dst, src, n) (word moves, forward)
+0000:4025	setmem	[high] setmem(dst, n, c)
+0000:4049	memset	[high] memset(dst, c, n) -> setmem
+0000:4068	__creat	[high] near _creat(attr, path) INT 21h 3Ch
+0000:4083	__trunc	[med] near: truncate file at current position (write 0 bytes)
+0000:4095	open	[high] open(path, oflag, pmode): O_CREAT/O_EXCL/O_TRUNC; device in O_BINARY -> raw mode via ioctl; sets _openfd
+0000:4204	_open	[high] _open(path, oflag) INT 21h 3Dh
+0000:4253	printf	[high] printf(fmt, ...) to stdout (16E0:92B2)
+0000:426E	_fputc	[high] _fputc(c, fp): putc() slow path
+0000:428A	fputc	[high] fputc(c, fp): buffered/unbuffered; text unbuffered '\n' -> "\r\n"; line-buffered flush on \n/\r; O_APPEND seek
+0000:441D	fputchar	[high] fputchar(c) = fputc(c, stdout)
+0000:4431	__fputn	[high] __fputn(fp, n, ptr): write n bytes (printf putter for streams)
+0000:4630	puts	[high] puts(s): s + '\n' to stdout
+0000:4688	read	[high] read(fd, buf, len): text mode strips '\r', stops at ^Z (seeks back, sets O_EOF)
+0000:4759	setvbuf	[high] setvbuf(fp, buf, type, size); sets _exitbuf=_xfflush; stdin/stdout buffered flags 16E0:959C/959E
+0000:4874	__strputn	[high] sprintf putter: memcpy into string and NUL-terminate
+0000:48B4	sprintf	[high] sprintf(buf, fmt, ...)
+0000:48D6	vsprintf	[high] vsprintf(buf, fmt, va_list)
+0000:48F7	strcat	[high] strcat(dst, src)
+0000:4936	strchr	[high] strchr(s, c)
+0000:4973	strcmp	[high] strcmp(a, b)
+0000:49A3	strcpy	[high] strcpy(dst, src)
+0000:49CC	strlen	[high] strlen(s) (NULL -> 0)
+0000:49EB	strncmp	[high] strncmp(a, b, n)
+0000:4A23	strncpy	[high] strncpy(dst, src, n), zero-pads
+0000:4A54	strrev	[high] strrev(s)
+0000:4A88	dostounix	[high] dostounix(struct date*, struct time*) -> time_t (calls tzset; adds timezone and DST hour)
+0000:4BB2	unixtodos	[high] unixtodos(time_t, struct date*, struct time*) (0x88F8 = 35064 h per 4 years, not a FILEMAN string)
+0000:4DB6	tzset	[high] tzset(): parse TZ env; defaults timezone=18000 (16E0:95CE), daylight=1 (95D2), tzname "EST"/"EDT"; also #pragma startup prio 30
+0000:4FA2	__isDST	[high] __isDST(hour, yday, month, year): US DST rule (April..October)
+0000:5081	write	[high] write(fd, buf, len): text mode '\n' -> "\r\n" via 128-byte buffer; O_APPEND seek
+0000:51D0	_write	[high] _write(fd, buf, len) INT 21h 40h; EACCES if read-only; sets O_CHANGED
+0000:520C	_xfclose	[high] exit hook: fclose all streams (_exitfopen)
+0000:5249	_xfflush	[high] exit hook: fflush the first 4 streams (_exitbuf)
+0000:5281	_fmemchr	[med] _fmemchr(s, c, n) (second, far-string library copy)
+0000:52A4	_fmemcpy	[med] _fmemcpy(dst, src, n) (no direct callers found)
+0000:52C8	_fsetmem	[low] internal setmem twin used by _fmemset
+0000:52EC	_fmemset	[med] _fmemset(dst, c, n)
+0000:530B	_fstrcat	[med] _fstrcat(dst, src)
+0000:534A	_fstrcmp	[med] _fstrcmp(a, b) (no direct callers found)
+0000:537A	_fstrcpy	[med] _fstrcpy(dst, src)
+0000:53A3	_fstrlen	[med] _fstrlen(s)
+0000:53C2	_fstrncpy	[med] _fstrncpy(dst, src, n), zero-pads
+0000:53F3	_fstrstr	[med] _fstrstr(s1, s2)

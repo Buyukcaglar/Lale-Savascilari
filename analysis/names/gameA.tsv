@@ -1,0 +1,157 @@
+122B:0014	o122B_ovr_trap	[low] Borland VROOMM overlay-manager core (INT 3Fh trap path): locate/load overlay, read code from EXE, apply fixups
+122B:0144	o122B_ovr_hook_int3f	[med] Save and replace the overlay interrupt vector (INT 21h AH=35h/25h with vector no. from overlay data seg)
+122B:0197	o122B_ovr_unhook	[low] Restore overlay interrupt vector / shutdown (calls 122B:0144)
+122B:01B9	o122B_ovr_open_exe	[low] Overlay manager: open the EXE (calls 122B:0267)
+122B:01C5	o122B_ovr_get_exe_path	[low] Overlay manager: DOS version check (INT 21h AH=30h) and locate program path
+122B:020A	o122B_ovr_find_exe	[low] Overlay manager: build EXE path from environment
+122B:0267	o122B_ovr_dos_open	[low] Overlay manager: INT 21h open file helper
+122B:028F	o122B_ovr_dos_close	[low] Overlay manager: INT 21h close helper
+122B:029F	o122B_ovr_read_header	[low] Overlay manager: read FBOV header from EXE
+122B:031F	o122B_ovr_load_segment	[low] Overlay manager: load one overlay (seek+read+fixup)
+122B:03EC	o122B_ovr_seek_read	[low] Overlay manager: lseek (4200h) + read (3Fh)
+122B:0425	o122B_ovr_fixup	[low] Overlay manager: apply overlay segment fixups
+122B:046A	o122B_ovr_fixup_one	[low] Overlay manager: single fixup helper
+122B:04F8	o122B_ovr_buffer_alloc	[low] Overlay manager: overlay buffer allocation
+122B:055E	o122B_ovr_evict	[low] Overlay manager: evict/age overlays in buffer
+122B:05A8	o122B_ovr_make_room	[low] Overlay manager: make room in overlay buffer
+122B:0623	o122B_ovr_helper_0623	[low] Overlay manager internal helper
+122B:063B	o122B_ovr_helper_063B	[low] Overlay manager internal helper
+122B:0676	o122B_ovr_helper_0676	[low] Overlay manager internal helper
+122B:0697	o122B_ovr_helper_0697	[low] Overlay manager internal helper
+122B:06B5	o122B_ovr_helper_06B5	[low] Overlay manager internal helper
+122B:06E8	o122B_ovr_helper_06E8	[low] Overlay manager internal helper
+122B:0739	o122B_ovr_helper_0739	[low] Overlay manager internal helper
+122B:0757	o122B_ovr_helper_0757	[low] Overlay manager internal helper
+122B:0763	o122B_ovr_helper_0763	[low] Overlay manager internal helper
+122B:0789	o122B_ovr_helper_0789	[low] Overlay manager internal helper
+122B:07A5	o122B_ovr_helper_07A5	[low] Overlay manager internal helper
+122B:07B1	o122B_ovr_helper_07B1	[low] Overlay manager internal helper
+122B:07FF	o122B_ovr_helper_07FF	[low] Overlay manager internal helper
+122B:0897	o122B_ovr_helper_0897	[low] Overlay manager internal helper (calls 05A8)
+122B:08EF	OvrInitEms	[med] Borland _OvrInitEms(handle, firstPage, pages): EMS overlay cache (INT 67h); called from main
+122B:0AB9	OvrInitExt	[med] Borland _OvrInitExt(start, length): XMS/extended-memory overlay cache (INT 2Fh 4300h/4310h, INT 15h)
+122B:0D8F	o122B_ems_detect	[med] Detect EMM ("EMMXXXX0" open + IOCTL 4400h/4407h, INT 67h AH=40h/46h/41h/42h)
+122B:0E41	o122B_ems_alloc	[low] EMS page allocate/map for overlay cache (INT 67h)
+122B:0EA6	o122B_ems_release	[low] EMS release (INT 67h)
+122B:0ED1	o122B_ext_detect	[low] XMS/extended memory detection (INT 21h 30h, INT 2Fh 43xx, INT 15h)
+122B:1081	o122B_ext_helper_1081	[low] Extended-memory overlay cache helper
+122B:1159	o122B_ext_helper_1159	[low] Extended-memory overlay cache helper
+122B:11AD	o122B_ext_copy	[low] Extended-memory block copy (INT 15h AH=87h style)
+2700:0000	q3d_free_view_buffers	[med] Free 3D-view buffers (far free with __FILE__ 3DQUICK.L), runs if option bit 0x20 set
+2700:00A8	q3d_blit_view	[med] Copy rendered 3D view buffer to the screen (graphics calls 0C7F)
+2700:0235	q3d_alloc_view_buffers	[med] Allocate 3D view buffers; fatal error on failure (3DQUICK.L)
+2700:02B0	q3d_project_a	[med] FP helper for table precalc A: project/scale value, 4x ftol
+2700:0328	q3d_precalc_table_a	[med] Startup precalc of perspective table A (369 x87 ops); called from main
+2700:0D1D	q3d_project_b	[med] FP helper for precalc B (4x ftol)
+2700:0DA8	q3d_precalc_table_b0	[low] Precalc perspective table (variant, 213 x87 ops); no direct caller found (pointer?)
+2700:15D7	q3d_precalc_table_b1	[med] Precalc perspective table (216 x87 ops); called from main
+2700:1E06	q3d_load_kor	[high] Load a .KOR coordinate file for a wall/texture set; version check "Kordinat dosyası versiyonu desteklenmiyor"
+2700:2413	q3d_precalc_table_c0	[low] Precalc perspective table (twin of 0DA8); no direct caller found
+2700:2C42	q3d_precalc_table_c1	[med] Precalc perspective table (twin of 15D7); called from main
+2700:3471	q3d_draw_strip_a	[low] Draw wall strip helper (called from 3969)
+2700:35FF	q3d_draw_strip_b	[low] Draw wall strip helper (called from 3969)
+2700:37EE	q3d_reset_kor	[low] Reset/free loaded .KOR data (called when a map loads)
+2700:3932	q3d_render_view	[med] Render whole first-person view: calls the 5 layer renderers 3CDD,43C9,4F55,56E0,58E2
+2700:3969	q3d_draw_cell_wall	[med] Draw one wall face from map cell; errors "Beklenmedik duvar!!!!; Harita offset: %d", "OrspUm[%d]"
+2700:3CDD	q3d_render_layer_far	[low] Render layer 1 (far row) of the view
+2700:43C9	q3d_render_layer_mid	[low] Render layer 2 of the view (largest)
+2700:4F55	q3d_render_layer_near	[low] Render layer 3 of the view
+2700:56E0	q3d_render_layer_side	[low] Render layer 4 of the view
+2700:58E2	q3d_render_layer_front	[low] Render layer 5 of the view
+2700:5E7F	q3d_debug_dump	[low] Debug: draw and wait for key (getch)
+2700:5F32	q3d_draw_automap	[med] Draw the map overview with "x:%d  y:%d" (called from explore loop)
+2700:624A	q3d_init_a	[low] Small init routine (no callers found; pointer/unused)
+2700:62EC	q3d_init_tables	[low] Init routine called from main after precalc
+2700:647B	q3d_anim_step_forward	[low] Step animation (one of 4 movement animations; LXMUL/LDIV interpolation)
+2700:69E2	q3d_anim_step_back	[low] Step animation variant
+2700:6F18	q3d_anim_turn_a	[low] Turn/slide animation (called via 80D0)
+2700:73D8	q3d_anim_turn_b	[low] Turn/slide animation (called via 80D0)
+2700:798C	q3d_anim_door	[low] Door/stair animation (called from s3d_try_move)
+2700:80D0	q3d_anim_dispatch	[low] Select and run animation 6F18/73D8
+2700:8197	q3d_anim_rotate_left	[low] Rotation animation using 08D0 blitters and x87 (30 ops)
+2700:8896	q3d_anim_rotate_right	[low] Rotation animation using 08D0 blitters and x87 (32 ops)
+2700:8FD4	q3d_wait_retrace	[low] Wait/sync helper (calls 09D4:0E4A)
+2700:9024	q3d_free_anim_buffer	[low] Free animation buffer (3DQUICK.L)
+2700:9078	q3d_shade_view	[low] Compute shading/darkness for view; uses rand() twice and x87
+303F:0000	s3d_try_move	[med] Try to move party (dx,dy,facing): wall/door checks on map cell, fires FRPOS events (type 3 leave, type 1 enter), animations
+303F:0715	s3d_random_view_effect	[low] Small random effect (rand) + blit view
+303F:07B6	s3d_redraw_view	[med] Redraw 3D view (switch on view mode, calls q3d render/anim); arg = force
+303F:0991	s3d_scan_cells	[low] Scan map cells around party (huge-pointer arithmetic)
+303F:0BDB	s3d_show_location	[high] "Şu anda <district>'ın kuzeybatısındayız" compass/location report window
+303F:0FFC	s3d_handle_key	[med] Keyboard command dispatcher of exploration (switch @1148): menus, camp, char screen, options, save, cheat mode "Cit mod"
+303F:189D	s3d_load_file_error	[low] Open/read helper with "Dosya açılamadı!" error
+303F:1927	s3d_load_district	[high] Load district map PCn (via table 16E0:2E31) and script PCSn; set size/start pos; load .KOR sets; rand() for 0xBBAB
+303F:23ED	s3d_debug_buffers	[low] Debug "Buf no:%d" memory-buffer check
+303F:2521	s3d_enter_view	[med] Set up exploration screen: pal3d.pal, panels, music, first view draw
+303F:276C	s3d_redraw_screen	[med] Redraw full exploration screen (view + panels)
+303F:27F7	s3d_draw_portrait	[low] Draw one party portrait/panel element
+303F:2C69	s3d_draw_party_panel	[med] Draw party status panel (HP "%3d" etc.); uses rand
+303F:392D	s3d_stub_392D	[low] Tiny function (10 insns)
+303F:394A	s3d_load_ui_images	[high] Load UI pictures pcmainth/trade/merdim/viewbuyu/viewpc/itembank/disdunya.cmp (called from main)
+303F:39FD	s3d_advance_clock	[low] Advance game time counters (no calls; used by camp, travel, explore loop)
+303F:3BF3	s3d_calc_daylight	[low] Compute day/night level from time (huge ptr reads)
+303F:3CCE	s3d_apply_daylight	[low] Apply day/night state (calls 3BF3)
+303F:3DD0	s3d_write_save	[high] Write save file (1524 bytes, 22 writes; layout in gameA.md)
+303F:3F95	s3d_read_save	[high] Read save file, reload district; "Saklama dosyası yükleme hatası"
+303F:4353	s3d_camp	[high] Camp/rest: "kamp yapIyoruz...", random interruptions (rand)
+303F:4A27	s3d_make_random_phrase	[low] Build random Turkish phrase from word lists with suffixes (rand)
+303F:4D22	s3d_draw_status_line	[med] Status line "%d %s %s, %02d:%02d" (date/time)
+303F:4F3A	s3d_character_screen	[med] Character/inventory screen (equip, drop "sol: at sağ: atma", gender, aphorism); many ISOSYS helpers
+303F:75EF	s3d_draw_portrait_hl	[low] Highlight portrait (calls 27F7)
+303F:765C	s3d_leave_district	[high] "semtten CIkacak mIsInIz?" then city-map travel (3C2D:2DE2) and reload
+303F:7A71	s3d_options_menu	[high] Options: savaş hızı, oyun müziği, savaş müziği, ses efektleri, zorluk, görüntü
+303F:7F2F	s3d_save_load_menu	[high] Save/load file menu (*.sav, sakla%03u.sav, "[bosch]", cheat-mode block)
+303F:837A	s3d_apply_sound_options	[low] Apply sound option (called from INTRFACE)
+303F:8524	s3d_explore_loop	[high] Main exploration loop: keys, clock, hunger, random encounters -> battle, events, death, ending
+39E5:0000	cg_random_gender	[low] Random gender pick (rand) and set "erkek"/"dişi"
+39E5:011F	cg_load_char_graphics	[low] Load chargen graphics/kor for current character (CHARGEN.L)
+39E5:035D	cg_roll_misc	[low] Random roll for a character attribute (rand) + ISOSYS helper 4595:0387
+39E5:0437	cg_roll_stats	[high] Roll character stats with random(n) (26 rand calls) into the 92-byte record
+39E5:0F4E	cg_draw_stats	[med] Draw rolled stats (itoa x14)
+39E5:164A	cg_draw_header	[med] Draw "karakter #%d" and gender
+39E5:1753	cg_draw_field_a	[low] Draw small chargen field
+39E5:17D2	cg_draw_field_b	[low] Draw small chargen field
+39E5:182E	cg_save_party	[high] Write GRP.DAT (4x(37+37) bytes + 4x92 bytes = 664)
+39E5:1932	cg_load_party	[high] Read GRP.DAT/GRPHAZIR.DAT (filename arg) and fill race names
+39E5:1A1A	cg_free_graphics	[low] Free chargen buffers
+39E5:1AA2	cg_main	[high] Character generation screen (palbat.pal, sematik.cmp, karakter.cmp); returns 0 on cancel
+3C2D:0000	demo_wait_key_or_delay	[low] Wait for key with timeout (kbhit/getch)
+3C2D:0086	demo_show_picture	[low] Load and display a picture via MEMMAN buffers
+3C2D:054D	demo_intro_menu	[high] Intro (acilis, istb, demo.amf) and main menu (yeni oyun/eski oyun/çabuk başla/dos'a çık); returns choice 1..6
+3C2D:1108	demo_story_scene	[med] Story slideshow ("taa ki yabgu ...", demo1.pal); FRPOS op 27
+3C2D:19F1	demo_game_over	[high] Party dead: villain laugh text, "eski bir oyuna devam edecek misiniz?"
+3C2D:1B76	demo_ending	[high] Ending sequence (soon.cmp, devam.cmp, xdson.rix)
+3C2D:1F32	demo_play_music	[med] Load/start AMF module (rand selects track); "Müzik dosyası bulunamadı!"
+3C2D:217C	demo_credits_exit	[high] THANX.DOC credits, grup.cmp, "İSTANBUL EFSANELERİ I - Lale Savaşçıları, sorunsuz bitti!"
+3C2D:2992	demo_palette_effect	[low] Palette/fade effect (0AC6:01AA x4)
+3C2D:2D3E	demo_stub_2D3E	[low] Small helper, no calls
+3C2D:2DE2	demo_city_map_travel	[high] Istanbul district map (isthar*.cmp): "trafik tIkalI", "%s girecek miyiz?", "Sehire mi? kanalizasyona mI?"
+3C2D:371E	demo_free_music	[low] Release music buffer (calls 09D4:05F4)
+3C2D:3790	demo_load_sounds	[med] Load sound samples buun.pur, seq1..seq5
+3FD1:0000	fr_run_event	[high] FRPOS interpreter: run the event of map cell (cell_off, trigger type); hard-coded shops by cell key; opcode switch @0911
+3FD1:20CE	fr_redraw	[med] Redraw view+daylight (FRPOS op 32)
+3FD1:2104	fr_teach_aphorism	[high] Teach a "vecize" (war aphorism) to a chosen character (FRPOS op 28)
+3FD1:23B2	fr_get_e5e3	[low] Return word 16E0:E5E3
+3FD1:23C0	fr_shop_draw_item	[low] Shop/loot screen: draw item list (called from 2F21)
+3FD1:27C4	fr_shop_draw_text	[low] Shop/loot screen text box
+3FD1:296A	fr_shop_draw_cursor	[low] Shop/loot screen cursor
+3FD1:2B1A	fr_shop_buy	[low] Shop purchase step: "para kalmadI!!!" (rand)
+3FD1:2D6F	fr_shop_draw_prices	[low] "%d %s" price lines
+3FD1:2F21	fr_item_exchange	[med] Shop / treasure / item exchange screen ("hazine bulduk"); FRPOS op 9 and hard-coded shops
+3FD1:46AA	fr_decode_text	[high] Decode script text in place: each byte += 10 (until NUL)
+3FD1:46E3	fr_find_character	[low] Find party member matching criteria ("adambul") for ops 22/23
+3FD1:4AAC	fr_flag_test	[high] Test event flag n in bit array 16E0:B9CA
+3FD1:4AD9	fr_flag_set	[high] Set event flag n
+3FD1:4B04	fr_flag_clear	[high] Clear event flag n
+3FD1:4B31	fr_flags_reset	[high] Clear all 256 event flags (32 bytes)
+3FD1:4B57	fr_show_icon	[high] Show portrait/icon "ikon%d.cmp"+".pal" in message window
+3FD1:4E42	fr_stub_4E42	[low] Small graphics helper (0C7F:0A51)
+3FD1:4E63	fr_fetch_byte	[high] Fetch next script byte at PC 16E0:BB98 from EMS-mapped PCS buffer
+3FD1:4ECB	fr_skip_commands	[high] Skip n script commands using the operand-length table ("Atla:%d")
+3FD1:509D	fr_fetch_string	[high] Read n bytes from script into new far buffer, NUL-terminate, decode (+10)
+3FD1:513F	fr_item_name	[low] Build item name string (" kIvrIk")
+3FD1:51C7	fr_draw_text_line	[low] Draw a text line (5784 font)
+3FD1:5285	fr_menu	[med] Up to 6-choice menu (FRPOS op 21), returns choice
+3FD1:5550	fr_draw_money	[med] Draw money/status "%s%5d"
+3FD1:57E8	fr_shop_load_gfx	[low] Shop graphics setup
+3FD1:5A7F	fr_shop_free_gfx	[low] Shop graphics release

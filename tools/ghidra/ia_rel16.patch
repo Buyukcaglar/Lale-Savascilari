@@ -1,0 +1,26 @@
+--- a/ia.sinc
++++ b/ia.sinc
+@@ -469,6 +469,7 @@
+   evexTType=(44,47)     # Used for Disp8*N (see table 2-35 in 325462-sdm-vol-1-2abcd-3abcd-4.pdf)
+   evexDisp8=(44,46)
+   reservedHigh=(48,63)  # reserved for future use
++  rmseg=(48,63) noflow  # Lale: real-mode code segment (paragraph) of this address, set by the loader
+ 
+ ;
+ 
+@@ -1147,8 +1148,13 @@
+ @endif
+ Mem: segWide^addr32 is $(LONGMODE_OFF) & addrsize=1 & segWide & highseg=1; addr32 	{ tmp:$(SIZE) = segWide + zext(addr32); export tmp; }
+ 
+-rel8: reloc is simm8        [ reloc=inst_next+simm8; ] { export *[ram]:$(SIZE) reloc; }
+-rel16: reloc is simm16      [ reloc=((inst_next >> 16) << 16) | ((inst_next + simm16) & 0xFFFF); ] { export *[ram]:$(SIZE) reloc; }
++# Lale: real-mode near branches wrap at the SEGMENT offset 0xFFFF.  inst_next is linear here,
++# so IP = (inst_next - segbase) mod 64K is recovered from rmseg (only segbase mod 64K matters)
++# and the target is inst_next - IP + ((IP + rel) mod 64K).  With rmseg=0: the old behaviour.
++rel8: reloc is protectedMode=0 & simm8 & rmseg [ reloc=inst_next - ((inst_next - ((rmseg << 4) & 0xFFFF)) & 0xFFFF) + ((((inst_next - ((rmseg << 4) & 0xFFFF)) & 0xFFFF) + simm8) & 0xFFFF); ] { export *[ram]:$(SIZE) reloc; }
++rel8: reloc is protectedMode=1 & simm8        [ reloc=inst_next+simm8; ] { export *[ram]:$(SIZE) reloc; }
++rel16: reloc is protectedMode=0 & simm16 & rmseg [ reloc=inst_next - ((inst_next - ((rmseg << 4) & 0xFFFF)) & 0xFFFF) + ((((inst_next - ((rmseg << 4) & 0xFFFF)) & 0xFFFF) + simm16) & 0xFFFF); ] { export *[ram]:$(SIZE) reloc; }
++rel16: reloc is protectedMode=1 & simm16      [ reloc=((inst_next >> 16) << 16) | ((inst_next + simm16) & 0xFFFF); ] { export *[ram]:$(SIZE) reloc; }
+ rel32: reloc is simm32      [ reloc=inst_next+simm32; ] { export *[ram]:$(SIZE) reloc; }
+ 
+ 

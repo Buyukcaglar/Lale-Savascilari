@@ -1,0 +1,206 @@
+0DF2:0000	DDSInit	[high] init DDS: allocs sentinel nodes of function/resource/driver lists (e77e/e77a/e782), magic e778=0xBEEF, registers DDS* and Mem* functions by name
+0DF2:011B	DDSRegisterFunction	[high] pascal (char far *name, void far *fn): append 12-byte {name,fn,next} node to function list; err 1 null arg, 2 not init, 7 duplicate, 12 no mem
+0DF2:0214	DDSRegisterResource	[high] pascal (name, ptr, size): append 16-byte {name,ptr,size,next} node to resource list
+0DF2:0316	DDSAccessFunction	[high] pascal (name, void far **out): look up function by name; 0 ok, 9 not found
+0DF2:03A5	DDSAccessResource	[high] pascal (name, **ptr, *size): look up resource by name; 0 ok, 10 not found
+0DF2:044A	DDSRemoveFunction	[high] pascal (name): unlink + free function node and its name copy
+0DF2:04F8	DDSRemoveResource	[high] pascal (name): unlink + free resource node
+0DF2:05A6	DDSGetDriverInfo	[med] pascal (filename, info far *): read 0x1C-byte "DS" header of a .DSD, return words hdr+0x0C (device id), hdr+0x1A (flags), hdr+0x12 (version)
+0DF2:0611	DDSLoadDriver	[med] pascal (filename, long far *handle): load MZ-like "DS" driver image, relocate, call entry(1,DDSAccessFunction,0), add 24-byte driver node
+0DF2:08EF	DDSRegisterDriver	[med] pascal (entry far, long far *handle): register a statically linked driver entry (same protocol, no file)
+0DF2:09EE	DDSUnloadDriver	[med] pascal (long handle): call driver entry(2,0,0), free image, unlink node; 6 unknown handle, 11 driver refused
+0DDF:000A	dsmiStrCpy	[high] pascal strcpy(dst,src) used by DDS
+0DDF:0025	dsmiStrNCpy	[high] pascal strncpy-like (dst,src,long n) using LOOPNZ
+0DDF:0044	dsmiStrCmp	[high] pascal string compare; returns 0 equal, else 1/-1/unsigned diff (only ==0 is meaningful)
+0DDF:007D	dsmiStrLen	[high] pascal strlen(far str)
+0DDF:0099	dsmiMemCpy	[high] pascal memcpy(dst,src,long n) word-wise + tail byte
+0DDF:00BB	dsmiMemCpy2	[med] identical copy of dsmiMemCpy (unreferenced)
+0DDF:00DD	dsmiMemCmp	[med] pascal memcmp(s1,s2,long n); quirk: JECXZ after REPE CMPSB reports equal if only the last byte differs
+0DDF:0105	dsmiMemSet	[high] pascal memset(dst, byte, long n)
+0DDF:011C	dsmiAbs	[high] pascal abs(int)
+0E9E:0000	MemAlloc	[high] DDS-registered "MemAlloc": pascal (void far **p, long size) -> farmalloc; 0 ok, 2 fail
+0E9E:003F	MemCalloc	[high] DDS-registered "MemCalloc": pascal (n, size, void far **p) -> farcalloc
+0E9E:0082	MemRealloc	[high] DDS-registered "MemRealloc": (void far **p, size) -> farrealloc
+0E9E:00DA	MemFree	[high] DDS-registered "MemFree": farfree(p); 3 if NULL
+0EAE:0006	cdiInit	[high] clear CDI channel map (7696) and device table (7796), magic 7694=0xDA, DDSRegisterFunction("cdiRegister")
+0EAE:0036	cdiRegister	[high] (CDIDEVICE far *dev): copy 0x68-byte function table into slot n, map 32 channels n*32..n*32+31 to it, return first channel
+0EAE:008F	cdiSetSample	[high] CDI slot 0x00 (ch, SAMPLEINFO far *)
+0EAE:00B8	cdiPlaySample	[high] CDI slot 0x04 (ch, freq, volume)
+0EAE:00E6	cdiStopChannel	[high] CDI slot 0x28 (ch)
+0EAE:010C	cdiSetVolume	[high] CDI slot 0x08 (ch, vol 0..64)
+0EAE:0136	cdiSetFrequency	[high] CDI slot 0x0C (ch, freq Hz)
+0EAE:0160	cdiSetLinearRate	[high] CDI slot 0x10 (ch, rate)
+0EAE:018A	cdiSetPosition	[high] CDI slot 0x14 (ch, pos)
+0EAE:01B4	cdiSetPanning	[high] CDI slot 0x18 (ch, pan -63..63, 100=surround)
+0EAE:01DE	cdiSetMasterVolume	[high] CDI slot 0x1C (ch selects device, vol)
+0EAE:0204	cdiMuteChannel	[high] CDI slot 0x20 (ch)
+0EAE:022A	cdiUnmuteChannel	[high] CDI slot 0x24 (ch)
+0EAE:0250	cdiMuteAll	[high] CDI slot 0x2C
+0EAE:0272	cdiUnmuteAll	[high] CDI slot 0x30
+0EAE:0294	cdiDownloadSample	[high] CDI slot 0x34 (ch, sample far*, sampletag far*, length)
+0EAE:02C2	cdiUnloadAll	[high] CDI slot 0x3C
+0EAE:02E4	cdiUnloadSample	[high] CDI slot 0x38 (ch, sampletag)
+0EAE:030A	cdiGetVolume	[high] CDI slot 0x40 (ch)
+0EAE:0330	cdiGetFrequency	[high] CDI slot 0x44 (ch)
+0EAE:0356	cdiGetPosition	[high] CDI slot 0x48 (ch)
+0EAE:037C	cdiGetPanning	[high] CDI slot 0x4C (ch)
+0EAE:03A2	cdiGetSample	[high] CDI slot 0x50 (ch)
+0EAE:03C8	cdiSetupChannels	[high] CDI slot 0x54 (ch, count)
+0EAE:03EE	cdiGetChannelStatus	[high] CDI slot 0x58 (ch)
+0EAE:0414	cdiPoll	[high] CDI slot 0x5C (ch); PUSHAD/POPAD around call; used by NSES 40 Hz timer routine
+0EAE:043A	cdiGetStatus	[med] CDI slot 0x64 (ch, arg) (name from GUS driver symbol order)
+0EAE:0460	cdiSetEffect	[med] CDI slot 0x60 (ch, a, b)
+0EF6:039B	ampScaleVolume	[high] (ch, vol): vol * trackVolume[ch](8571) >> 6; returns EAX
+0EF6:03BE	ampCmdPanning	[high] row effect 0x97: clamp -63..63 (100 kept), ampSetPanning
+0EF6:03F2	ampCmdNoteCut	[high] row effect 0x94: arm cut (tick cmd 0x14)
+0EF6:0402	ampCmdNoteDelay	[high] row effect 0x93: arm delayed note (consumes following note entry)
+0EF6:0442	ampCmdFinePorta	[high] row effect 0x92: period += (signed param)<<4 once, set freq
+0EF6:04A2	ampCmdFineVolSlide	[high] row effect 0x91: volume += signed param once (clamp 0..64)
+0EF6:04DD	ampCmdSampleOffset	[high] row effect 0x90: cdiSetPosition(param<<8, clamped to sample length), 0 = reuse last
+0EF6:0521	ampCmdRetrig	[high] row effect 0x8F: arm retrigger every param ticks
+0EF6:0535	ampCmdSync	[high] row effect 0x8E: store sync byte (7c67) read by ampGetSync
+0EF6:053D	ampCmdVibratoVolSlide	[high] row effect 0x8B
+0EF6:054D	ampCmdTonePortaVolSlide	[high] row effect 0x8A
+0EF6:055D	ampCmdTremolo	[med] row effect 0x87 (OpenMPT calls it tremor; AMP implements sine tremolo): speed/depth nibbles with memory
+0EF6:059F	ampCmdVibrato	[high] row effect 0x89: speed/depth nibbles with memory
+0EF6:05D0	ampCmdArpeggio	[high] row effect 0x88: precompute base/+x/+y frequencies via 2^(n/12) table
+0EF6:0642	ampCmdTonePorta	[high] row effect 0x86: target period from following note, speed memory
+0EF6:06C7	ampCmdPortamento	[high] row effect 0x84: signed slide (0x80 = repeat last, reversed sign), memory
+0EF6:06FA	ampCmdExtraFinePorta	[med] row effect 0x96: arms tick cmd 0x16 (period += param every non-zero tick)
+0EF6:070E	ampCmdVolumeSlide	[high] row effect 0x82: arm per-tick volume slide
+0EF6:071E	ampCmdSetVolume	[high] row effect 0x83
+0EF6:0743	ampCmdPositionJump	[high] row effect 0x8D: jump to order param-1 (backward only if loop option)
+0EF6:076E	ampCmdPatternBreak	[high] row effect 0x8C: set break flag (param ignored, always row 0)
+0EF6:0774	ampCmdSetSpeed	[high] row effect 0x81: ticks per row (0 ignored)
+0EF6:0786	ampCmdSetTempo	[high] row effect 0x95: BPM; tickHz = BPM*50/125 (integer)
+0EF6:07A7	ampCmdInstrument	[high] row entry 0x80: load instrument into channel SAMPLEINFO (8231), cdiSetSample, reset volume
+0EF6:086A	ampDoCommand	[high] dispatch row effect (cmd&0x7F) through jump table cs:036B (24 entries; index 0x18 accepted but out of table)
+0EF6:088D	ampPlayNote	[high] row note entry: note 0 = stop, 0x7F = keep note; freq = c2spd*semitone[note]>>10, cdiPlaySample unless track paused
+0EF6:0955	ampReadTrackRow	[high] (bx=track) consume all 3-byte track entries with row<=current row, then refresh freq/volume
+0EF6:0A16	ampNextPattern	[high] load order entry (0x82 bytes) for current order; stop or loop at end
+0EF6:0A71	ampTickVolumeSlide	[high] tick routine cmd 2 (also used by 0x8A/0x8B)
+0EF6:0AA1	ampTickExtraFinePorta	[med] tick routine cmd 0x16: period += param
+0EF6:0AF7	ampTickPortamento	[high] tick routine cmd 4: period += param<<4, clamp 100..0xD5FF
+0EF6:0B63	ampTickTonePorta	[high] tick routine cmd 6
+0EF6:0BD2	ampTickArpeggio	[high] tick routine cmd 8: freq[tick%3]
+0EF6:0BFB	ampTickVibrato	[high] tick routine cmd 9: sine table cs:02CB, depth*sin>>7 on period
+0EF6:0C76	ampTickTremolo	[med] tick routine cmd 7: depth*sin>>10 on volume
+0EF6:0CE6	ampTickTonePortaVolSlide	[high] tick routine cmd 0x0A
+0EF6:0CEF	ampTickVibratoVolSlide	[high] tick routine cmd 0x0B
+0EF6:0CF8	ampTickRetrig	[high] tick routine cmd 0x0F: cdiSetPosition(0) when tick % param == 0
+0EF6:0D18	ampTickNoteDelay	[high] tick routine cmd 0x13: trigger stored note when tick == param
+0EF6:0DAC	ampTickNoteCut	[high] tick routine cmd 0x14: volume 0 when tick == param
+0EF6:0E00	ampDoTickEffects	[high] (bx=track) look up cmd in table cs:0DD0 (12 entries, tick 0 uses only arpeggio/retrig at cs:0DF8)
+0EF6:0E3F	ampIncTrackTicks	[high] saturating per-track tick counter (+0x0B)
+0EF6:0E56	ampTick	[high] one player tick: tick++, on speed wrap read next row/order, then tick effects for all tracks
+0EF6:0ED2	ampPoll	[high] catch-up loop: while (GetDSMITime-last) > ampGetTickLength: ampTick, last += len
+0EF6:0F4C	ampInterrupt	[high] ISR-style (IRET) entry: switch to private stack DGROUP:7BE4, call ampPoll; called from NSES 100 Hz timer routine
+0EF6:0F8C	ampInit	[high] (long options): clear state, DDSAccessFunction("MCPSampleRealAddress"), tickHz=50, track volumes 0x40
+0EF6:1014	ampClose	[high] clear initialized flag
+0EF6:1032	ampPlayRange	[med] (module far*, startOrder, endOrder, options): copy MODULE header to 7BE8, set tempo/speed/pans, download samples via cdiDownloadSample, start (Ghidra: FUN_0000_ff92)
+0EF6:121F	ampPlayModule	[high] (module, options): ampPlayRange(0, orderCount)
+0EF6:125A	ampPlayPattern	[med] (module, order, options): ampPlayRange(order, order)
+0EF6:1296	ampStopModule	[high] stop all tracks, cdiUnloadSample each instrument
+0EF6:12FE	ampPauseModule	[high] pause all tracks (status bit1)
+0EF6:1338	ampResumeModule	[high]
+0EF6:1372	ampGetModuleStatus	[high] returns status byte 7c50 (bit0 playing, bit1 paused)
+0EF6:138A	ampGetTrackStatus	[high] (track) returns track flags
+0EF6:13B9	ampPauseTrack	[high] (track) flag bit1 + cdiMuteChannel
+0EF6:1407	ampResumeTrack	[high] (track) cdiUnmuteChannel + clear bit1
+0EF6:1458	ampGetPattern	[high] current order index
+0EF6:146F	ampGetRow	[high] last processed row
+0EF6:1484	ampGetSync	[high] read and clear sync byte (effect 0x8E)
+0EF6:14A0	ampGetTempo	[high] AL=speed AH=BPM
+0EF6:14B9	ampSetTempo	[high] (AL=speed, AH=BPM; 0 = unchanged)
+0EF6:14F6	ampGetTrackData	[high] (track) fill 10-byte TRACKDATA at DGROUP:7C44 and return far ptr
+0EF6:1577	ampBreakPattern	[high] (+1/-1) skip to next/previous order
+0EF6:15B9	ampGetTickLength	[high] 10000 / tickHz (integer) in DSMI time units (0.1 ms), DX:AX
+0EF6:15E5	ampSetPanning	[high] (track, pan) store and cdiSetPanning
+0EF6:1625	ampSetTrackVolume	[med] (track or -1 for all, vol 0..64) -> table 8571 (DSMI ampSetMasterVolume)
+105B:0009	ampLinkTracks	[high] replace order-table track numbers by far pointers into module track table
+105B:008A	ampLoadAMF	[high] AMF reader (versions 1,8,9,10..14) from open handle into MODULE; tracks/samples allocated, large samples (>1 KB) moved to EMS via EMSAlloc/EMSCopyTo
+105B:07F3	ampLoadModule	[high] pascal (filename, options, MODULE far **out): alloc 0x5C MODULE, open, check "AMF", ampLoadAMF, record file size
+10EF:0036	tsSetPIT	[high] near, AX = PIT ch0 divisor (mode 3, port 43h=0x36, 40h lo/hi)
+10EF:0048	tsTimerISR	[high] INT 08h handler: EOI first, STI, for each active slot acc+=step, call routine (PUSHF+CALLF) on carry
+10EF:007D	tsInit	[high] Timer Service v2.0 init: hook INT 08, slot 0 = old BIOS handler with rate 0xFFFF, master rate 0xFFFF
+10EF:00DF	tsClose	[high] restore PIT divisor and INT 08 vector
+10EF:0110	tsChangeRoutine	[high] pascal (slot, rate): set slot rate, lower master PIT divisor if needed, recompute all steps
+10EF:0178	tsAddRoutine	[high] pascal (void far *isr, rate divisor): allocate slot 1..15, returns slot or -2
+10EF:0206	tsRemoveRoutine	[high] pascal (slot)
+10EF:0263	tsSetTimerRate	[high] pascal (divisor): reprogram PIT, recompute steps
+10EF:02B5	tsGetTimerRate	[high] returns master divisor 86b2
+111B:0003	ampFreeModule	[high] pascal (MODULE far*): free orders, instrument samples (EMS ones via DDS "EMSFree"), instruments, tracks (dedup)
+1134:000E	emsInit	[high] INT 67h 40/41/46: require EMS 4.0, store page frame
+1134:0049	emsAllocPages	[high] pascal (pages): INT 67h/43, single global handle 86c0
+1134:007A	emsMapPage	[high] pascal (logical, physical 0..3): INT 67h/44
+1134:00AC	emsSavePageMap	[high] INT 67h/47
+1134:00BA	emsRestorePageMap	[high] INT 67h/48
+1134:00C8	emsGetFreePages	[high] INT 67h/42
+1134:00DC	emsFreeHandle	[high] INT 67h/45
+1134:00F6	emsGetPageFrame	[high] returns page-frame segment
+1134:00FF	emsMoveMemory	[high] pascal (far *moveStruct): INT 67h/57
+1145:0004	dsmiTimeInit	[high] (long step): reset DSMI time, register GetDSMITime/LockDSMITime/UnlockDSMITime with DDS (game passes step 100)
+1145:005E	GetDSMITime	[high] DX:AX = DSMI time (0.1 ms units) or the locked snapshot
+1145:007F	dsmiTimeAdvance	[med] far proc: time += step (unreferenced twin of the ISR)
+1145:0096	dsmiTimeISR	[high] IRET routine added to Timer Service at 100 Hz: time += step
+1145:00BD	LockDSMITime	[high] snapshot time, nesting counter e796
+1145:00DE	UnlockDSMITime	[high]
+1154:0001	emsFindBlock	[med] find EMS heap block by handle in list 86f0
+1154:0053	emsNewBlockDesc	[med] get free 18-byte block descriptor, grow table by 128
+1154:0100	emsClearDesc	[low] *p = 0
+1154:010D	emsHeapInit	[med] (pages wanted): detect EMM driver, emsInit, allocate pages, register EMSAlloc/EMSFree/EMSCopyTo/EMSCopyFrom/EMSCopy/EMSLock/EMSRestoreState/EMSSaveState
+1154:03A5	emsHeapClose	[med] free EMS, DDSRemoveFunction all EMS* names
+1154:0410	EMSAlloc	[med] DDS "EMSAlloc": allocate block in EMS heap, returns handle
+1154:061B	EMSFree	[med] DDS "EMSFree"
+1154:0688	EMSLock	[med] DDS "EMSLock": map block region into page frame, return far ptr
+1154:07F4	EMSLockRegion	[low] variant of EMSLock used by MEMMAN (09D4:0BB4)
+1154:0963	EMSCopyTo	[med] DDS "EMSCopyTo": conventional -> EMS via INT 67h/57
+1154:0A0D	EMSCopyFrom	[med] DDS "EMSCopyFrom"
+1154:0AB7	EMSCopy	[med] DDS "EMSCopy": EMS -> EMS
+1154:0BAB	EMSSaveState	[med] DDS "EMSSaveState": save page map (used around cdiPoll in 40 Hz ISR)
+1154:0BF4	EMSRestoreState	[med] DDS "EMSRestoreState"
+1154:0C4D	EMSHeapAvail	[low] walk block list, returns free amount (called by MEMMAN 09D4:044C)
+1154:0D52	emsInt67	[low] bare INT 67h stub
+2599:0018	asm_blit_scaled_key_flip	[high] 386: scaled (16.16) transparent blit, optional horizontal mirror (flags bit0); work vars in CS:0000-0017; called by 0AC6:0EE8
+2599:0144	asm_blit_scaled_key	[med] 386: scaled transparent blit without flip (key at [bp+28h]); unreferenced
+2599:0234	asm_span_scaled_key	[med] 386: scale one span src->dst with transparent key; unreferenced
+2599:028F	asm_memset32	[high] (far dst, dword value, count): REP STOSD + tail STOSB
+2599:02AF	asm_memcpy32	[high] (far dst, far src, count): REP MOVSD + tail MOVSB
+2599:02D0	asm_copy_rect	[high] (src far, sx, sy, w, h, spitch, dst far, dx, dy, dpitch): opaque rect copy; passed as far fn ptr to blit dispatcher 0AC6:0430
+2599:0341	asm_copy_rect_key	[high] same args + key byte: transparent rect copy; far fn ptr
+2599:03C4	asm_copy_rect_key_mirror	[high] same as 0341 but horizontally mirrored; far fn ptr
+2599:0440	asm_tint_rect	[med] blend each pixel != colour with colour through triangular blend table (FS:BX); unreferenced
+2599:04AD	asm_blend_span	[high] dst[i] = blendTable(src1[i], src2[i]) over count bytes; called by 0C7F:0A0F
+2599:0500	asm_upscale_view2x	[high] 2x upscale of 100-byte-pitch view buffer to VGA A000 (rows 4..195, x 6..190) with blend-table interpolation, 0xFE = keep screen pixel; called by 3FD1:4D26
+08D0:000C	q3d_draw_quad	[low] large integer/LDIV polygon (quad) rasterizer for the 3D view (uses view window d930..d936)
+08D0:0975	q3d_draw_quad_clipped	[low] helper of q3d_clip_quad_near
+08D0:098C	q3d_clip_quad_near	[low] clip quad against window edge (d930/d932 - 20), then draw
+08D0:0D2C	q3d_set_view_window	[low] store 4 view parameters to d930..d936
+08D0:0D49	q3d_build_side_quad	[low] fill quad struct: 4 header words + 4 vertices (x,y,z) of a wall in an x=const plane
+08D0:0DF9	q3d_build_front_quad	[low] same for a wall in a z=const plane
+08D0:0EA9	q3d_rotate_quad	[low] rotate 4 vertices about (cx,cz) by float angle (sin/cos), then copy/draw
+1351:0012	emu_check_zero_denormal	[low] Borland 8087 emulator: classify operand
+1351:00F3	emu_mul	[low] emulator multiply core (12-byte temp reals on SS stack, SS:[0Ch] = emulated stack top)
+1351:02BD	emu_div	[low] emulator divide core
+1351:0353	emu_mul_mantissa	[low] 64-bit mantissa multiply helper
+1351:048A	emu_add	[low] emulator add/sub core
+1351:0DC1	emu_load_const	[low] load internal constant
+1351:0E3D	emu_set_special	[low] write zero/infinity result
+1351:0E53	emu_set_indefinite	[low] raise invalid, write indefinite
+1351:0E6B	emu_push_operand	[low] push 11-byte operand onto emulated stack
+1351:0E87	emu_push_cs_const	[low] push constant from CS
+1351:0EBA	emu_dup_top	[low] duplicate ST(0)
+1351:1446	emu_round_to_int	[low] round temp real to integer
+1351:154E	emu_load_sti	[low] load ST(i)
+1351:1B5D	emu_transcendental	[low] transcendental driver (reduction + polynomial)
+1351:1B96	emu_poly_step	[low] helper of emu_transcendental
+1351:1EB8	emu_bcd_word	[low] packed-BCD digit group -> binary
+1351:1EE7	emu_fbld	[low] FBLD (packed BCD load)
+1351:1FB2	emu_bin_to_bcd	[low] binary -> packed BCD digits
+1351:1FD0	emu_fbstp	[low] FBSTP (packed BCD store)
+1351:2714	emu_exception	[low] set status bits, on unmasked exception chain to INT handler via SS:[40h]
+15C9:02F0	fp87_toggle_flag	[low] xor flag byte in emulator state (helper of fixup handler)
+15C9:0306	fp87_fixup_handler	[med] INT 34h-3Dh handler when a real x87 exists: rewrites caller's "CD 3x" into "9B D8+x" (self-modifying patch) and re-executes
+15C9:0430	fp87_exception_handler	[med] x87 exception (IRQ13/INT 2) handler: FNSTENV, clear, decode faulting op, dispatch to RTL FPE
+15C9:054B	fp87_exc_pop	[low] helper of fp87_exception_handler
+15C9:0598	fp87_reexec_on_stack	[low] build an ESC instruction on the stack and RETF into it

@@ -1,0 +1,879 @@
+address	name	comment
+0000:0000	start	[rtl] [high] Borland c0 startup (c0l): DOS version, PSP/env, stack/heap setup (_stklen 16E0:94C8=0x1000), BSS clear 962C-EA7C, SaveVectors, BIOS midnight flag, run #pragma startup table 95F0-9620, call main (0546:0001) with argc/argv/envp, exit()
+0000:0154	_cleanup	[rtl] [high] c0: run #pragma exit table (16E0:9620-962C) in priority order
+0000:0167	_checknull	[rtl] [high] c0: null-pointer check stub (empty RETF in this build)
+0000:0168	_terminate	[rtl] [high] c0: INT 21h AH=4Ch terminate with exit code (bytes from 0171 are the INT 0 divide-error handler -> ErrorExit "Divide error")
+0000:017A	SaveVectors	[rtl] [high] c0: save INT 0/4/5/6 vectors to 16E0:005B-0069 and hook INT 0 (divide error) to 0000:0171
+0000:01BD	_restorezero	[rtl] [high] c0: restore INT 0/4/5/6 vectors saved by SaveVectors
+0000:01EA	c0_StartExit	[rtl] [med] c0: walk startup/exit table (6-byte entries: callType,prio,addr) picking next entry by priority; init table ascending, exit table descending
+0000:01F6	c0_ExitLoop	[rtl] [med] c0: body of the startup/exit table walker (xref from 0EF6 is a bogus mid-instruction hit)
+0000:0241	ErrorDisplay	[rtl] [high] c0: write DS:DX (CX bytes) to stderr via INT 21h AH=40h
+0000:0249	abort	[rtl] [high] abort(): print "Abnormal program termination" and _exit(3); 024F is ErrorExit (also tail of divide-error handler). Bytes 02FC/04B6 inside this range are the emulator install/uninstall startup/exit routines
+0000:04ED	_fpu_stub_ret2	[rtl] [low] far stub returning AX=2, called by the 8087 emulator (1351:2751) during vector setup
+0000:04F1	__ldtrunc	[rtl] [med] FP helper: clamp long double to float/double range (exp limits 0x407E/0x43FE); errno=ERANGE(0x22) on over/underflow; used by _scanrslt
+0000:0585	__ldtrunc_epilog	[rtl] [low] epilogue fragment of __ldtrunc (RET 14h); xref from 0EF6 is bogus
+0000:058B	__realcvt_trim	[rtl] [med] __realcvt helper: strip trailing zeros (for %g) and trailing '.'
+0000:05AE	__realcvt	[rtl] [high] printf FP conversion (%e %f %g %E %G), reached via _realcvt vector 16E0:95E0 (thunk 0000:2F09); precision clamped to 40
+0000:0743	__scan_nop	[rtl] [low] empty near function (scanf FP linkage stub)
+0000:0748	_scantod	[rtl] [high] scanf/atof FP engine: parse number via get/unget callbacks: sign, digits, '.', exponent, INF/NAN; uses pow10
+0000:0A53	_scanpop	[rtl] [med] scanf FP helper: discard ST(0)
+0000:0A5B	_scanrslt	[rtl] [med] scanf FP helper: store scanned long double as float/double/long double (flags) via __ldtrunc
+0000:0AD8	__fp_far_nop	[rtl] [low] empty far function (FP linkage stub)
+0000:0ADD	__xcvt	[rtl] [med] FP -> decimal digit string conversion core used by __realcvt
+0000:0CE5	_fperror	[rtl] [med] SIGFPE dispatcher: call signal() handler (16E0:EA60) or fprintf(stderr,"Floating point error: %s.") and abort()
+0000:0D94	__pow10	[rtl] [high] near: 10^n as long double from tables 16E0:90D0-9142 (n<-4932 -> 0, n>4932 -> INF)
+0000:0E5D	pow10	[rtl] [high] double pow10(int p)
+0000:0E68	matherr	[rtl] [high] default matherr(): UNDERFLOW(4) -> retval 0, return 1; TLOSS(5) -> return 1; else 0
+0000:0E92	sin	[rtl] [high] double sin(double): FSIN if _8087 (16E0:8FA0)>=3 else emulator INT 3Eh; huge |x| -> __matherr(TLOSS,"sin")
+0000:0EE2	__matherr	[rtl] [high] math error dispatcher: struct exception, call matherr, else fprintf(stderr,"%s: %s error"), errno=EDOM(0x21)/ERANGE(0x22)
+0000:0F8B	cos	[rtl] [high] double cos(double): FCOS if _8087>=3 else emulator; TLOSS -> __matherr
+0000:0FDB	atan2	[rtl] [high] double atan2(double y,double x); atan2(0,0) -> __matherr(DOMAIN,"atan2")
+0000:1099	F_FTOL	[rtl] [high] FTOL@: x87 ST(0) -> long with truncation (temporarily sets RC=chop)
+0000:10C5	atexit	[rtl] [high] atexit(): register far func in table 16E0:E9D2 (max 32, count 16E0:918E)
+0000:10F2	_dos_getfileattr	[rtl] [high] _dos_getfileattr(path, unsigned *attr) INT 21h 4300h
+0000:1112	_dos_setfileattr	[rtl] [high] _dos_setfileattr(path, attr) INT 21h 4301h
+0000:112F	_dos_findfirst	[rtl] [high] _dos_findfirst(path, attrib, struct find_t*): temporary DTA swap, INT 21h 4Eh
+0000:1162	_dos_findnext	[rtl] [high] _dos_findnext(struct find_t*) INT 21h 4Fh
+0000:118F	_dos_getvect	[rtl] [high] _dos_getvect(intno) INT 21h 35h
+0000:119E	_dos_setvect	[rtl] [high] _dos_setvect(intno, handler) INT 21h 25h
+0000:11B0	__exit	[rtl] [high] internal __exit(code, dontexit, quick): atexit funcs, _cleanup, (*_exitbuf)(), _restorezero, _checknull, (*_exitfopen)(), (*_exitopen)(), _terminate
+0000:1207	exit	[rtl] [high] exit(status)
+0000:1216	_exit	[rtl] [high] _exit(status) (quick: no atexit, no stream flush)
+0000:1242	F_LXMUL	[rtl] [high] LXMUL@: 32x32 long multiply DX:AX * CX:BX (far)
+0000:1259	F_PCMP	[rtl] [high] PCMP@: compare two huge pointers after normalisation (far)
+0000:127A	F_SCOPY	[rtl] [high] SCOPY@: struct copy of CX bytes, far src -> far dst (RETF 8)
+0000:1296	getdate	[rtl] [high] getdate(struct date*) INT 21h 2Ah
+0000:12A9	gettime	[rtl] [high] gettime(struct time*) INT 21h 2Ch
+0000:12BC	getvect	[rtl] [high] getvect(intno) INT 21h 35h
+0000:12CB	setvect	[rtl] [high] setvect(intno, handler) INT 21h 25h
+0000:12DC	N_LDIV	[rtl] [high] N_LDIV@: near-call shim into F_LDIV
+0000:12DF	F_LDIV	[rtl] [high] LDIV@: signed 32-bit divide, truncating (shared core at 12F9, mode in CX)
+0000:12E6	F_LUDIV	[rtl] [high] LUDIV@: unsigned 32-bit divide
+0000:12EB	N_LMOD	[rtl] [high] N_LMOD@: near-call shim into F_LMOD
+0000:12EE	F_LMOD	[rtl] [high] LMOD@: signed 32-bit modulo (sign of dividend)
+0000:12F6	F_LUMOD	[rtl] [high] LUMOD@: unsigned 32-bit modulo
+0000:138A	N_LXLSH	[rtl] [high] N_LXLSH@: near shim into F_LXLSH
+0000:138D	F_LXLSH	[rtl] [high] LXLSH@: long shift left DX:AX by CL
+0000:13AE	F_LXRSH	[rtl] [high] LXRSH@: long arithmetic shift right
+0000:13CE	F_LXURSH	[rtl] [high] LXURSH@: long logical shift right
+0000:13EC	N_PADA	[rtl] [high] N_PADA@: huge pointer (in memory at DX:AX) += long, normalised
+0000:1474	N_PADD	[rtl] [high] N_PADD@: near shim into F_PADD
+0000:1477	F_PADD	[rtl] [high] PADD@: huge pointer + long, normalised (offset 0-15)
+0000:14A6	F_PSUB	[rtl] [high] PSUB@: huge pointer - long, normalised
+0000:14D4	N_PSBP	[rtl] [high] N_PSBP@: huge pointer difference -> long
+0000:1502	F_SPUSH	[rtl] [high] SPUSH@: copy CX-byte struct onto stack (struct passed by value)
+0000:1523	__IOerror	[rtl] [high] __IOerror(code): set _doserrno (16E0:945E) and errno (16E0:007F) via _dosErrorToSV 16E0:9460; returns -1
+0000:155C	__DOSerror	[rtl] [high] __DOSerror(code): __IOerror then return DOS code
+0000:156E	isatty	[rtl] [high] isatty(fd) INT 21h 4400h, returns DX&0x80
+0000:157F	__longtoa	[rtl] [high] __longtoa(val,buf,radix,maybeSigned,hexStyle): long -> ASCII (radix 2..36); core of itoa/ltoa/ultoa/printf
+0000:1601	__utoa	[rtl] [high] __utoa(unsigned, buf): unsigned decimal -> string (used by __mkname)
+0000:1621	lseek	[rtl] [high] lseek(fd, long off, whence) INT 21h 42h; clears O_EOF(0x200) in _openfd
+0000:164A	__mkname	[rtl] [high] __mkname(num, prefix, buf): build "TMP<num>.$$$" (default buffer 16E0:EA52)
+0000:16A7	__tmpnam	[rtl] [high] __tmpnam(buf, int *num): next nonexistent temp file name (probes with _dos_getfileattr)
+0000:16FE	N_LXMUL	[rtl] [high] N_LXMUL@: near 32x32 long multiply
+0000:1715	N_PCMP	[rtl] [high] N_PCMP@: near huge-pointer compare
+0000:1736	outport	[rtl] [high] outport(port, int) OUT DX,AX
+0000:1742	outportb	[rtl] [high] outportb(port, byte) OUT DX,AL
+0000:174E	outpw	[rtl] [high] outpw(port, word), returns word
+0000:175A	outp	[rtl] [high] outp(port, byte), returns byte
+0000:1768	srand	[rtl] [high] srand(seed): seed lo (16E0:94C4) = seed, seed hi (16E0:94C6) = 0
+0000:1779	rand	[rtl] [high] rand(): seed = seed*0x015A4E35 + 1 (32-bit at 16E0:94C4/94C6, initial 1); return (seed>>16)&0x7FFF
+0000:179F	_read	[rtl] [high] _read(fd,buf,len) raw INT 21h 3Fh; EACCES if fd opened write-only
+0000:17CE	segread	[rtl] [high] segread(struct SREGS*): store ES,CS,SS,DS
+0000:17EE	setdate	[rtl] [high] setdate(struct date*) INT 21h 2Bh
+0000:1803	settime	[rtl] [high] settime(struct time*) INT 21h 2Dh (code following at 1818 is _setupio)
+0000:1818	_setupio	[rtl] [high] #pragma startup prio 2: init _openfd[]/_streams[] for handles 5.._nfile-1 (no Ghidra function)
+0000:18CE	stime	[rtl] [high] stime(time_t*): unixtodos + setdate + settime
+0000:190E	time	[rtl] [high] time(time_t*): getdate + gettime -> dostounix (tzset defaults EST5EDT)
+0000:1966	tell	[rtl] [high] tell(fd) = lseek(fd, 0, SEEK_CUR)
+0000:197E	unlink	[rtl] [high] unlink(path) INT 21h 41h
+0000:1996	__vp_hex4	[rtl] [med] __vprinter helper: emit DX as 4 hex digits (%p)
+0000:199D	__vp_hex2	[rtl] [med] __vprinter helper: emit AL as 2 hex digits
+0000:19A6	__vp_hexdigit	[rtl] [med] __vprinter helper: nibble -> hex char (DAA trick) and STOSB
+0000:19AE	__vprinter	[rtl] [high] __vprinter(putter, outP, fmt, args): Borland printf engine entry (80-byte local buffer)
+0000:19C8	__vp_strlen	[rtl] [med] __vprinter helper: strlen of ES:DI
+0000:19D5	__vp_putc	[rtl] [med] __vprinter helper: buffer one char, flush when 80 are queued
+0000:19DE	__vp_flush	[rtl] [med] __vprinter helper: flush local buffer through putter callback; records error
+0000:1A12	__vprinter_body	[rtl] [high] __vprinter main loop: '%' parsing, flags - + space # 0, width/precision/*, F N h l modifiers, d i o u x X c s p n e f g E G; "(null)" for NULL %s
+0000:1E6C	__vptr	[rtl] [med] conio: (row,col) -> far video address (16E0:953F offset, 9541 segment)
+0000:1E91	__vram	[rtl] [med] conio: copy cells to/from video RAM with CGA snow avoidance (port 3DAh) when 16E0:953E set
+0000:1F0B	_stpcpy	[rtl] [high] stpcpy(dst,src) via strlen+memcpy, returns dst+len
+0000:1F3F	bioskey	[rtl] [high] bioskey(cmd) INT 16h (cmd&1: 0 if no key, -1 if key code is 0)
+0000:1F64	calloc	[rtl] [high] calloc(n,size): malloc(n*size) (fails if >64K) then setmem 0
+0000:1FC3	__cputn	[rtl] [med] conio: write n chars to the text window (BEL/BS/LF/CR, wrap, scroll; direct video or BIOS)
+0000:210F	__crt_romcmp	[rtl] [low] _crtinit helper: compare a string with ROM bytes (F000:FFEA vs "COMPAQ")
+0000:213C	__crt_egacheck	[rtl] [low] _crtinit helper: INT 10h AH=12h BL=10h EGA presence test
+0000:214A	_VideoInt	[rtl] [med] conio: INT 10h wrapper with mode-set special cases (C4350 = 0x40, cursor shape)
+0000:21CE	_c0crtinit	[rtl] [med] #pragma startup prio 16: _crtinit(current mode) and read default text attribute (no Ghidra function)
+0000:21EB	_crtinit	[rtl] [med] conio: initialise _video struct 16E0:9532-9543 (mode, rows, cols, graphics, snow, segment B000/B800)
+0000:22E5	__delay_nop	[rtl] [low] empty near RET used as I/O delay by readtimer
+0000:22E6	readtimer	[rtl] [med] read PIT channel 0 count (inverted)
+0000:2300	_initdelay	[rtl] [med] #pragma startup prio 16: calibrate delay(): per-ms multiplier 16E0:957E = 0x4A9 or default 0x952 (no Ghidra function)
+0000:2321	delay	[rtl] [high] delay(ms): busy-wait on PIT channel 0 counts
+0000:238E	__free_last	[rtl] [med] farheap: release last block (shrink heap via brk)
+0000:23F1	__free_join	[rtl] [med] farheap: free inner block, merge with neighbours
+0000:2462	__pull_free_block	[rtl] [med] farheap: unlink block from free list
+0000:248B	__insert_free_block	[rtl] [med] farheap: link block into free list (rover CS:2386)
+0000:24C2	farfree	[rtl] [high] farfree(void far*) (= free() in large model); heap state in CS:2382-238C
+0000:24EB	__create_heap	[rtl] [med] farheap: first allocation (sbrk, paragraph align)
+0000:254F	__extend_heap	[rtl] [med] farheap: grow heap with sbrk for a new block
+0000:25A9	__allocate_split	[rtl] [med] farheap: carve block from the end of a larger free block
+0000:25CC	malloc	[rtl] [high] malloc(size_t): farmalloc with high word 0
+0000:25D6	farmalloc	[rtl] [high] farmalloc(unsigned long): (n+19)>>4 paragraphs, first fit from rover, 4-byte header, 16-byte aligned
+0000:2653	__realloc_grow	[rtl] [med] farrealloc helper: allocate new block, copy (MOVSW in 64K chunks), free old
+0000:26CF	__realloc_shrink	[rtl] [med] farrealloc helper: split block in place
+0000:2733	realloc	[rtl] [high] realloc(void*, size_t) -> farrealloc
+0000:273A	farrealloc	[rtl] [high] farrealloc(void far*, unsigned long)
+0000:27B4	__brk_setblock	[rtl] [med] heap: resize DOS program block via setblock in 64-paragraph steps
+0000:282A	__brk	[rtl] [med] brk(): set heap top 16E0:008B/008D (checked against _heapbase/_heaptop)
+0000:2869	__sbrk	[rtl] [med] sbrk(long incr): grow heap, return old break
+0000:28F7	farcalloc	[rtl] [high] farcalloc(n,size): farmalloc + setmem in 0xFA00-byte chunks
+0000:2987	farcoreleft	[rtl] [high] farcoreleft(): bytes between heap break and top, minus 16, paragraph-rounded
+0000:29D7	getch	[rtl] [high] getch(): ungetch buffer (16E0:9584 flag, 9585 char) else INT 21h 07h
+0000:2A33	gettext	[rtl] [high] gettext(l,t,r,b,buf)
+0000:2A89	puttext	[rtl] [high] puttext(l,t,r,b,buf)
+0000:2ACC	harderr	[rtl] [med] harderr(handler) wrapper
+0000:2ADE	hardresume	[rtl] [med] hardresume(axret)
+0000:2AEC	hardretn	[rtl] [med] hardretn(retn)
+0000:2B4E	__harderr_install	[rtl] [low] install INT 24h ISR (0000:2AFA) with C handler 16E0:EA6A (flag EA64=0)
+0000:2B7A	_harderr	[rtl] [med] _harderr(handler): INT 24h ISR with far handler 16E0:EA66 (flag EA64=1)
+0000:2BA6	_hardresume	[rtl] [low] return from INT 24h ISR to DOS with AL=result (SP from 16E0:EA6E)
+0000:2BC1	_hardretn	[rtl] [low] abort the DOS call from INT 24h: bdos(0x54), set CF and error code in caller frame
+0000:2C20	int86	[rtl] [high] int86(intno, in, out) via segread + int86x
+0000:2C51	int86x	[rtl] [high] int86x(intno, in, out, sregs): builds INT n / RETF thunk on stack (INT 25h/26h pop flags)
+0000:2CEA	intdos	[rtl] [high] intdos(in, out)
+0000:2D18	intdosx	[rtl] [high] intdosx(in, out, sregs) INT 21h; CF -> __IOerror
+0000:2D78	intr	[rtl] [high] intr(intno, struct REGPACK*)
+0000:2DBE	__intr_iret	[rtl] [low] IRET helper inside intr (restores flags)
+0000:2E1C	ioctl	[rtl] [high] ioctl(fd, func, argdx, argcx) INT 21h 44h
+0000:2E37	__ioctl_frag	[rtl] [low] mid-function fragment of ioctl (xref from 0EF6 is bogus)
+0000:2E45	kbhit	[rtl] [high] kbhit(): ungetch pending or INT 21h 0Bh
+0000:2E57	movetext	[rtl] [high] movetext(l,t,r,b,dl,dt)
+0000:2EF4	putch	[rtl] [high] putch(c) -> __cputn(1)
+0000:2F09	__realcvt_thunk	[rtl] [high] JMP [_realcvt 16E0:95E0] (= 0000:05AE)
+0000:2F0D	__scr_off2xy	[rtl] [low] conio BIOS path: video offset -> (row,col)
+0000:2F45	__scr_gotoxy	[rtl] [low] conio BIOS path: set cursor if changed, advance position
+0000:2F79	__scr_bioscopy	[rtl] [low] conio BIOS path: copy cells via INT 10h AH=08h/09h
+0000:3043	__screenio	[rtl] [low] conio: move count cells between buffer and screen (direct __vram or BIOS)
+0000:307F	__validxy	[rtl] [low] conio: validate rectangle against screen size
+0000:30C2	__fillblank	[rtl] [low] conio: fill row buffer with blanks in current attribute
+0000:30E4	__scroll	[rtl] [med] conio: scroll window up/down (direct video or INT 10h 06h/07h)
+0000:3252	_setargv	[rtl] [med] #pragma startup prio 16: parse PSP command tail into argv (no Ghidra function)
+0000:3377	setblock	[rtl] [high] setblock(seg, newsize) INT 21h 4Ah, -1 on success else max size
+0000:3393	_setenvp	[rtl] [med] #pragma startup prio 16: build environ[] (16E0:9596) from env block (no Ghidra function)
+0000:33EB	sound	[rtl] [high] sound(freq): PIT ch2 divisor 1193181/freq, speaker on
+0000:3417	nosound	[rtl] [high] nosound(): speaker off (port 61h)
+0000:341E	textmode	[rtl] [high] textmode(mode) (-1 = LASTMODE) -> _crtinit, reset attribute
+0000:343D	__wherexy	[rtl] [med] conio: get cursor position via INT 10h AH=03h
+0000:3469	atol	[rtl] [high] atol(s): skip isspace (_ctype 16E0:9191), sign, decimal digits, no overflow check
+0000:34DE	atoi	[rtl] [high] atoi(s) = (int)atol(s)
+0000:34EF	bdos	[rtl] [high] bdos(dosfun, dosdx, dosal)
+0000:34FF	_chmod	[rtl] [high] _chmod(path, func, attrib) INT 21h 43h
+0000:351C	close	[rtl] [high] close(fd): range check vs _nfile, clear _openfd, _close
+0000:3544	_close	[rtl] [high] _close(fd) INT 21h 3Eh
+0000:3562	eof	[rtl] [high] eof(fd): O_EOF flag, device check, compare position with size
+0000:35D9	fclose	[rtl] [high] fclose(fp): fflush, free buffer, close, delete temp file
+0000:3684	fflush	[rtl] [high] fflush(fp) (NULL -> flushall)
+0000:3751	flushall	[rtl] [high] flushall(): fflush every open stream, return count
+0000:3793	__getmode	[rtl] [med] fopen helper: parse mode r/w/a, +, t/b -> open flags (default _fmode 16E0:9458 = O_TEXT); sets _exitfopen=_xfclose
+0000:384F	__openfp	[rtl] [high] __openfp(fp,name,mode,share): open, isatty -> _F_TERM, setvbuf(512)
+0000:391E	__getfp	[rtl] [high] __getfp(): find free FILE in _streams (16E0:929E, _nfile=20 entries of 20 bytes)
+0000:3968	fopen	[rtl] [high] fopen(name, mode)
+0000:399D	fprintf	[rtl] [high] fprintf(fp, fmt, ...)
+0000:39B9	__fread_n	[rtl] [med] fread helper: bulk _read for whole buffer multiples, else per-char via _fgetc
+0000:3AAD	fread	[rtl] [high] fread(ptr, size, n, fp)
+0000:3B3B	__nlcount	[rtl] [med] ftell/fseek helper: count '\n' in buffer for text-mode position correction
+0000:3BBD	fseek	[rtl] [high] fseek(fp, long, whence)
+0000:3C3D	ftell	[rtl] [high] ftell(fp) (text mode: +1 per buffered '\n')
+0000:3C95	fwrite	[rtl] [high] fwrite(ptr, size, n, fp)
+0000:3D20	__flushterm	[rtl] [med] flush all streams that are _F_TERM|_F_LBUF before a terminal read
+0000:3D5E	__ffill	[rtl] [med] fill FILE buffer via read(); sets _F_EOF/_F_ERR
+0000:3DD6	_fgetc	[rtl] [high] _fgetc(fp): getc() slow path (level++ then fgetc)
+0000:3DEE	fgetc	[rtl] [high] fgetc(fp): buffered read; unbuffered path reads 1 byte, skips '\r' in text mode
+0000:3EE8	getenv	[rtl] [high] getenv(name) over environ (16E0:9596)
+0000:3F58	itoa	[rtl] [high] itoa(int, buf, radix): signed only for radix 10
+0000:3F83	ultoa	[rtl] [high] ultoa(unsigned long, buf, radix)
+0000:3FA0	ltoa	[rtl] [high] ltoa(long, buf, radix): signed only for radix 10
+0000:3FC8	memccpy	[rtl] [high] memccpy(dst, src, c, n)
+0000:4001	memcpy	[rtl] [high] memcpy(dst, src, n) (word moves, forward)
+0000:4025	setmem	[rtl] [high] setmem(dst, n, c)
+0000:4049	memset	[rtl] [high] memset(dst, c, n) -> setmem
+0000:4068	__creat	[rtl] [high] near _creat(attr, path) INT 21h 3Ch
+0000:4083	__trunc	[rtl] [med] near: truncate file at current position (write 0 bytes)
+0000:4095	open	[rtl] [high] open(path, oflag, pmode): O_CREAT/O_EXCL/O_TRUNC; device in O_BINARY -> raw mode via ioctl; sets _openfd
+0000:4204	_open	[rtl] [high] _open(path, oflag) INT 21h 3Dh
+0000:4253	printf	[rtl] [high] printf(fmt, ...) to stdout (16E0:92B2)
+0000:426E	_fputc	[rtl] [high] _fputc(c, fp): putc() slow path
+0000:428A	fputc	[rtl] [high] fputc(c, fp): buffered/unbuffered; text unbuffered '\n' -> "\r\n"; line-buffered flush on \n/\r; O_APPEND seek
+0000:441D	fputchar	[rtl] [high] fputchar(c) = fputc(c, stdout)
+0000:4431	__fputn	[rtl] [high] __fputn(fp, n, ptr): write n bytes (printf putter for streams)
+0000:4630	puts	[rtl] [high] puts(s): s + '\n' to stdout
+0000:4688	read	[rtl] [high] read(fd, buf, len): text mode strips '\r', stops at ^Z (seeks back, sets O_EOF)
+0000:4759	setvbuf	[rtl] [high] setvbuf(fp, buf, type, size); sets _exitbuf=_xfflush; stdin/stdout buffered flags 16E0:959C/959E
+0000:4874	__strputn	[rtl] [high] sprintf putter: memcpy into string and NUL-terminate
+0000:48B4	sprintf	[rtl] [high] sprintf(buf, fmt, ...)
+0000:48D6	vsprintf	[rtl] [high] vsprintf(buf, fmt, va_list)
+0000:48F7	strcat	[rtl] [high] strcat(dst, src)
+0000:4936	strchr	[rtl] [high] strchr(s, c)
+0000:4973	strcmp	[rtl] [high] strcmp(a, b)
+0000:49A3	strcpy	[rtl] [high] strcpy(dst, src)
+0000:49CC	strlen	[rtl] [high] strlen(s) (NULL -> 0)
+0000:49EB	strncmp	[rtl] [high] strncmp(a, b, n)
+0000:4A23	strncpy	[rtl] [high] strncpy(dst, src, n), zero-pads
+0000:4A54	strrev	[rtl] [high] strrev(s)
+0000:4A88	dostounix	[rtl] [high] dostounix(struct date*, struct time*) -> time_t (calls tzset; adds timezone and DST hour)
+0000:4BB2	unixtodos	[rtl] [high] unixtodos(time_t, struct date*, struct time*) (0x88F8 = 35064 h per 4 years, not a FILEMAN string)
+0000:4DB6	tzset	[rtl] [high] tzset(): parse TZ env; defaults timezone=18000 (16E0:95CE), daylight=1 (95D2), tzname "EST"/"EDT"; also #pragma startup prio 30
+0000:4FA2	__isDST	[rtl] [high] __isDST(hour, yday, month, year): US DST rule (April..October)
+0000:5081	write	[rtl] [high] write(fd, buf, len): text mode '\n' -> "\r\n" via 128-byte buffer; O_APPEND seek
+0000:51D0	_write	[rtl] [high] _write(fd, buf, len) INT 21h 40h; EACCES if read-only; sets O_CHANGED
+0000:520C	_xfclose	[rtl] [high] exit hook: fclose all streams (_exitfopen)
+0000:5249	_xfflush	[rtl] [high] exit hook: fflush the first 4 streams (_exitbuf)
+0000:5281	_fmemchr	[rtl] [med] _fmemchr(s, c, n) (second, far-string library copy)
+0000:52A4	_fmemcpy	[rtl] [med] _fmemcpy(dst, src, n) (no direct callers found)
+0000:52C8	_fsetmem	[rtl] [low] internal setmem twin used by _fmemset
+0000:52EC	_fmemset	[rtl] [med] _fmemset(dst, c, n)
+0000:530B	_fstrcat	[rtl] [med] _fstrcat(dst, src)
+0000:534A	_fstrcmp	[rtl] [med] _fstrcmp(a, b) (no direct callers found)
+0000:537A	_fstrcpy	[rtl] [med] _fstrcpy(dst, src)
+0000:53A3	_fstrlen	[rtl] [med] _fstrlen(s)
+0000:53C2	_fstrncpy	[rtl] [med] _fstrncpy(dst, src, n), zero-pads
+0000:53F3	_fstrstr	[rtl] [med] _fstrstr(s1, s2)
+0546:0001	ist_main	[engine] [high] main(): startup checks (TRDOS font, FS init, _OvrInitEms, DDS/timer, SES.CFG, EMS/conv. memory, ctrl/kbd vectors, sound, CKD archives, fonts, RIX, 3D tables, mouse, VGA), then main game loop / ending
+05DC:0004	ui_text_measure_0004	[engine] [low] INTRFACE helper calling 5784:0B43/0DEA (text layout/width); writes 9667
+05DC:00CD	ui_nop	[engine] [med] empty callback (default UI hook)
+05DC:00D2	ui_return_zero	[engine] [med] callback returning 0 (default UI hook)
+05DC:00D9	ui_get_9671	[engine] [med] returns byte DGROUP:9671 (current UI state/flag)
+05DC:00E9	ui_button_press_anim	[engine] [low] UI element press: hides cursor, redraws element, warps mouse (5511:02A1), shows cursor
+05DC:0167	ui_button_release_anim	[engine] [low] UI element release/redraw counterpart of ui_button_press_anim
+05DC:027B	ui_draw_panel_027B	[engine] [low] draws a UI panel/strip from EMS slot (09D4:068A, 0C7F:0A51, 0AC6:0430)
+05DC:0308	ui_draw_panel_0308	[engine] [low] draws UI element background via gr_blit
+05DC:041C	ui_setup_hotspots	[engine] [low] builds UI hotspot/rect tables (e725..), calls 09D4:07C9 and 4595:019F
+05DC:0568	ui_rect_op_0568	[engine] [low] (x,y,w,h) rectangle helper
+05DC:05E4	ui_rect_op_05E4	[engine] [low] (x,y,w,h) rectangle helper using 9658
+05DC:066B	ui_update_hover	[engine] [low] mouse-over highlighting of UI zones (0C7F:05C7 zone test + blits)
+05DC:0831	ui_unhighlight	[engine] [low] restores a highlighted element (blit + cursor refresh)
+05DC:0881	ui_free_panel	[engine] [low] frees UI panel mm block (0DB7:022F) and restores screen
+05DC:08DB	ui_memcpy	[engine] [med] wrapper over asm 2599:02AF (far memcpy, dword-wise)
+05DC:08F6	ui_cd_music	[engine] [high] menu idle callback (installed at 16E0:98D4/9694): if o5737_cd_play()==0 replay last track (play_track(0)), then s3d_apply_sound_options
+05DC:0940	ui_init_tables	[engine] [low] big static initialisation of UI tables (9694..97xx)
+05DC:1133	ui_event_loop	[engine] [low] generic UI event loop dispatching through callback table DGROUP:962C..964C (mouse zones, keys, cursor)
+05DC:178E	ui_init_voices	[engine] [med] "initvoices": allocates/loads speech voice samples (55CC:01F3) into EMS
+05DC:192D	ui_load_voice	[engine] [med] loads one voice sample n ("%s %d'ye yüklenirken") and starts it via DSMI (0EAE/0D42:014F)
+05DC:1B6A	ui_play_voice	[engine] [med] play a voice line (loads if needed, records end time in 73D1/73D3)
+05DC:1D1B	ui_wait_voice	[engine] [med] waits until current voice finished (ms clock e74a, ESC aborts), returns 1 on ESC
+05DC:1E5E	ui_wait_frames	[engine] [med] waits n cursor-animation periods ((bb35+1)*k ms) keeping mouse cursor animated
+05DC:1EB9	ui_restore_background	[engine] [low] restores saved screen area (slot e29f) and cursor
+05DC:1F6A	ui_save_background	[engine] [low] saves screen area into an mm block before drawing a dialog
+05DC:2083	ui_poll_input	[engine] [low] one input step: keys (kbhit/getch) + mouse zones, returns key/zone code
+05DC:2198	ui_dialog_2198	[engine] [low] large dialog/text-box routine (two far params)
+05DC:25EC	ui_format_text	[engine] [low] text formatting/wrapping using 5784 text routines
+05DC:2948	ui_message_box	[engine] [low] message box (string, int) with mouse/keyboard wait
+05DC:2D9A	ui_call_9650	[engine] [low] calls hook DGROUP:9650 after zone test
+05DC:2DCA	ui_wait_click_or_key	[engine] [med] waits for mouse click or key with timeout (ms clock), updates cursor
+05DC:2EEC	ui_ask_evet_hayir	[engine] [med] waits for E/e (Evet) or H/h (Hayir) key; returns 1/0
+08D0:000C	q3d_draw_quad	[lib] [low] large integer/LDIV polygon (quad) rasterizer for the 3D view (uses view window d930..d936)
+08D0:0975	q3d_draw_quad_clipped	[lib] [low] helper of q3d_clip_quad_near
+08D0:098C	q3d_clip_quad_near	[lib] [low] clip quad against window edge (d930/d932 - 20), then draw
+08D0:0D2C	q3d_set_view_window	[lib] [low] store 4 view parameters to d930..d936
+08D0:0D49	q3d_build_side_quad	[lib] [low] fill quad struct: 4 header words + 4 vertices (x,y,z) of a wall in an x=const plane
+08D0:0DF9	q3d_build_front_quad	[lib] [low] same for a wall in a z=const plane
+08D0:0EA9	q3d_rotate_quad	[lib] [low] rotate 4 vertices about (cx,cz) by float angle (sin/cos), then copy/draw
+09D4:0006	mm_memcpy	[engine] [high] far memcpy(dst,src,n) via asm 2599:02AF
+09D4:0022	mm_copy_recolor	[engine] [med] copy n bytes, writing color AH where src==DL, skipping others (recolor blit row)
+09D4:004C	mm_copy_transparent	[engine] [high] copy n bytes skipping bytes == key (transparent row copy)
+09D4:0071	mm_init	[engine] [high] mm_init(ems_bytes): INT21 AH=3A AL=1 BX=1 probe, EMS lib init (1154:010D, KB), clears 110-slot handle table, checks free memory
+09D4:0164	mm_alloc	[engine] [high] mm_alloc(u32 size, type 0=conv/1=EMS) -> 9-byte handle {ptr/emsHandle,u32 size,u8 type}; fatal on failure
+09D4:0360	mm_free	[engine] [high] mm_free(handle,file,line): frees EMS (1154:061B) or farfree, marks slot 0xFF
+09D4:044C	mm_coreleft	[engine] [high] free memory: 0=conventional farcoreleft, 1=EMS free, 2=sum
+09D4:0485	mm_check_type	[engine] [med] asserts type is 0 or 1
+09D4:04AB	mm_duplicate	[engine] [med] allocate new block of given type and copy contents (conv/EMS combos via 1154:0963/0A0D/0AB7)
+09D4:05F4	mm_change_type	[engine] [med] move block between conventional and EMS (dup + free + struct copy)
+09D4:068A	mm_copy_block	[engine] [med] copy whole block src->dst (conv<->EMS moves)
+09D4:07C9	mm_copy_range	[engine] [med] copy byte range between two blocks (offsets/len), conv or EMS (INT67 move via 1154)
+09D4:095A	mm_shutdown	[engine] [med] frees all handles, releases EMS (1154:03A5)
+09D4:09A8	mm_rle_09A8	[engine] [low] small byte-loop helper (lodsb loop)
+09D4:09CC	mm_copy_09CC	[engine] [low] small byte copy helper
+09D4:09F6	mm_rle_09F6	[engine] [low] small byte-loop helper
+09D4:0A1D	mm_farmalloc	[engine] [high] farmalloc wrapper tracking low-water mark of free memory (de30/6e06)
+09D4:0A81	mm_ems_lock	[engine] [high] save current EMS page map (86F8, 4 words) into lock ctx, mark busy, remember file/line; nested lock = fatal
+09D4:0B22	mm_ems_unlock	[engine] [high] restore EMS page map from lock ctx (1134:007A) and clear busy
+09D4:0BB4	mm_map	[engine] [med] map (block, u32 offset, len) into page frame / return far ptr and usable length (16K pages)
+09D4:0E4A	mm_surface_alloc	[engine] [high] surface slot n: set w,h in e29b table and mm_alloc(w*h, type; 2=auto conv-else-EMS)
+0AC6:000A	sys_rowcopy_planar	[engine] [med] row callback for 640x480x16 (mode 12h): per plane sets map mask (5511:000A) and copies bytes with edge masks
+0AC6:01AA	sys_putpixel	[engine] [high] buf[y*pitch+x]=color
+0AC6:01C5	sys_blit_cb	[engine] [med] generic EMS-aware blit with caller-supplied row function (used with sys_rowcopy_planar)
+0AC6:0430	sys_blit	[engine] [high] blit(sx,sy,w,h,dx,dy,srcSlot,dstSlot,rowfn far[,key]) between surface slots (EMS-mapped)
+0AC6:0615	sys_blit_0615	[engine] [low] blit variant (EMS lock, row fn)
+0AC6:070B	sys_blit_recolor	[engine] [low] blit using mm_copy_recolor (byte params at +12h/+14h = from/to colors)
+0AC6:0908	sys_fill_rect	[engine] [low] fill rectangle in a slot with color (memset32, EMS)
+0AC6:0B99	sys_fill_rect_checked	[engine] [low] validated wrapper around 0AC6:13F5
+0AC6:0C5A	sys_blit_scaled	[engine] [low] blit through asm 2599:0018 (386 scaled/special copy)
+0AC6:0F21	sys_blit_0F21	[engine] [low] blit variant (two slots, byte params)
+0AC6:10F1	sys_line_10F1	[engine] [low] clipped row helper using mm_copy_transparent
+0AC6:1185	sys_line_1185	[engine] [low] clipped row helper using mm_copy_transparent
+0AC6:1261	sys_line_1261	[engine] [low] clipped row helper using mm_copy_transparent
+0AC6:1307	sys_line_1307	[engine] [low] clipped row helper using mm_copy_transparent
+0AC6:13F5	sys_fill_slot_rect	[engine] [low] fill/clear area of slot (EMS-mapped)
+0AC6:16DC	sys_fill_slot	[engine] [med] fill whole slot/buffer (slot,len,value) e.g. clear 64000 bytes
+0AC6:18AF	sys_find_glyph	[engine] [low] lookup returning "bulamadim!!!" message if not found
+0AC6:195E	sys_find_color	[engine] [low] lookup with "bulamadim!!!" message (palette/anti-alias table search)
+0AC6:1A13	sys_build_aa_table	[engine] [low] builds anti-alias table from palette e5ef
+0AC6:1AA0	sys_load_rix	[engine] [med] loads .RIX anti-alias/font table (xdintro.rix) into mm block e52f via fm_load_file
+0C7F:000C	gr_set_dac	[engine] [high] set DAC: OUT 3C6=FF, 3C8=start, per chunk wait 3DA bit3 set then clear, REP OUTSB to 3C9
+0C7F:0050	gr_set_palette	[engine] [high] gr_set_dac(0,256,pal,1 chunk)
+0C7F:0069	gr_cursor_set_shape	[engine] [high] select mouse cursor shape n (loads strip of 6 shapes from slot 0x4B into slot 9) and redraw
+0C7F:0204	gr_cursor_hide	[engine] [high] restore save-under (slot 10) at last cursor pos, e5f3=0
+0C7F:026B	gr_cursor_update	[engine] [high] poll mouse; if moved/changed shape: restore bg, save new bg (slot10), draw shape (slot9, key 0)
+0C7F:04A1	gr_call_then_cursor	[engine] [med] calls far fn and redraws cursor with its result as shape
+0C7F:04AF	gr_mouse_read	[engine] [high] INT33 AX=3: x>>shift, y, buttons -> out params; returns buttons
+0C7F:0515	gr_zone_under_cursor	[engine] [high] returns 1..40 index of hotspot rect (table e5f5, 8 bytes) containing cursor, 0 none
+0C7F:05C7	gr_cursor_in_zone	[engine] [high] is cursor (15x15) inside hotspot rect n
+0C7F:067D	gr_cursor_in_rect	[engine] [high] is cursor inside rect (x,y,w,h)
+0C7F:06B6	gr_zones_clear	[engine] [high] set all 41 hotspot rects to -1
+0C7F:0714	gr_wait_buttons_up	[engine] [high] loop until mouse buttons released, animating cursor
+0C7F:073F	gr_fade	[engine] [high] fade(ms, dBright, dVolume): time-based palette scale e5ef->e5eb (level 7318/731E) + music volume (0EF6:1625)
+0C7F:08FC	gr_blend3	[engine] [low] combines three mm blocks through asm 2599:04AD in mapped chunks
+0C7F:0A51	gr_draw_strip	[engine] [low] draws vertical strip/columns of a slot through EMS mapping ("İç hata!" bounds check)
+0D42:0005	snd_ems_map_sample	[engine] [med] DSMI MCPSampleRealAddress hook: maps EMS sample (1154:0688) -> real far ptr
+0D42:0041	snd_ems_save_map	[engine] [med] DSMI MCPEnableVirtualSamples hook (1154:0BAB)
+0D42:005E	snd_ems_restore_map	[engine] [med] DSMI MCPDisableVirtualSamples hook (1154:0BF4)
+0D42:007B	snd_identity_addr	[engine] [low] returns given far ptr (non-EMS address hook)
+0D42:0093	snd_timer_40hz	[engine] [med] timer routine (divisor 0x7485, ~40 Hz): guarded, EMS map save, 0EAE:0414, restore (iret)
+0D42:00CF	snd_getenv_hook	[engine] [med] DSMI GetEnvString hook -> getenv
+0D42:00EB	snd_setvect_hook	[engine] [med] DSMI SetVector hook -> getvect/setvect
+0D42:0120	snd_timer_100hz	[engine] [med] timer routine (divisor 0x2E9B, 100 Hz): guarded call to AMP poll 0EF6:0F4C (iret)
+0D42:014F	snd_play_sample	[engine] [med] play sample slot (table de38, 0x17 bytes/entry) on channel via CDI (0EAE:008F/01B4/00B8)
+0D42:01F0	snd_load_sound	[engine] [med] load sound file by name into sample slot ("%s. ses dosyası bulunamadı")
+0D42:044D	snd_load_sample_ems	[engine] [med] reads sample data into EMS-backed mm block for DSMI
+0DB7:0009	ctl_ctrlbrk_handler	[engine] [high] ctrlbrk() callback: allows 3 breaks (counter 7510) then aborts
+0DB7:0026	ctl_install	[engine] [high] hook INT23h (ctl_int23), INT09h (ctl_int09), INT00h (ctl_div0); ctrlbrk(ctl_ctrlbrk_handler); flag 750A|=0x10
+0DB7:00B3	ctl_uninstall	[engine] [high] restore INT00/09/23 vectors
+0DB7:00F6	ctl_div0_isr	[engine] [high] INT0 handler: returns AX=EAX=0xFFFF, skips 3-byte faulting instruction
+0DB7:0135	ctl_int23_isr	[engine] [high] Ctrl-C/Ctrl-Break: fatal exit message
+0DB7:0174	ctl_int09_isr	[engine] [high] INT9 hook: only traps Ctrl+Alt+Del (scancode 53h), else chains to BIOS
+0DB7:01E3	ctl_flush_keys	[engine] [high] while(kbhit()) getch()
+0DB7:01F4	ctl_timer_tick	[engine] [high] timer service routine @100Hz: ms clock DGROUP:E74A (dword) += 10
+0DB7:021E	ctl_timer_install	[engine] [high] tsAddRoutine(ctl_timer_tick, 0x2E9B) -> 100 Hz
+0DB7:022F	ctl_free_checked	[engine] [med] mm_free(*pp,file,line) then *pp=NULL (fatal if NULL)
+0DB7:027E	ctl_dds_timer_init	[engine] [med] DDS init (0DF2:0000) + timer service init (10EF:007D)
+0DDF:000A	dsmiStrCpy	[lib] [high] pascal strcpy(dst,src) used by DDS
+0DDF:0025	dsmiStrNCpy	[lib] [high] pascal strncpy-like (dst,src,long n) using LOOPNZ
+0DDF:0044	dsmiStrCmp	[lib] [high] pascal string compare; returns 0 equal, else 1/-1/unsigned diff (only ==0 is meaningful)
+0DDF:007D	dsmiStrLen	[lib] [high] pascal strlen(far str)
+0DDF:0099	dsmiMemCpy	[lib] [high] pascal memcpy(dst,src,long n) word-wise + tail byte
+0DDF:00BB	dsmiMemCpy2	[lib] [med] identical copy of dsmiMemCpy (unreferenced)
+0DDF:00DD	dsmiMemCmp	[lib] [med] pascal memcmp(s1,s2,long n); quirk: JECXZ after REPE CMPSB reports equal if only the last byte differs
+0DDF:0105	dsmiMemSet	[lib] [high] pascal memset(dst, byte, long n)
+0DDF:011C	dsmiAbs	[lib] [high] pascal abs(int)
+0DF2:0000	DDSInit	[lib] [high] init DDS: allocs sentinel nodes of function/resource/driver lists (e77e/e77a/e782), magic e778=0xBEEF, registers DDS* and Mem* functions by name
+0DF2:011B	DDSRegisterFunction	[lib] [high] pascal (char far *name, void far *fn): append 12-byte {name,fn,next} node to function list; err 1 null arg, 2 not init, 7 duplicate, 12 no mem
+0DF2:0214	DDSRegisterResource	[lib] [high] pascal (name, ptr, size): append 16-byte {name,ptr,size,next} node to resource list
+0DF2:0316	DDSAccessFunction	[lib] [high] pascal (name, void far **out): look up function by name; 0 ok, 9 not found
+0DF2:03A5	DDSAccessResource	[lib] [high] pascal (name, **ptr, *size): look up resource by name; 0 ok, 10 not found
+0DF2:044A	DDSRemoveFunction	[lib] [high] pascal (name): unlink + free function node and its name copy
+0DF2:04F8	DDSRemoveResource	[lib] [high] pascal (name): unlink + free resource node
+0DF2:05A6	DDSGetDriverInfo	[lib] [med] pascal (filename, info far *): read 0x1C-byte "DS" header of a .DSD, return words hdr+0x0C (device id), hdr+0x1A (flags), hdr+0x12 (version)
+0DF2:0611	DDSLoadDriver	[lib] [med] pascal (filename, long far *handle): load MZ-like "DS" driver image, relocate, call entry(1,DDSAccessFunction,0), add 24-byte driver node
+0DF2:08EF	DDSRegisterDriver	[lib] [med] pascal (entry far, long far *handle): register a statically linked driver entry (same protocol, no file)
+0DF2:09EE	DDSUnloadDriver	[lib] [med] pascal (long handle): call driver entry(2,0,0), free image, unlink node; 6 unknown handle, 11 driver refused
+0E9E:0000	MemAlloc	[lib] [high] DDS-registered "MemAlloc": pascal (void far **p, long size) -> farmalloc; 0 ok, 2 fail
+0E9E:003F	MemCalloc	[lib] [high] DDS-registered "MemCalloc": pascal (n, size, void far **p) -> farcalloc
+0E9E:0082	MemRealloc	[lib] [high] DDS-registered "MemRealloc": (void far **p, size) -> farrealloc
+0E9E:00DA	MemFree	[lib] [high] DDS-registered "MemFree": farfree(p); 3 if NULL
+0EAE:0006	cdiInit	[lib] [high] clear CDI channel map (7696) and device table (7796), magic 7694=0xDA, DDSRegisterFunction("cdiRegister")
+0EAE:0036	cdiRegister	[lib] [high] (CDIDEVICE far *dev): copy 0x68-byte function table into slot n, map 32 channels n*32..n*32+31 to it, return first channel
+0EAE:008F	cdiSetSample	[lib] [high] CDI slot 0x00 (ch, SAMPLEINFO far *)
+0EAE:00B8	cdiPlaySample	[lib] [high] CDI slot 0x04 (ch, freq, volume)
+0EAE:00E6	cdiStopChannel	[lib] [high] CDI slot 0x28 (ch)
+0EAE:010C	cdiSetVolume	[lib] [high] CDI slot 0x08 (ch, vol 0..64)
+0EAE:0136	cdiSetFrequency	[lib] [high] CDI slot 0x0C (ch, freq Hz)
+0EAE:0160	cdiSetLinearRate	[lib] [high] CDI slot 0x10 (ch, rate)
+0EAE:018A	cdiSetPosition	[lib] [high] CDI slot 0x14 (ch, pos)
+0EAE:01B4	cdiSetPanning	[lib] [high] CDI slot 0x18 (ch, pan -63..63, 100=surround)
+0EAE:01DE	cdiSetMasterVolume	[lib] [high] CDI slot 0x1C (ch selects device, vol)
+0EAE:0204	cdiMuteChannel	[lib] [high] CDI slot 0x20 (ch)
+0EAE:022A	cdiUnmuteChannel	[lib] [high] CDI slot 0x24 (ch)
+0EAE:0250	cdiMuteAll	[lib] [high] CDI slot 0x2C
+0EAE:0272	cdiUnmuteAll	[lib] [high] CDI slot 0x30
+0EAE:0294	cdiDownloadSample	[lib] [high] CDI slot 0x34 (ch, sample far*, sampletag far*, length)
+0EAE:02C2	cdiUnloadAll	[lib] [high] CDI slot 0x3C
+0EAE:02E4	cdiUnloadSample	[lib] [high] CDI slot 0x38 (ch, sampletag)
+0EAE:030A	cdiGetVolume	[lib] [high] CDI slot 0x40 (ch)
+0EAE:0330	cdiGetFrequency	[lib] [high] CDI slot 0x44 (ch)
+0EAE:0356	cdiGetPosition	[lib] [high] CDI slot 0x48 (ch)
+0EAE:037C	cdiGetPanning	[lib] [high] CDI slot 0x4C (ch)
+0EAE:03A2	cdiGetSample	[lib] [high] CDI slot 0x50 (ch)
+0EAE:03C8	cdiSetupChannels	[lib] [high] CDI slot 0x54 (ch, count)
+0EAE:03EE	cdiGetChannelStatus	[lib] [high] CDI slot 0x58 (ch)
+0EAE:0414	cdiPoll	[lib] [high] CDI slot 0x5C (ch); PUSHAD/POPAD around call; used by NSES 40 Hz timer routine
+0EAE:043A	cdiGetStatus	[lib] [med] CDI slot 0x64 (ch, arg) (name from GUS driver symbol order)
+0EAE:0460	cdiSetEffect	[lib] [med] CDI slot 0x60 (ch, a, b)
+0EF6:039B	ampScaleVolume	[lib] [high] (ch, vol): vol * trackVolume[ch](8571) >> 6; returns EAX
+0EF6:03BE	ampCmdPanning	[lib] [high] row effect 0x97: clamp -63..63 (100 kept), ampSetPanning
+0EF6:03F2	ampCmdNoteCut	[lib] [high] row effect 0x94: arm cut (tick cmd 0x14)
+0EF6:0402	ampCmdNoteDelay	[lib] [high] row effect 0x93: arm delayed note (consumes following note entry)
+0EF6:0442	ampCmdFinePorta	[lib] [high] row effect 0x92: period += (signed param)<<4 once, set freq
+0EF6:04A2	ampCmdFineVolSlide	[lib] [high] row effect 0x91: volume += signed param once (clamp 0..64)
+0EF6:04DD	ampCmdSampleOffset	[lib] [high] row effect 0x90: cdiSetPosition(param<<8, clamped to sample length), 0 = reuse last
+0EF6:0521	ampCmdRetrig	[lib] [high] row effect 0x8F: arm retrigger every param ticks
+0EF6:0535	ampCmdSync	[lib] [high] row effect 0x8E: store sync byte (7c67) read by ampGetSync
+0EF6:053D	ampCmdVibratoVolSlide	[lib] [high] row effect 0x8B
+0EF6:054D	ampCmdTonePortaVolSlide	[lib] [high] row effect 0x8A
+0EF6:055D	ampCmdTremolo	[lib] [med] row effect 0x87 (OpenMPT calls it tremor; AMP implements sine tremolo): speed/depth nibbles with memory
+0EF6:059F	ampCmdVibrato	[lib] [high] row effect 0x89: speed/depth nibbles with memory
+0EF6:05D0	ampCmdArpeggio	[lib] [high] row effect 0x88: precompute base/+x/+y frequencies via 2^(n/12) table
+0EF6:0642	ampCmdTonePorta	[lib] [high] row effect 0x86: target period from following note, speed memory
+0EF6:06C7	ampCmdPortamento	[lib] [high] row effect 0x84: signed slide (0x80 = repeat last, reversed sign), memory
+0EF6:06FA	ampCmdExtraFinePorta	[lib] [med] row effect 0x96: arms tick cmd 0x16 (period += param every non-zero tick)
+0EF6:070E	ampCmdVolumeSlide	[lib] [high] row effect 0x82: arm per-tick volume slide
+0EF6:071E	ampCmdSetVolume	[lib] [high] row effect 0x83
+0EF6:0743	ampCmdPositionJump	[lib] [high] row effect 0x8D: jump to order param-1 (backward only if loop option)
+0EF6:076E	ampCmdPatternBreak	[lib] [high] row effect 0x8C: set break flag (param ignored, always row 0)
+0EF6:0774	ampCmdSetSpeed	[lib] [high] row effect 0x81: ticks per row (0 ignored)
+0EF6:0786	ampCmdSetTempo	[lib] [high] row effect 0x95: BPM; tickHz = BPM*50/125 (integer)
+0EF6:07A7	ampCmdInstrument	[lib] [high] row entry 0x80: load instrument into channel SAMPLEINFO (8231), cdiSetSample, reset volume
+0EF6:086A	ampDoCommand	[lib] [high] dispatch row effect (cmd&0x7F) through jump table cs:036B (24 entries; index 0x18 accepted but out of table)
+0EF6:088D	ampPlayNote	[lib] [high] row note entry: note 0 = stop, 0x7F = keep note; freq = c2spd*semitone[note]>>10, cdiPlaySample unless track paused
+0EF6:0955	ampReadTrackRow	[lib] [high] (bx=track) consume all 3-byte track entries with row<=current row, then refresh freq/volume
+0EF6:0A16	ampNextPattern	[lib] [high] load order entry (0x82 bytes) for current order; stop or loop at end
+0EF6:0A71	ampTickVolumeSlide	[lib] [high] tick routine cmd 2 (also used by 0x8A/0x8B)
+0EF6:0AA1	ampTickExtraFinePorta	[lib] [med] tick routine cmd 0x16: period += param
+0EF6:0AF7	ampTickPortamento	[lib] [high] tick routine cmd 4: period += param<<4, clamp 100..0xD5FF
+0EF6:0B63	ampTickTonePorta	[lib] [high] tick routine cmd 6
+0EF6:0BD2	ampTickArpeggio	[lib] [high] tick routine cmd 8: freq[tick%3]
+0EF6:0BFB	ampTickVibrato	[lib] [high] tick routine cmd 9: sine table cs:02CB, depth*sin>>7 on period
+0EF6:0C76	ampTickTremolo	[lib] [med] tick routine cmd 7: depth*sin>>10 on volume
+0EF6:0CE6	ampTickTonePortaVolSlide	[lib] [high] tick routine cmd 0x0A
+0EF6:0CEF	ampTickVibratoVolSlide	[lib] [high] tick routine cmd 0x0B
+0EF6:0CF8	ampTickRetrig	[lib] [high] tick routine cmd 0x0F: cdiSetPosition(0) when tick % param == 0
+0EF6:0D18	ampTickNoteDelay	[lib] [high] tick routine cmd 0x13: trigger stored note when tick == param
+0EF6:0DAC	ampTickNoteCut	[lib] [high] tick routine cmd 0x14: volume 0 when tick == param
+0EF6:0E00	ampDoTickEffects	[lib] [high] (bx=track) look up cmd in table cs:0DD0 (12 entries, tick 0 uses only arpeggio/retrig at cs:0DF8)
+0EF6:0E3F	ampIncTrackTicks	[lib] [high] saturating per-track tick counter (+0x0B)
+0EF6:0E56	ampTick	[lib] [high] one player tick: tick++, on speed wrap read next row/order, then tick effects for all tracks
+0EF6:0ED2	ampPoll	[lib] [high] catch-up loop: while (GetDSMITime-last) > ampGetTickLength: ampTick, last += len
+0EF6:0F4C	ampInterrupt	[lib] [high] ISR-style (IRET) entry: switch to private stack DGROUP:7BE4, call ampPoll; called from NSES 100 Hz timer routine
+0EF6:0F8C	ampInit	[lib] [high] (long options): clear state, DDSAccessFunction("MCPSampleRealAddress"), tickHz=50, track volumes 0x40
+0EF6:1014	ampClose	[lib] [high] clear initialized flag
+0EF6:1032	ampPlayRange	[lib] [med] (module far*, startOrder, endOrder, options): copy MODULE header to 7BE8, set tempo/speed/pans, download samples via cdiDownloadSample, start (Ghidra: FUN_0000_ff92)
+0EF6:121F	ampPlayModule	[lib] [high] (module, options): ampPlayRange(0, orderCount)
+0EF6:125A	ampPlayPattern	[lib] [med] (module, order, options): ampPlayRange(order, order)
+0EF6:1296	ampStopModule	[lib] [high] stop all tracks, cdiUnloadSample each instrument
+0EF6:12FE	ampPauseModule	[lib] [high] pause all tracks (status bit1)
+0EF6:1338	ampResumeModule	[lib] [high]
+0EF6:1372	ampGetModuleStatus	[lib] [high] returns status byte 7c50 (bit0 playing, bit1 paused)
+0EF6:138A	ampGetTrackStatus	[lib] [high] (track) returns track flags
+0EF6:13B9	ampPauseTrack	[lib] [high] (track) flag bit1 + cdiMuteChannel
+0EF6:1407	ampResumeTrack	[lib] [high] (track) cdiUnmuteChannel + clear bit1
+0EF6:1458	ampGetPattern	[lib] [high] current order index
+0EF6:146F	ampGetRow	[lib] [high] last processed row
+0EF6:1484	ampGetSync	[lib] [high] read and clear sync byte (effect 0x8E)
+0EF6:14A0	ampGetTempo	[lib] [high] AL=speed AH=BPM
+0EF6:14B9	ampSetTempo	[lib] [high] (AL=speed, AH=BPM; 0 = unchanged)
+0EF6:14F6	ampGetTrackData	[lib] [high] (track) fill 10-byte TRACKDATA at DGROUP:7C44 and return far ptr
+0EF6:1577	ampBreakPattern	[lib] [high] (+1/-1) skip to next/previous order
+0EF6:15B9	ampGetTickLength	[lib] [high] 10000 / tickHz (integer) in DSMI time units (0.1 ms), DX:AX
+0EF6:15E5	ampSetPanning	[lib] [high] (track, pan) store and cdiSetPanning
+0EF6:1625	ampSetTrackVolume	[lib] [med] (track or -1 for all, vol 0..64) -> table 8571 (DSMI ampSetMasterVolume)
+105B:0009	ampLinkTracks	[lib] [high] replace order-table track numbers by far pointers into module track table
+105B:008A	ampLoadAMF	[lib] [high] AMF reader (versions 1,8,9,10..14) from open handle into MODULE; tracks/samples allocated, large samples (>1 KB) moved to EMS via EMSAlloc/EMSCopyTo
+105B:07F3	ampLoadModule	[lib] [high] pascal (filename, options, MODULE far **out): alloc 0x5C MODULE, open, check "AMF", ampLoadAMF, record file size
+10EF:0036	tsSetPIT	[lib] [high] near, AX = PIT ch0 divisor (mode 3, port 43h=0x36, 40h lo/hi)
+10EF:0048	tsTimerISR	[lib] [high] INT 08h handler: EOI first, STI, for each active slot acc+=step, call routine (PUSHF+CALLF) on carry
+10EF:007D	tsInit	[lib] [high] Timer Service v2.0 init: hook INT 08, slot 0 = old BIOS handler with rate 0xFFFF, master rate 0xFFFF
+10EF:00DF	tsClose	[lib] [high] restore PIT divisor and INT 08 vector
+10EF:0110	tsChangeRoutine	[lib] [high] pascal (slot, rate): set slot rate, lower master PIT divisor if needed, recompute all steps
+10EF:0178	tsAddRoutine	[lib] [high] pascal (void far *isr, rate divisor): allocate slot 1..15, returns slot or -2
+10EF:0206	tsRemoveRoutine	[lib] [high] pascal (slot)
+10EF:0263	tsSetTimerRate	[lib] [high] pascal (divisor): reprogram PIT, recompute steps
+10EF:02B5	tsGetTimerRate	[lib] [high] returns master divisor 86b2
+111B:0003	ampFreeModule	[lib] [high] pascal (MODULE far*): free orders, instrument samples (EMS ones via DDS "EMSFree"), instruments, tracks (dedup)
+1134:000E	emsInit	[lib] [high] INT 67h 40/41/46: require EMS 4.0, store page frame
+1134:0049	emsAllocPages	[lib] [high] pascal (pages): INT 67h/43, single global handle 86c0
+1134:007A	emsMapPage	[lib] [high] pascal (logical, physical 0..3): INT 67h/44
+1134:00AC	emsSavePageMap	[lib] [high] INT 67h/47
+1134:00BA	emsRestorePageMap	[lib] [high] INT 67h/48
+1134:00C8	emsGetFreePages	[lib] [high] INT 67h/42
+1134:00DC	emsFreeHandle	[lib] [high] INT 67h/45
+1134:00F6	emsGetPageFrame	[lib] [high] returns page-frame segment
+1134:00FF	emsMoveMemory	[lib] [high] pascal (far *moveStruct): INT 67h/57
+1145:0004	dsmiTimeInit	[lib] [high] (long step): reset DSMI time, register GetDSMITime/LockDSMITime/UnlockDSMITime with DDS (game passes step 100)
+1145:005E	GetDSMITime	[lib] [high] DX:AX = DSMI time (0.1 ms units) or the locked snapshot
+1145:007F	dsmiTimeAdvance	[lib] [med] far proc: time += step (unreferenced twin of the ISR)
+1145:0096	dsmiTimeISR	[lib] [high] IRET routine added to Timer Service at 100 Hz: time += step
+1145:00BD	LockDSMITime	[lib] [high] snapshot time, nesting counter e796
+1145:00DE	UnlockDSMITime	[lib] [high]
+1154:0001	emsFindBlock	[lib] [med] find EMS heap block by handle in list 86f0
+1154:0053	emsNewBlockDesc	[lib] [med] get free 18-byte block descriptor, grow table by 128
+1154:0100	emsClearDesc	[lib] [low] *p = 0
+1154:010D	emsHeapInit	[lib] [med] (pages wanted): detect EMM driver, emsInit, allocate pages, register EMSAlloc/EMSFree/EMSCopyTo/EMSCopyFrom/EMSCopy/EMSLock/EMSRestoreState/EMSSaveState
+1154:03A5	emsHeapClose	[lib] [med] free EMS, DDSRemoveFunction all EMS* names
+1154:0410	EMSAlloc	[lib] [med] DDS "EMSAlloc": allocate block in EMS heap, returns handle
+1154:061B	EMSFree	[lib] [med] DDS "EMSFree"
+1154:0688	EMSLock	[lib] [med] DDS "EMSLock": map block region into page frame, return far ptr
+1154:07F4	EMSLockRegion	[lib] [low] variant of EMSLock used by MEMMAN (09D4:0BB4)
+1154:0963	EMSCopyTo	[lib] [med] DDS "EMSCopyTo": conventional -> EMS via INT 67h/57
+1154:0A0D	EMSCopyFrom	[lib] [med] DDS "EMSCopyFrom"
+1154:0AB7	EMSCopy	[lib] [med] DDS "EMSCopy": EMS -> EMS
+1154:0BAB	EMSSaveState	[lib] [med] DDS "EMSSaveState": save page map (used around cdiPoll in 40 Hz ISR)
+1154:0BF4	EMSRestoreState	[lib] [med] DDS "EMSRestoreState"
+1154:0C4D	EMSHeapAvail	[lib] [low] walk block list, returns free amount (called by MEMMAN 09D4:044C)
+1154:0D52	emsInt67	[lib] [low] bare INT 67h stub
+122B:0014	o122B_ovr_trap	[gameA] [low] Borland VROOMM overlay-manager core (INT 3Fh trap path): locate/load overlay, read code from EXE, apply fixups
+122B:0144	o122B_ovr_hook_int3f	[gameA] [med] Save and replace the overlay interrupt vector (INT 21h AH=35h/25h with vector no. from overlay data seg)
+122B:0197	o122B_ovr_unhook	[gameA] [low] Restore overlay interrupt vector / shutdown (calls 122B:0144)
+122B:01B9	o122B_ovr_open_exe	[gameA] [low] Overlay manager: open the EXE (calls 122B:0267)
+122B:01C5	o122B_ovr_get_exe_path	[gameA] [low] Overlay manager: DOS version check (INT 21h AH=30h) and locate program path
+122B:020A	o122B_ovr_find_exe	[gameA] [low] Overlay manager: build EXE path from environment
+122B:0267	o122B_ovr_dos_open	[gameA] [low] Overlay manager: INT 21h open file helper
+122B:028F	o122B_ovr_dos_close	[gameA] [low] Overlay manager: INT 21h close helper
+122B:029F	o122B_ovr_read_header	[gameA] [low] Overlay manager: read FBOV header from EXE
+122B:031F	o122B_ovr_load_segment	[gameA] [low] Overlay manager: load one overlay (seek+read+fixup)
+122B:03EC	o122B_ovr_seek_read	[gameA] [low] Overlay manager: lseek (4200h) + read (3Fh)
+122B:0425	o122B_ovr_fixup	[gameA] [low] Overlay manager: apply overlay segment fixups
+122B:046A	o122B_ovr_fixup_one	[gameA] [low] Overlay manager: single fixup helper
+122B:04F8	o122B_ovr_buffer_alloc	[gameA] [low] Overlay manager: overlay buffer allocation
+122B:055E	o122B_ovr_evict	[gameA] [low] Overlay manager: evict/age overlays in buffer
+122B:05A8	o122B_ovr_make_room	[gameA] [low] Overlay manager: make room in overlay buffer
+122B:0623	o122B_ovr_helper_0623	[gameA] [low] Overlay manager internal helper
+122B:063B	o122B_ovr_helper_063B	[gameA] [low] Overlay manager internal helper
+122B:0676	o122B_ovr_helper_0676	[gameA] [low] Overlay manager internal helper
+122B:0697	o122B_ovr_helper_0697	[gameA] [low] Overlay manager internal helper
+122B:06B5	o122B_ovr_helper_06B5	[gameA] [low] Overlay manager internal helper
+122B:06E8	o122B_ovr_helper_06E8	[gameA] [low] Overlay manager internal helper
+122B:0739	o122B_ovr_helper_0739	[gameA] [low] Overlay manager internal helper
+122B:0757	o122B_ovr_helper_0757	[gameA] [low] Overlay manager internal helper
+122B:0763	o122B_ovr_helper_0763	[gameA] [low] Overlay manager internal helper
+122B:0789	o122B_ovr_helper_0789	[gameA] [low] Overlay manager internal helper
+122B:07A5	o122B_ovr_helper_07A5	[gameA] [low] Overlay manager internal helper
+122B:07B1	o122B_ovr_helper_07B1	[gameA] [low] Overlay manager internal helper
+122B:07FF	o122B_ovr_helper_07FF	[gameA] [low] Overlay manager internal helper
+122B:0897	o122B_ovr_helper_0897	[gameA] [low] Overlay manager internal helper (calls 05A8)
+122B:08EF	OvrInitEms	[gameA] [med] Borland _OvrInitEms(handle, firstPage, pages): EMS overlay cache (INT 67h); called from main
+122B:0AB9	OvrInitExt	[gameA] [med] Borland _OvrInitExt(start, length): XMS/extended-memory overlay cache (INT 2Fh 4300h/4310h, INT 15h)
+122B:0D8F	o122B_ems_detect	[gameA] [med] Detect EMM ("EMMXXXX0" open + IOCTL 4400h/4407h, INT 67h AH=40h/46h/41h/42h)
+122B:0E41	o122B_ems_alloc	[gameA] [low] EMS page allocate/map for overlay cache (INT 67h)
+122B:0EA6	o122B_ems_release	[gameA] [low] EMS release (INT 67h)
+122B:0ED1	o122B_ext_detect	[gameA] [low] XMS/extended memory detection (INT 21h 30h, INT 2Fh 43xx, INT 15h)
+122B:1081	o122B_ext_helper_1081	[gameA] [low] Extended-memory overlay cache helper
+122B:1159	o122B_ext_helper_1159	[gameA] [low] Extended-memory overlay cache helper
+122B:11AD	o122B_ext_copy	[gameA] [low] Extended-memory block copy (INT 15h AH=87h style)
+1351:0012	emu_check_zero_denormal	[lib] [low] Borland 8087 emulator: classify operand
+1351:00F3	emu_mul	[lib] [low] emulator multiply core (12-byte temp reals on SS stack, SS:[0Ch] = emulated stack top)
+1351:02BD	emu_div	[lib] [low] emulator divide core
+1351:0353	emu_mul_mantissa	[lib] [low] 64-bit mantissa multiply helper
+1351:048A	emu_add	[lib] [low] emulator add/sub core
+1351:0DC1	emu_load_const	[lib] [low] load internal constant
+1351:0E3D	emu_set_special	[lib] [low] write zero/infinity result
+1351:0E53	emu_set_indefinite	[lib] [low] raise invalid, write indefinite
+1351:0E6B	emu_push_operand	[lib] [low] push 11-byte operand onto emulated stack
+1351:0E87	emu_push_cs_const	[lib] [low] push constant from CS
+1351:0EBA	emu_dup_top	[lib] [low] duplicate ST(0)
+1351:1446	emu_round_to_int	[lib] [low] round temp real to integer
+1351:154E	emu_load_sti	[lib] [low] load ST(i)
+1351:1B5D	emu_transcendental	[lib] [low] transcendental driver (reduction + polynomial)
+1351:1B96	emu_poly_step	[lib] [low] helper of emu_transcendental
+1351:1EB8	emu_bcd_word	[lib] [low] packed-BCD digit group -> binary
+1351:1EE7	emu_fbld	[lib] [low] FBLD (packed BCD load)
+1351:1FB2	emu_bin_to_bcd	[lib] [low] binary -> packed BCD digits
+1351:1FD0	emu_fbstp	[lib] [low] FBSTP (packed BCD store)
+1351:2714	emu_exception	[lib] [low] set status bits, on unmasked exception chain to INT handler via SS:[40h]
+15C9:02F0	fp87_toggle_flag	[lib] [low] xor flag byte in emulator state (helper of fixup handler)
+15C9:0306	fp87_fixup_handler	[lib] [med] INT 34h-3Dh handler when a real x87 exists: rewrites caller's "CD 3x" into "9B D8+x" (self-modifying patch) and re-executes
+15C9:0430	fp87_exception_handler	[lib] [med] x87 exception (IRQ13/INT 2) handler: FNSTENV, clear, decode faulting op, dispatch to RTL FPE
+15C9:054B	fp87_exc_pop	[lib] [low] helper of fp87_exception_handler
+15C9:0598	fp87_reexec_on_stack	[lib] [low] build an ESC instruction on the stack and RETF into it
+2599:0018	asm_blit_scaled_key_flip	[lib] [high] 386: scaled (16.16) transparent blit, optional horizontal mirror (flags bit0); work vars in CS:0000-0017; called by 0AC6:0EE8
+2599:0144	asm_blit_scaled_key	[lib] [med] 386: scaled transparent blit without flip (key at [bp+28h]); unreferenced
+2599:0234	asm_span_scaled_key	[lib] [med] 386: scale one span src->dst with transparent key; unreferenced
+2599:028F	asm_memset32	[lib] [high] (far dst, dword value, count): REP STOSD + tail STOSB
+2599:02AF	asm_memcpy32	[lib] [high] (far dst, far src, count): REP MOVSD + tail MOVSB
+2599:02D0	asm_copy_rect	[lib] [high] (src far, sx, sy, w, h, spitch, dst far, dx, dy, dpitch): opaque rect copy; passed as far fn ptr to blit dispatcher 0AC6:0430
+2599:0341	asm_copy_rect_key	[lib] [high] same args + key byte: transparent rect copy; far fn ptr
+2599:03C4	asm_copy_rect_key_mirror	[lib] [high] same as 0341 but horizontally mirrored; far fn ptr
+2599:0440	asm_tint_rect	[lib] [med] blend each pixel != colour with colour through triangular blend table (FS:BX); unreferenced
+2599:04AD	asm_blend_span	[lib] [high] dst[i] = blendTable(src1[i], src2[i]) over count bytes; called by 0C7F:0A0F
+2599:0500	asm_upscale_view2x	[lib] [high] 2x upscale of 100-byte-pitch view buffer to VGA A000 (rows 4..195, x 6..190) with blend-table interpolation, 0xFE = keep screen pixel; called by 3FD1:4D26
+2700:0000	q3d_free_view_buffers	[gameA] [med] Free 3D-view buffers (far free with __FILE__ 3DQUICK.L), runs if option bit 0x20 set
+2700:00A8	q3d_blit_view	[gameA] [med] Copy rendered 3D view buffer to the screen (graphics calls 0C7F)
+2700:0235	q3d_alloc_view_buffers	[gameA] [med] Allocate 3D view buffers; fatal error on failure (3DQUICK.L)
+2700:02B0	q3d_project_a	[gameA] [med] FP helper for table precalc A: project/scale value, 4x ftol
+2700:0328	q3d_precalc_table_a	[gameA] [med] Startup precalc of perspective table A (369 x87 ops); called from main
+2700:0D1D	q3d_project_b	[gameA] [med] FP helper for precalc B (4x ftol)
+2700:0DA8	q3d_precalc_table_b0	[gameA] [low] Precalc perspective table (variant, 213 x87 ops); no direct caller found (pointer?)
+2700:15D7	q3d_precalc_table_b1	[gameA] [med] Precalc perspective table (216 x87 ops); called from main
+2700:1E06	q3d_load_kor	[gameA] [high] Load a .KOR coordinate file for a wall/texture set; version check "Kordinat dosyası versiyonu desteklenmiyor"
+2700:2413	q3d_precalc_table_c0	[gameA] [low] Precalc perspective table (twin of 0DA8); no direct caller found
+2700:2C42	q3d_precalc_table_c1	[gameA] [med] Precalc perspective table (twin of 15D7); called from main
+2700:3471	q3d_draw_strip_a	[gameA] [low] Draw wall strip helper (called from 3969)
+2700:35FF	q3d_draw_strip_b	[gameA] [low] Draw wall strip helper (called from 3969)
+2700:37EE	q3d_reset_kor	[gameA] [low] Reset/free loaded .KOR data (called when a map loads)
+2700:3932	q3d_render_view	[gameA] [med] Render whole first-person view: calls the 5 layer renderers 3CDD,43C9,4F55,56E0,58E2
+2700:3969	q3d_draw_cell_wall	[gameA] [med] Draw one wall face from map cell; errors "Beklenmedik duvar!!!!; Harita offset: %d", "OrspUm[%d]"
+2700:3CDD	q3d_render_layer_far	[gameA] [low] Render layer 1 (far row) of the view
+2700:43C9	q3d_render_layer_mid	[gameA] [low] Render layer 2 of the view (largest)
+2700:4F55	q3d_render_layer_near	[gameA] [low] Render layer 3 of the view
+2700:56E0	q3d_render_layer_side	[gameA] [low] Render layer 4 of the view
+2700:58E2	q3d_render_layer_front	[gameA] [low] Render layer 5 of the view
+2700:5E7F	q3d_debug_dump	[gameA] [low] Debug: draw and wait for key (getch)
+2700:5F32	q3d_draw_automap	[gameA] [med] Draw the map overview with "x:%d  y:%d" (called from explore loop)
+2700:624A	q3d_init_a	[gameA] [low] Small init routine (no callers found; pointer/unused)
+2700:62EC	q3d_init_tables	[gameA] [low] Init routine called from main after precalc
+2700:647B	q3d_anim_step_forward	[gameA] [low] Step animation (one of 4 movement animations; LXMUL/LDIV interpolation)
+2700:69E2	q3d_anim_step_back	[gameA] [low] Step animation variant
+2700:6F18	q3d_anim_turn_a	[gameA] [low] Turn/slide animation (called via 80D0)
+2700:73D8	q3d_anim_turn_b	[gameA] [low] Turn/slide animation (called via 80D0)
+2700:798C	q3d_anim_door	[gameA] [low] Door/stair animation (called from s3d_try_move)
+2700:80D0	q3d_anim_dispatch	[gameA] [low] Select and run animation 6F18/73D8
+2700:8197	q3d_anim_rotate_left	[gameA] [low] Rotation animation using 08D0 blitters and x87 (30 ops)
+2700:8896	q3d_anim_rotate_right	[gameA] [low] Rotation animation using 08D0 blitters and x87 (32 ops)
+2700:8FD4	q3d_wait_retrace	[gameA] [low] Wait/sync helper (calls 09D4:0E4A)
+2700:9024	q3d_free_anim_buffer	[gameA] [low] Free animation buffer (3DQUICK.L)
+2700:9078	q3d_shade_view	[gameA] [low] Compute shading/darkness for view; uses rand() twice and x87
+303F:0000	s3d_try_move	[gameA] [med] Try to move party (dx,dy,facing): wall/door checks on map cell, fires FRPOS events (type 3 leave, type 1 enter), animations
+303F:0715	s3d_random_view_effect	[gameA] [low] Small random effect (rand) + blit view
+303F:07B6	s3d_redraw_view	[gameA] [med] Redraw 3D view (switch on view mode, calls q3d render/anim); arg = force
+303F:0991	s3d_scan_cells	[gameA] [low] Scan map cells around party (huge-pointer arithmetic)
+303F:0BDB	s3d_show_location	[gameA] [high] "Şu anda <district>'ın kuzeybatısındayız" compass/location report window
+303F:0FFC	s3d_handle_key	[gameA] [med] Keyboard command dispatcher of exploration (switch @1148): menus, camp, char screen, options, save, cheat mode "Cit mod"
+303F:189D	s3d_load_file_error	[gameA] [low] Open/read helper with "Dosya açılamadı!" error
+303F:1927	s3d_load_district	[gameA] [high] Load district map PCn (via table 16E0:2E31) and script PCSn; set size/start pos; load .KOR sets; rand() for 0xBBAB
+303F:23ED	s3d_debug_buffers	[gameA] [low] Debug "Buf no:%d" memory-buffer check
+303F:2521	s3d_enter_view	[gameA] [med] Set up exploration screen: pal3d.pal, panels, music, first view draw
+303F:276C	s3d_redraw_screen	[gameA] [med] Redraw full exploration screen (view + panels)
+303F:27F7	s3d_draw_portrait	[gameA] [low] Draw one party portrait/panel element
+303F:2C69	s3d_draw_party_panel	[gameA] [med] Draw party status panel (HP "%3d" etc.); uses rand
+303F:392D	s3d_stub_392D	[gameA] [low] Tiny function (10 insns)
+303F:394A	s3d_load_ui_images	[gameA] [high] Load UI pictures pcmainth/trade/merdim/viewbuyu/viewpc/itembank/disdunya.cmp (called from main)
+303F:39FD	s3d_advance_clock	[gameA] [low] Advance game time counters (no calls; used by camp, travel, explore loop)
+303F:3BF3	s3d_calc_daylight	[gameA] [low] Compute day/night level from time (huge ptr reads)
+303F:3CCE	s3d_apply_daylight	[gameA] [low] Apply day/night state (calls 3BF3)
+303F:3DD0	s3d_write_save	[gameA] [high] Write save file (1524 bytes, 22 writes; layout in gameA.md)
+303F:3F95	s3d_read_save	[gameA] [high] Read save file, reload district; "Saklama dosyası yükleme hatası"
+303F:4353	s3d_camp	[gameA] [high] Camp/rest: "kamp yapIyoruz...", random interruptions (rand)
+303F:4A27	s3d_make_random_phrase	[gameA] [low] Build random Turkish phrase from word lists with suffixes (rand)
+303F:4D22	s3d_draw_status_line	[gameA] [med] Status line "%d %s %s, %02d:%02d" (date/time)
+303F:4F3A	s3d_character_screen	[gameA] [med] Character/inventory screen (equip, drop "sol: at sağ: atma", gender, aphorism); many ISOSYS helpers
+303F:75EF	s3d_draw_portrait_hl	[gameA] [low] Highlight portrait (calls 27F7)
+303F:765C	s3d_leave_district	[gameA] [high] "semtten CIkacak mIsInIz?" then city-map travel (3C2D:2DE2) and reload
+303F:7A71	s3d_options_menu	[gameA] [high] Options: savaş hızı, oyun müziği, savaş müziği, ses efektleri, zorluk, görüntü
+303F:7F2F	s3d_save_load_menu	[gameA] [high] Save/load file menu (*.sav, sakla%03u.sav, "[bosch]", cheat-mode block)
+303F:837A	s3d_apply_sound_options	[gameA] [low] Apply sound option (called from INTRFACE)
+303F:8524	s3d_explore_loop	[gameA] [high] Main exploration loop: keys, clock, hunger, random encounters -> battle, events, death, ending
+39E5:0000	cg_random_gender	[gameA] [low] Random gender pick (rand) and set "erkek"/"dişi"
+39E5:011F	cg_load_char_graphics	[gameA] [low] Load chargen graphics/kor for current character (CHARGEN.L)
+39E5:035D	cg_roll_misc	[gameA] [low] Random roll for a character attribute (rand) + ISOSYS helper 4595:0387
+39E5:0437	cg_roll_stats	[gameA] [high] Roll character stats with random(n) (26 rand calls) into the 92-byte record
+39E5:0F4E	cg_draw_stats	[gameA] [med] Draw rolled stats (itoa x14)
+39E5:164A	cg_draw_header	[gameA] [med] Draw "karakter #%d" and gender
+39E5:1753	cg_draw_field_a	[gameA] [low] Draw small chargen field
+39E5:17D2	cg_draw_field_b	[gameA] [low] Draw small chargen field
+39E5:182E	cg_save_party	[gameA] [high] Write GRP.DAT (4x(37+37) bytes + 4x92 bytes = 664)
+39E5:1932	cg_load_party	[gameA] [high] Read GRP.DAT/GRPHAZIR.DAT (filename arg) and fill race names
+39E5:1A1A	cg_free_graphics	[gameA] [low] Free chargen buffers
+39E5:1AA2	cg_main	[gameA] [high] Character generation screen (palbat.pal, sematik.cmp, karakter.cmp); returns 0 on cancel
+3C2D:0000	demo_wait_key_or_delay	[gameA] [low] Wait for key with timeout (kbhit/getch)
+3C2D:0086	demo_show_picture	[gameA] [low] Load and display a picture via MEMMAN buffers
+3C2D:054D	demo_intro_menu	[gameA] [high] Intro (acilis, istb, demo.amf) and main menu (yeni oyun/eski oyun/çabuk başla/dos'a çık); returns choice 1..6
+3C2D:1108	demo_story_scene	[gameA] [med] Story slideshow ("taa ki yabgu ...", demo1.pal); FRPOS op 27
+3C2D:19F1	demo_game_over	[gameA] [high] Party dead: villain laugh text, "eski bir oyuna devam edecek misiniz?"
+3C2D:1B76	demo_ending	[gameA] [high] Ending sequence (soon.cmp, devam.cmp, xdson.rix)
+3C2D:1F32	demo_play_music	[gameA] [med] Load/start AMF module (rand selects track); "Müzik dosyası bulunamadı!"
+3C2D:217C	demo_credits_exit	[gameA] [high] THANX.DOC credits, grup.cmp, "İSTANBUL EFSANELERİ I - Lale Savaşçıları, sorunsuz bitti!"
+3C2D:2992	demo_palette_effect	[gameA] [low] Palette/fade effect (0AC6:01AA x4)
+3C2D:2D3E	demo_stub_2D3E	[gameA] [low] Small helper, no calls
+3C2D:2DE2	demo_city_map_travel	[gameA] [high] Istanbul district map (isthar*.cmp): "trafik tIkalI", "%s girecek miyiz?", "Sehire mi? kanalizasyona mI?"
+3C2D:371E	demo_free_music	[gameA] [low] Release music buffer (calls 09D4:05F4)
+3C2D:3790	demo_load_sounds	[gameA] [med] Load sound samples buun.pur, seq1..seq5
+3FD1:0000	fr_run_event	[gameA] [high] FRPOS interpreter: run the event of map cell (cell_off, trigger type); hard-coded shops by cell key; opcode switch @0911
+3FD1:20CE	fr_redraw	[gameA] [med] Redraw view+daylight (FRPOS op 32)
+3FD1:2104	fr_teach_aphorism	[gameA] [high] Teach a "vecize" (war aphorism) to a chosen character (FRPOS op 28)
+3FD1:23B2	fr_get_e5e3	[gameA] [low] Return word 16E0:E5E3
+3FD1:23C0	fr_shop_draw_item	[gameA] [low] Shop/loot screen: draw item list (called from 2F21)
+3FD1:27C4	fr_shop_draw_text	[gameA] [low] Shop/loot screen text box
+3FD1:296A	fr_shop_draw_cursor	[gameA] [low] Shop/loot screen cursor
+3FD1:2B1A	fr_shop_buy	[gameA] [low] Shop purchase step: "para kalmadI!!!" (rand)
+3FD1:2D6F	fr_shop_draw_prices	[gameA] [low] "%d %s" price lines
+3FD1:2F21	fr_item_exchange	[gameA] [med] Shop / treasure / item exchange screen ("hazine bulduk"); FRPOS op 9 and hard-coded shops
+3FD1:46AA	fr_decode_text	[gameA] [high] Decode script text in place: each byte += 10 (until NUL)
+3FD1:46E3	fr_find_character	[gameA] [low] Find party member matching criteria ("adambul") for ops 22/23
+3FD1:4AAC	fr_flag_test	[gameA] [high] Test event flag n in bit array 16E0:B9CA
+3FD1:4AD9	fr_flag_set	[gameA] [high] Set event flag n
+3FD1:4B04	fr_flag_clear	[gameA] [high] Clear event flag n
+3FD1:4B31	fr_flags_reset	[gameA] [high] Clear all 256 event flags (32 bytes)
+3FD1:4B57	fr_show_icon	[gameA] [high] Show portrait/icon "ikon%d.cmp"+".pal" in message window
+3FD1:4E42	fr_stub_4E42	[gameA] [low] Small graphics helper (0C7F:0A51)
+3FD1:4E63	fr_fetch_byte	[gameA] [high] Fetch next script byte at PC 16E0:BB98 from EMS-mapped PCS buffer
+3FD1:4ECB	fr_skip_commands	[gameA] [high] Skip n script commands using the operand-length table ("Atla:%d")
+3FD1:509D	fr_fetch_string	[gameA] [high] Read n bytes from script into new far buffer, NUL-terminate, decode (+10)
+3FD1:513F	fr_item_name	[gameA] [low] Build item name string (" kIvrIk")
+3FD1:51C7	fr_draw_text_line	[gameA] [low] Draw a text line (5784 font)
+3FD1:5285	fr_menu	[gameA] [med] Up to 6-choice menu (FRPOS op 21), returns choice
+3FD1:5550	fr_draw_money	[gameA] [med] Draw money/status "%s%5d"
+3FD1:57E8	fr_shop_load_gfx	[gameA] [low] Shop graphics setup
+3FD1:5A7F	fr_shop_free_gfx	[gameA] [low] Shop graphics release
+4595:0000	iso_free_battle_gfx	[gameB] [med] free the battle image slots (E29F+8n for n=11..19 and n=1..2, E2D7, E2CF) via 0DB7:022F (free with __FILE__/__LINE__)
+4595:008A	iso_wnd_cb_picture6	[gameB] [low] INTRFACE window callback (registered at 05DC:0B35 as 1694:004D) that calls iso_show_picture(6)
+4595:0097	iso_wnd_cb_set_layout	[gameB] [low] INTRFACE window callback: iso_show_picture(6), then set the panel rectangle globals E725..E733 from (col,row,lineh)
+4595:0136	iso_wnd_cb_button	[gameB] [low] INTRFACE window callback: draw a framed button/label via iso_blit_icon(7) and 0AC6:0430, optionally highlighted
+4595:019F	iso_draw_text_shadow	[gameB] [med] draw a string twice with a 1-px offset (colours 7/1) via iso_draw_text, giving a shadowed caption; the 303F character screen calls it 25x
+4595:0202	iso_clamp_add	[gameB] [high] *p += d, then clamp *p into [lo,hi]; args (int far *p, d, lo, hi)
+4595:0238	iso_sign	[gameB] [high] returns 1, -1 or 0 for x>0, x<0 or x==0
+4595:0255	iso_bit_test	[gameB] [high] returns -1 if bit (n-1) of mask is set, else 0 (n is 1-based)
+4595:028E	iso_blit_icon	[gameB] [med] blit picture slot n (E29F+8n) at x,y through 0AC6:0430
+4595:02D1	iso_draw_bar	[gameB] [med] draw a stat/HP bar segment from the bar image (width E2CB), 50 px per unit row
+4595:0387	iso_draw_sprite	[gameB] [low] map a sprite frame from EMS (1154:0688) and blit it (0AC6:0430), inside a MEMMAN mark/release
+4595:0570	iso_load_battle_gfx	[gameB] [high] load battle graphics: anakes/yericon/tabletur.cmp; party sprites (table 269B, 13-byte names) and monster-group sprites (<short name>.cmp/.kor from table 2185; karafa.cmp/.kor special case); duvarica/duvaricb/duvaric%d.cmp walls
+4595:0B80	iso_draw_text	[gameB] [med] draw text at x,y (coordinates clamped to >=0): font 1 via grt_draw_text (5784:0B43), else grt_draw_text_alt (5784:0DEA)
+4595:0BE1	iso_show_picture	[gameB] [med] hide mouse, copy picture slot n (E29F+8n) to the screen (09D4:068A), show mouse with colour E5E3
+4595:0C27	iso_set_cell	[gameB] [high] occupancy grid: occ[x][y] = v (28x28 words at DGROUP C2CE, stride 0x38)
+4595:0C40	iso_center_view	[gameB] [high] view origin D580/D57E = clamp(pos-3, 0, 20) from combatant c's x/y
+4595:0D1B	iso_draw_map	[gameB] [med] draw the visible isometric battlefield (tiles, walls) from view origin D57E/D580
+4595:0F86	iso_trace_line	[gameB] [med] trace a line from combatant c to (x,y) over the grid (slope in x100 fixed point); sets D560 (clear/visible) and D564 (distance)
+4595:1139	iso_scroll_view_dir	[gameB] [low] scroll the battlefield view one step (switch table), then redraw (0AC6:0C5A)
+4595:14EA	iso_scroll_view_to	[gameB] [low] scroll the view smoothly from the old origin to (x,y)
+4595:16EB	iso_show_message	[gameB] [med] show a speech/message line for combatant c (name + text; "naneli"/"bu ciklet" special cases) and speak it via iso_speak_vecize
+4595:1935	iso_face_anim_tick	[gameB] [med] timer callback (installed by iso_start_face_anim) that animates the speaking face; RNG: random(2) ? 0 : (random(2)+3)*32 (2nd call only if the 1st is 0); fatal "Loop-Surat animasyonu hatası" tip=%d
+4595:1ACE	iso_apply_dot_damage	[gameB] [low] apply effect damage d to combatant c (only if template+0x14 > 0); sets the hit/killed animation state
+4595:1B6D	iso_next_turn	[gameB] [high] battle-end check (side alive flags 2634/2636: 632E=1 win, 2 loss; returns -1). Otherwise advance the initiative list: new round re-rolls (D54A++, 303F:39FD); skip dead or stunned (+0x22--); AP = template+0x0C; status 0x15 AP-3 (min 3), 0x1C AP*2; centre the view; party battle cry random(4)+0x19/0x1D
+4595:1E75	iso_roll_initiative	[gameB] [high] for c=1..28: order[c]=c (D4C0); init[c] (D4FA) = max(0, random(6)+T.+0x0E+10-T.+0x08), where the max() macro evaluates random(6) TWICE when the first value is >=0; then bubble sort descending
+4595:1FFC	iso_add_status	[gameB] [med] store status (id, duration*60) in combatant c's 5 slots (+0x16..+0x1E, value%100 = id): refresh a matching slot, else use a free one
+4595:20E0	iso_has_status	[gameB] [high] 1 if any status slot (+0x16..+0x1E) of combatant c has value%100 == id, else 0
+4595:214E	iso_play_sfx	[gameB] [med] play battle sound n (17-byte sample-name table 22EA: adim*.pur, vurus, iska, olum, ...) if sound is on (73D0/BB38); monster-specific variants by type (switch)
+4595:22B3	iso_start_face_anim	[gameB] [low] allocate the 14-byte timer-callback record (9660), point 964C at 1694:007A (iso_face_anim_tick) and store the args
+4595:235B	iso_speak_vecize	[gameB] [med] play the voice sample for vecize/answer n (55CC:01F3 load, 05DC:192D play) with the face animation; errors "Ses dosyası hatası!" / "Ses dosyasını okuyamıyom!"
+4595:255B	iso_sfx_rate	[gameB] [med] playback rate for sound n: class byte table 1E8D -> 4500..44000 Hz (default 7500), scaled by arg/7500
+4595:2623	iso_voice_filename	[gameB] [med] sprintf "vecize%.2d.pur"/"fecize%.2d.pur" (male/female voice) or "cevap%.2d.pur"/"fevap%.2d.pur"
+4595:2721	iso_redraw	[gameB] [med] full battle-screen redraw: map, combatants, HP/AP bars (itoa), names, message, current-actor marker
+4595:2C7B	iso_step_sfx	[gameB] [low] footstep/terrain sound id for the current actor (switch on monster type and tile)
+4595:2D39	iso_move_step	[gameB] [med] move the current actor one cell in a keypad direction (scancodes 47..51): facing, AP cost, collision, bump attack (iso_attack), scrolling, step animation
+4595:3955	iso_draw_combatants	[gameB] [med] draw all combatants in isometric depth order (facing frames); RNG: random(10)+1 -> 631A (idle/anim frame)
+4595:3F5B	iso_attack	[gameB] [high] resolve attacker D56E vs defender D56C, up to 2 attacks: AP-cost check, to-hit, damage, armour, slayer bonuses, stun weapon, XP, death, on-hit spell (formulas in gameB.md)
+4595:482D	iso_pick_target	[gameB] [med] mouse/keyboard target-cell cursor (bioskey, mouse 0C7F:0515/026B); result in D57A/D578
+4595:4DB8	iso_cmd_attack	[gameB] [med] player attack command: target and range/LOS checks ("vuramam ki !!", "çok uzakta be anam !", "kim uğraşacak şimdi yaa ?!"), then iso_attack
+4595:50BD	iso_cmd_vecize	[gameB] [med] player spell ("vecize") command: the player TYPES the saying (getch, strncmp 4A23, atoi), matched against the known list; "Bu adam vecize okuyamaz!", "vecize bilmiyor!"
+4595:552C	iso_vecize_reaction	[gameB] [low] random reaction line from a combatant that was addressed ("bana mı dedin ?", "yok abicim, ne haddimize", "sana dedim, n'olcek ?")
+4595:568C	iso_build_battlefield	[gameB] [med] build the 28x28 battle map from the 3D dungeon around the party (far ptr B9EC, 15 bytes per cell, width B9EB, pos B9F1/B9F3, facing B9F0): walls/doors, random decoration random(101), random(2)
+4595:6345	iso_party_to_battle	[gameB] [low] copy party character records (0x5C bytes) into the battle templates (D5AC loop), then iso_calc_char_stats
+4595:64F5	iso_calc_char_stats	[gameB] [low] compute derived combat values for char 2898 through the helpers below
+4595:6828	iso_calc_weapon	[gameB] [med] weapon to-hit bonus D5A8 and encoded damage D5AA for char 2898's equipped weapon (14-byte table at E7F)
+4595:6AC2	iso_calc_stat_a	[gameB] [low] derived-stat helper (table 10AA, D5EE)
+4595:6B79	iso_calc_stat_b	[gameB] [low] derived-stat helper (status tests via iso_has_status)
+4595:6CD6	iso_calc_stat_c	[gameB] [low] derived-stat helper (table 10AA, D5E6/D5EA)
+4595:6E4D	iso_calc_ap_by_load	[gameB] [low] returns max(3, 10 - max(0, D5EE-5)), i.e. AP from load
+4595:6E95	iso_draw_char_frame	[gameB] [low] hide mouse, draw the character panel background (iso_draw_item_icon, 0AC6:0908/0430)
+4595:6F5F	iso_item_effect_a	[gameB] [low] item-effect entry for char 2898 (stat change); no static caller
+4595:704E	iso_item_effect_b	[gameB] [low] item-effect entry for char 2898 (stat change); no static caller
+4595:713D	iso_item_effect_maxhp3	[gameB] [low] char 2898: char field -0x664E += 3 and template max HP (+0x02) += 3
+4595:7172	iso_item_effect_c	[gameB] [low] item-effect entry for char 2898 (stat change)
+4595:71A7	iso_item_effect_d	[gameB] [low] char 2898: char field -0x663E += 50
+4595:71C4	iso_item_effect_e	[gameB] [low] char 2898: char field -0x6644 += 50 and template +0x14 += 50
+4595:71F9	iso_item_effect_f	[gameB] [low] char 2898: char field -0x664C += 50
+4595:7216	iso_item_effect_g	[gameB] [low] char 2898: char field -0x6648 += 50
+4595:7233	iso_item_effect_h	[gameB] [low] char 2898: char field -0x6646 += 50
+4595:7250	iso_init_panel_layout	[gameB] [low] INTRFACE window callback (1694:0106) that fills the panel/button coordinate globals E69D..E70B
+4595:7470	iso_draw_name	[gameB] [low] draw a combatant name, centred by text width (monster long names from 1EB3)
+4595:7574	iso_draw_char_info	[gameB] [med] character info panel: HP/AP "%d/%d", gender "erkek"/"dişi", "%s %s", stats
+4595:7A03	iso_use_item	[gameB] [med] use a consumable (items 0x20..0x29, 10-byte effect table 1047: stat, stat2, ..., amount); one branch uses random(7) -> D5B0
+4595:7F29	iso_draw_textbox	[gameB] [low] draw a framed text box (0AC6:0908) with two text lines
+4595:7F80	iso_format_stat_line	[gameB] [low] build a "name value/value" description string (strcpy/strcat/itoa) for the item/stat panel
+4595:80D6	iso_refresh_desc	[gameB] [low] rebuild and redraw the description box when the selected entry changed (D5E8 vs D5E4)
+4595:8111	iso_battle_to_party	[gameB] [med] after battle, copy template HP/stats and combatant values back into the records of chars 1..4
+4595:8269	iso_eval_param	[gameB] [high] spell-parameter decoder: v<1000 returns v; 1001..1019 are formulas (random(lvl+1)+random(3), D55C, D5BE, random(D55C+9), random(6)+8*D5BE, target HP+25, ...); anything else is fatal (559A:0000, line 0x9A2)
+4595:84E9	iso_cast_vecize	[gameB] [high] apply vecize D5E2 from caster D5DE to target D5E0: decode its 11 params (table 7E+0x16*s) through iso_eval_param, deaf/silenced checks (status 0x1F/0x17), message (779+0x25*s), damage/heal/status/area effects, sounds, kills
+4595:8E4F	iso_vecize_effect	[gameB] [low] per-target part of a vecize: transformations and special lines ("ohh!", "geliyorum babacığım!", "ben gariban bir antenim!"), damage via iso_apply_dot_damage
+4595:9490	iso_after_hit	[gameB] [low] post-hit reactions: retaliation/thorns ("dokunmıyacaktın bana!"), "bi korum bir de yer kor!"
+4595:9668	iso_ai_turn	[gameB] [high] AI for non-player combatant D5DE (enemies, side 2): picks a target (nearest/weakest), may use a vecize (BB53; "teslim, teslim!" surrender), moves via iso_move_step, attacks via iso_attack; 14 random() calls
+4595:AA60	iso_give_xp	[gameB] [high] if c is a party member (template < 5): char xp (-0x6652) += n, then iso_xp_progress
+4595:AAAE	iso_xp_progress	[gameB] [med] xp-driven growth (no level numbers): every 1000 xp max HP += max(0, class bonus)+1; every 190 points of another counter, stats grow (iso_sign used 16x)
+4595:B04D	iso_draw_item_icon	[gameB] [low] draw the item icon/cell for slot D5EA (0AC6:0430)
+4595:B22F	iso_draw_portrait	[gameB] [low] draw a character portrait/frame (0AC6:0908/0430/0B99, 0C7F:0A51)
+4595:B40A	iso_battle	[gameB] [high] battle entry (callers 3DSYS 303F:8524 and FRPOS 3FD1): palbat.pal, music random(2)?0xC:0x10, monster groups (HP = BB39*w0+w1), placement (random(9)/random(8) retry loop), initiative, main loop (AI vs keyboard/mouse commands), stun random(2)+2, results
+5313:0000	gfl_ring_read_far	[gameB] [med] GFLALT.H: copy len bytes at stream pos (mod ring size) from the EMS ring buffer to a far buffer, split at the wrap; EMS map 1154:0688 + memcpy32 2599:02AF. Args (ring hnd far*, dst far, dstoff, pos long, len long, ringsize long)
+5313:0145	gfl_ring_copy_to_ems	[gameB] [med] GFLALT.H: same as gfl_ring_read_far but the destination is another EMS block (09D4:07C9 EMS-to-EMS copy) at a long dst offset; used for frame staging and for audio into the sample slot
+5313:0241	gfl_alloc_sample_slot	[gameB] [med] GFLALT.H: set up NSES sample-table entry slot (0x17-byte entries at DGROUP DE34) with an EMS block of len*count bytes (asserts size<=0xC000 and slot free); GFL uses slot 0x30 (2 x 22050 bytes)
+5313:0390	gfl_decode_frame	[gameB] [high] GFL delta/RLE decoder into a 64000-byte frame buffer: 1nnnnnnn literal (n+1), 01xxxxxx skip, 00xxxxxx fill with next byte; stops at src end or dst+64000
+5313:04D0	gfl_load_ghd	[gameB] [high] GFLSTR.H: open <name>.GHD, read 0x310-byte header (sig "GFL" sum check 0xD9), set up audio slot and preload 1 s of audio, copy palette to current palette, read the 8-byte-per-frame index into farmalloc'd memory
+5313:06AA	gfl_open_gfl	[gameB] [high] GFLSTR.H: open <name>.GFL, alloc 64K EMS staging block, EMS ring buffer (size from free EMS, file length and memory mode 8DDA) and 64000-byte frame buffer, preload ring in 0xC000 chunks
+5313:08E2	gfl_close	[gameB] [high] GFLSTR.H: free the frame index, the audio sample slot, close the GFL handle, free ring, staging and frame buffers
+5313:095E	gfl_update_frame_clock	[gameB] [high] GFLMAIN.H: current frame D5F2 = (ms_counter E74A - start D60E) * fps / 1000
+5313:0996	gfl_show_frame	[gameB] [high] GFLMAIN.H: process frame D5F2 if new: music pattern-jump flag, keyframe-skip on lag, palette chunk or revert, 1 s audio chunk into the sample double buffer, decode, wait for vertical retrace, blit; arg!=0 also resyncs the audio channels' play position to the clock
+5313:0DE8	gfl_stream_fill	[gameB] [high] GFLMAIN.H: refill the EMS ring from the GFL file in 0x800-byte reads while >10 ms remain in the frame period; after dropped frames it seeks forward to the next keyframe
+5313:1126	gfl_play_loop	[gameB] [high] GFL.C: clear screen, set header palette, show frame 0, start the clock and the looping audio on the last two channels; loop kbhit/getch (Esc aborts), clock, show, stream until the last frame; stop the audio channels; return the last key
+5313:1270	gfl_play	[gameB] [high] GFL.C: public entry gfl_play(name): asserts strlen<=8, MEMMAN mark, sprintf "%s.GHD"/"%s.GFL" into the DGROUP literal "01234567.012", load, open, play loop, close, MEMMAN release; returns the key that ended playback
+5447:0000	fm_cmp_decode_huge	[engine] [high] CMP RLE decoder, 32-bit lengths, EMS window remap every 48K (listing: ovl5313 tail)
+5447:043B	fm_cmp_decode	[engine] [high] CMP RLE decoder: c>0x80 run of (c-0x80) x next byte; else copy c literal bytes; returns bytes written (listing 5447:038F)
+5447:052A	fm_load_cmp	[engine] [high] fm_load_cmp(memtype,name,slot): read u16 w,u16 h, allocate slot w*h, decode (listing 5447:047E)
+5447:0873	fm_filelength	[engine] [high] file length via tell/seek end/seek back (listing 5447:07C7)
+5447:08B9	fm_load_pal	[engine] [high] fm_load_pal(name,first,count): read count*3 bytes into palette e5ef+first*3 (listing 5447:080D)
+5447:093A	fm_load_file	[engine] [high] fm_load_file(memtype,name,block): load whole file into (new) mm block, chunked through EMS (listing 5447:088E)
+5447:0B5F	fm_change_ext	[engine] [med] returns malloc'd copy of path with extension replaced (listing 5447:0AB3)
+5511:0000	ogr_int10	[engine] [high] INT 10h with AX=arg (mode 13h/12h/03h set) (listing 5447:0BDE)
+5511:000A	ogr_set_map_mask	[engine] [high] OUT 3C4 word (mask<<8)|02 (listing 5447:0BE8)
+5511:0018	ogr_set_split_line	[engine] [high] CRTC line compare = 2*n (reg18 = n2 mod 255 (sic), bit8->CR07.4, bit9->CR09.6); unused (listing 5447:0BF6)
+5511:0090	ogr_set_start_addr	[engine] [high] wait 3DA retrace set->clear, CRTC 0Ch/0Dh = start (u32) (listing 5447:0C6E)
+5511:00E1	ogr_screen_on	[engine] [high] read 3DA, write 20h to 3C0 (PAS=1, display on)
+5511:00FD	ogr_screen_off	[engine] [high] read 3DA, write 00h to 3C0 (PAS=0, blank)
+5511:0119	ogr_black_palette	[engine] [high] zero work palette e5eb and load it, brightness 7318=0
+5511:015B	ogr_clear_screen	[engine] [high] memset32 64000 bytes of slot 0 (screen) to 0
+5511:017C	ogr_mouse_init	[engine] [high] INT33 fn0/fn3, mouse x shift (7325) if x==320, alloc cursor buffers (15x15, 90x15), cursor window 0..319/0..199
+5511:02A1	ogr_mouse_set_pos	[engine] [high] INT33 fn4 (x<<shift,y)
+5511:02F3	ogr_mouse_set_window	[engine] [high] INT33 fn7/fn8 ranges; updates 7314/7316 limits
+5511:03DF	ogr_palette_step_fade	[engine] [med] stepwise fade of palette toward target/black by n per step with tick delay
+5511:06F0	ogr_init	[engine] [high] VGA check INT10 AX=1A00, slot0 = A000:0000 320x204 (0xFF00), alloc 2 palettes (768), mode 13h
+5511:0830	ogr_copy_pal_entries	[engine] [low] copies 3 bytes +12h..14h to +3Ch.. and 0x18 bytes block (struct helper)
+559A:0000	o559A_fatal	[engine] [high] fatal error(file,line,msg,code): prints, stops sound/DDS/CD, closes files, mode 3, Turkish font, exit(0)
+559A:01F3	o559A_load_trdos_font	[engine] [high] load TRDOS.DAT 8x16 font via INT10 AX=1100 (text mode Turkish font)
+559A:0291	o559A_beep	[engine] [med] sound(freq); delay(ms); nosound()
+559A:02AD	o559A_clear_tables	[engine] [med] zero 90 surface handles (e29b) and 49 sample slots (de34, 0x17 bytes)
+55CC:0000	oses_init	[engine] [high] read SES.CFG (13-byte driver name, 0x5C SDI config, u16 at 8DDA), DDS load .DSD, hook MCP/SDI imports, timers
+55CC:01F3	oses_load_sample	[engine] [med] load a sample file into EMS block (OSES.L)
+5646:0000	o5646_init	[gameB] [med] stdio handle layer: calloc a table of n FILE* (n=0 -> 20); pascal; returns 0 or -1
+5646:003A	o5646_open	[gameB] [med] fopen(name, mode_table[modeidx&15] at DS:8ED8) into the first free table slot; pascal; returns the index or -1
+5646:00BF	o5646_close	[gameB] [med] flush (0000:3684) + fclose and clear the slot; pascal
+5646:0140	o5646_read	[gameB] [med] fread of a long count into a huge buffer in 0xFFF0-byte pieces (seg += 0xFFF); returns 0 if everything was read, otherwise a quirky partial count; pascal (h, buf, count)
+5646:0248	o5646_write	[gameB] [med] fwrite counterpart of o5646_read (0000:3C95); pascal
+5646:0350	o5646_seek	[gameB] [med] fseek(fp, long off, whence); pascal (h, off, whence)
+5646:03A6	o5646_tell	[gameB] [med] ftell; pascal
+5646:03F6	o5646_flush	[gameB] [low] calls 0000:3684 (probably fflush) on the slot's FILE*; pascal
+5646:0443	o5646_eof	[gameB] [med] EOF test: _F_EOF flag, otherwise ftell/fseek(END)/ftell compare and restore; pascal
+569A:0000	o569A_check_handle	[gameB] [med] near cdecl helper: 0 if handle index is in range and open, else -1
+569A:002F	o569A_toupper	[gameB] [high] ASCII a-z to upper (cdecl, near)
+569A:0047	o569A_mount_archive	[gameB] [med] open a FLiB .CKD archive (via o5646), check "FLiB" magic, read the directory of 0x41-byte "FiLE" entries into 0x38-byte records in one of 8 archive slots (DGROUP E86C, 12 bytes each); pascal (path, tag); returns the slot or -1
+569A:0266	o569A_unmount_archive	[gameB] [med] free the slot's directory and close the archive file; pascal
+569A:02CB	o569A_init	[gameB] [med] allocate n 0x38-byte virtual-file records (E868/E866), clear the archive slots, call o5646_init(n); pascal
+569A:0342	o569A_open	[gameB] [med] virtual open: search the mounted archives for name (case-insensitive, 32 chars) and copy its record; else open the real file via o5646_open; pascal (name, mode); returns the handle or -1
+569A:04CA	o569A_close	[gameB] [med] close a virtual handle (real files: o5646_close); pascal
+569A:053C	o569A_read	[gameB] [med] virtual read(h, buf far, long count): archive members seek the CKD to base+pos and clamp at the member end; returns 0 when everything was read; pascal
+569A:06F7	o569A_write	[gameB] [med] write; real files only (archive members return -1); pascal
+569A:074E	o569A_seek	[gameB] [med] seek(h, long off, whence 0/1/2), clamped inside archive members; pascal
+569A:08B2	o569A_tell	[gameB] [med] tell; member pos or o5646_tell; pascal
+569A:090A	o569A_flush	[gameB] [low] o5646_flush for real files, -1 for archive members; pascal
+569A:093F	o569A_eof	[gameB] [med] eof; for members pos==size-1 (off-by-one quirk); pascal
+5737:0000	o5737_cd_drive_info	[engine] [med] MSCDEX INT2F AX=1501 drive device list
+5737:0048	o5737_cd_read_cfg	[engine] [low] fopen of a CD config, returns byte +4
+5737:0071	o5737_nop	[engine] [med] empty
+5737:0072	o5737_cd_request	[engine] [high] MSCDEX INT2F AX=1510 send device request (drive, req far)
+5737:0086	o5737_cd_ioctl	[engine] [high] build IOCTL input(0x4402)/output(0x4403) request and send
+5737:00CF	o5737_cd_reset	[engine] [med] IOCTL output code 2 (reset drive)
+5737:00EA	o5737_cd_detect	[engine] [high] INT2F AX=1500 install check; IOCTL 0Ah audio disk info
+5737:0144	o5737_cd_stop	[engine] [high] device request 85h STOP AUDIO (if CD audio active 8F4E)
+5737:0198	o5737_cd_init	[engine] [med] reset + detect, sets 8F4E=1
+5737:01A9	o5737_cd_qchannel	[engine] [med] IOCTL input 0Ch audio Q-channel info
+5737:01DF	o5737_msf_to_sectors	[engine] [med] red-book MSF -> sector arithmetic
+5737:024F	o5737_cd_track_info	[engine] [med] IOCTL input 0Bh audio track info
+5737:0291	o5737_cd_vtoc_ok	[engine] [high] INT2F AX=1505 read volume descriptor; 1 if CF clear. Disc-present check of the FRPOS video op 3FD1:1540 when 16E0:3D5C==1 (never in this build: main clears 3D5C)
+5737:02D0	o5737_cd_play	[engine] [high] Q-channel poll: 1 while start < head < start+len-4, else 0 (track ended); menus loop with play_track(0)
+5737:0361	o5737_cd_status	[engine] [low] IOCTL input (audio status)
+5737:0396	o5737_cd_play_track	[engine] [low] play a track / loop management (uses 0C7F cursor, 7318 etc.)
+5784:0000	grt_input_line	[gameB] [med] GRTEXT.L: interactive one-line text input (kbhit/getch loop, special keys 0/8/0x0D/0x1B via a CS switch table), redraws with shadowed text and a cursor
+5784:06B4	grt_text_width	[gameB] [med] GRTEXT.L: pixel width of a string, font 1 = proportional glyph widths read from the EMS font (E2B7), font 2 = 4*strlen
+5784:08E7	grt_is_upper	[gameB] [med] GRTEXT.L: true for A-Z and cp857 capitals 80 98 99 9A 9E A6 (C-cedilla, dotted I, O/U-umlaut, S-cedilla, G-breve)
+5784:0923	grt_toupper_inplace	[gameB] [med] GRTEXT.L: Turkish-aware toupper of *p (i -> dotted capital I 0x98, cp857 table)
+5784:09D1	grt_tolower_inplace	[gameB] [med] GRTEXT.L: Turkish-aware tolower of *p (I -> dotless i, cp857 table)
+5784:0A7F	grt_strip_accent_inplace	[gameB] [med] GRTEXT.L: replace a cp857 Turkish letter at *p with its plain ASCII letter (C G I O S U c g i o s u)
+5784:0B43	grt_draw_text	[gameB] [low] GRTEXT.L: draw a string at x,y in font/colour (glyphs from the EMS font, gr 0AC6:0430 blit)
+5784:0DEA	grt_draw_text_alt	[gameB] [low] GRTEXT.L: second text draw variant (upper-casing, other font path); used for shadowed text by grt_input_line
+5784:0F84	grt_decode_turkish_lower	[gameB] [low] GRTEXT.L: map ASCII placeholder capitals 'C'..'U' to cp857 Turkish letters through a switch table, then lower-case the string in place; returns str
+5784:1048	grt_char_to_ascii	[gameB] [med] GRTEXT.L: return the plain ASCII equivalent of a cp857 Turkish lower-case letter (s g o u c i), else the char unchanged

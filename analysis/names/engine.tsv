@@ -1,0 +1,154 @@
+0546:0001	ist_main	[high] main(): startup checks (TRDOS font, FS init, _OvrInitEms, DDS/timer, SES.CFG, EMS/conv. memory, ctrl/kbd vectors, sound, CKD archives, fonts, RIX, 3D tables, mouse, VGA), then main game loop / ending
+05DC:0004	ui_text_measure_0004	[low] INTRFACE helper calling 5784:0B43/0DEA (text layout/width); writes 9667
+05DC:00CD	ui_nop	[med] empty callback (default UI hook)
+05DC:00D2	ui_return_zero	[med] callback returning 0 (default UI hook)
+05DC:00D9	ui_get_9671	[med] returns byte DGROUP:9671 (current UI state/flag)
+05DC:00E9	ui_button_press_anim	[low] UI element press: hides cursor, redraws element, warps mouse (5511:02A1), shows cursor
+05DC:0167	ui_button_release_anim	[low] UI element release/redraw counterpart of ui_button_press_anim
+05DC:027B	ui_draw_panel_027B	[low] draws a UI panel/strip from EMS slot (09D4:068A, 0C7F:0A51, 0AC6:0430)
+05DC:0308	ui_draw_panel_0308	[low] draws UI element background via gr_blit
+05DC:041C	ui_setup_hotspots	[low] builds UI hotspot/rect tables (e725..), calls 09D4:07C9 and 4595:019F
+05DC:0568	ui_rect_op_0568	[low] (x,y,w,h) rectangle helper
+05DC:05E4	ui_rect_op_05E4	[low] (x,y,w,h) rectangle helper using 9658
+05DC:066B	ui_update_hover	[low] mouse-over highlighting of UI zones (0C7F:05C7 zone test + blits)
+05DC:0831	ui_unhighlight	[low] restores a highlighted element (blit + cursor refresh)
+05DC:0881	ui_free_panel	[low] frees UI panel mm block (0DB7:022F) and restores screen
+05DC:08DB	ui_memcpy	[med] wrapper over asm 2599:02AF (far memcpy, dword-wise)
+05DC:08F6	ui_cd_music	[high] menu idle callback (installed at 16E0:98D4/9694): if o5737_cd_play()==0 replay last track (play_track(0)), then s3d_apply_sound_options
+05DC:0940	ui_init_tables	[low] big static initialisation of UI tables (9694..97xx)
+05DC:1133	ui_event_loop	[low] generic UI event loop dispatching through callback table DGROUP:962C..964C (mouse zones, keys, cursor)
+05DC:178E	ui_init_voices	[med] "initvoices": allocates/loads speech voice samples (55CC:01F3) into EMS
+05DC:192D	ui_load_voice	[med] loads one voice sample n ("%s %d'ye yüklenirken") and starts it via DSMI (0EAE/0D42:014F)
+05DC:1B6A	ui_play_voice	[med] play a voice line (loads if needed, records end time in 73D1/73D3)
+05DC:1D1B	ui_wait_voice	[med] waits until current voice finished (ms clock e74a, ESC aborts), returns 1 on ESC
+05DC:1E5E	ui_wait_frames	[med] waits n cursor-animation periods ((bb35+1)*k ms) keeping mouse cursor animated
+05DC:1EB9	ui_restore_background	[low] restores saved screen area (slot e29f) and cursor
+05DC:1F6A	ui_save_background	[low] saves screen area into an mm block before drawing a dialog
+05DC:2083	ui_poll_input	[low] one input step: keys (kbhit/getch) + mouse zones, returns key/zone code
+05DC:2198	ui_dialog_2198	[low] large dialog/text-box routine (two far params)
+05DC:25EC	ui_format_text	[low] text formatting/wrapping using 5784 text routines
+05DC:2948	ui_message_box	[low] message box (string, int) with mouse/keyboard wait
+05DC:2D9A	ui_call_9650	[low] calls hook DGROUP:9650 after zone test
+05DC:2DCA	ui_wait_click_or_key	[med] waits for mouse click or key with timeout (ms clock), updates cursor
+05DC:2EEC	ui_ask_evet_hayir	[med] waits for E/e (Evet) or H/h (Hayir) key; returns 1/0
+09D4:0006	mm_memcpy	[high] far memcpy(dst,src,n) via asm 2599:02AF
+09D4:0022	mm_copy_recolor	[med] copy n bytes, writing color AH where src==DL, skipping others (recolor blit row)
+09D4:004C	mm_copy_transparent	[high] copy n bytes skipping bytes == key (transparent row copy)
+09D4:0071	mm_init	[high] mm_init(ems_bytes): INT21 AH=3A AL=1 BX=1 probe, EMS lib init (1154:010D, KB), clears 110-slot handle table, checks free memory
+09D4:0164	mm_alloc	[high] mm_alloc(u32 size, type 0=conv/1=EMS) -> 9-byte handle {ptr/emsHandle,u32 size,u8 type}; fatal on failure
+09D4:0360	mm_free	[high] mm_free(handle,file,line): frees EMS (1154:061B) or farfree, marks slot 0xFF
+09D4:044C	mm_coreleft	[high] free memory: 0=conventional farcoreleft, 1=EMS free, 2=sum
+09D4:0485	mm_check_type	[med] asserts type is 0 or 1
+09D4:04AB	mm_duplicate	[med] allocate new block of given type and copy contents (conv/EMS combos via 1154:0963/0A0D/0AB7)
+09D4:05F4	mm_change_type	[med] move block between conventional and EMS (dup + free + struct copy)
+09D4:068A	mm_copy_block	[med] copy whole block src->dst (conv<->EMS moves)
+09D4:07C9	mm_copy_range	[med] copy byte range between two blocks (offsets/len), conv or EMS (INT67 move via 1154)
+09D4:095A	mm_shutdown	[med] frees all handles, releases EMS (1154:03A5)
+09D4:09A8	mm_rle_09A8	[low] small byte-loop helper (lodsb loop)
+09D4:09CC	mm_copy_09CC	[low] small byte copy helper
+09D4:09F6	mm_rle_09F6	[low] small byte-loop helper
+09D4:0A1D	mm_farmalloc	[high] farmalloc wrapper tracking low-water mark of free memory (de30/6e06)
+09D4:0A81	mm_ems_lock	[high] save current EMS page map (86F8, 4 words) into lock ctx, mark busy, remember file/line; nested lock = fatal
+09D4:0B22	mm_ems_unlock	[high] restore EMS page map from lock ctx (1134:007A) and clear busy
+09D4:0BB4	mm_map	[med] map (block, u32 offset, len) into page frame / return far ptr and usable length (16K pages)
+09D4:0E4A	mm_surface_alloc	[high] surface slot n: set w,h in e29b table and mm_alloc(w*h, type; 2=auto conv-else-EMS)
+0AC6:000A	sys_rowcopy_planar	[med] row callback for 640x480x16 (mode 12h): per plane sets map mask (5511:000A) and copies bytes with edge masks
+0AC6:01AA	sys_putpixel	[high] buf[y*pitch+x]=color
+0AC6:01C5	sys_blit_cb	[med] generic EMS-aware blit with caller-supplied row function (used with sys_rowcopy_planar)
+0AC6:0430	sys_blit	[high] blit(sx,sy,w,h,dx,dy,srcSlot,dstSlot,rowfn far[,key]) between surface slots (EMS-mapped)
+0AC6:0615	sys_blit_0615	[low] blit variant (EMS lock, row fn)
+0AC6:070B	sys_blit_recolor	[low] blit using mm_copy_recolor (byte params at +12h/+14h = from/to colors)
+0AC6:0908	sys_fill_rect	[low] fill rectangle in a slot with color (memset32, EMS)
+0AC6:0B99	sys_fill_rect_checked	[low] validated wrapper around 0AC6:13F5
+0AC6:0C5A	sys_blit_scaled	[low] blit through asm 2599:0018 (386 scaled/special copy)
+0AC6:0F21	sys_blit_0F21	[low] blit variant (two slots, byte params)
+0AC6:10F1	sys_line_10F1	[low] clipped row helper using mm_copy_transparent
+0AC6:1185	sys_line_1185	[low] clipped row helper using mm_copy_transparent
+0AC6:1261	sys_line_1261	[low] clipped row helper using mm_copy_transparent
+0AC6:1307	sys_line_1307	[low] clipped row helper using mm_copy_transparent
+0AC6:13F5	sys_fill_slot_rect	[low] fill/clear area of slot (EMS-mapped)
+0AC6:16DC	sys_fill_slot	[med] fill whole slot/buffer (slot,len,value) e.g. clear 64000 bytes
+0AC6:18AF	sys_find_glyph	[low] lookup returning "bulamadim!!!" message if not found
+0AC6:195E	sys_find_color	[low] lookup with "bulamadim!!!" message (palette/anti-alias table search)
+0AC6:1A13	sys_build_aa_table	[low] builds anti-alias table from palette e5ef
+0AC6:1AA0	sys_load_rix	[med] loads .RIX anti-alias/font table (xdintro.rix) into mm block e52f via fm_load_file
+0C7F:000C	gr_set_dac	[high] set DAC: OUT 3C6=FF, 3C8=start, per chunk wait 3DA bit3 set then clear, REP OUTSB to 3C9
+0C7F:0050	gr_set_palette	[high] gr_set_dac(0,256,pal,1 chunk)
+0C7F:0069	gr_cursor_set_shape	[high] select mouse cursor shape n (loads strip of 6 shapes from slot 0x4B into slot 9) and redraw
+0C7F:0204	gr_cursor_hide	[high] restore save-under (slot 10) at last cursor pos, e5f3=0
+0C7F:026B	gr_cursor_update	[high] poll mouse; if moved/changed shape: restore bg, save new bg (slot10), draw shape (slot9, key 0)
+0C7F:04A1	gr_call_then_cursor	[med] calls far fn and redraws cursor with its result as shape
+0C7F:04AF	gr_mouse_read	[high] INT33 AX=3: x>>shift, y, buttons -> out params; returns buttons
+0C7F:0515	gr_zone_under_cursor	[high] returns 1..40 index of hotspot rect (table e5f5, 8 bytes) containing cursor, 0 none
+0C7F:05C7	gr_cursor_in_zone	[high] is cursor (15x15) inside hotspot rect n
+0C7F:067D	gr_cursor_in_rect	[high] is cursor inside rect (x,y,w,h)
+0C7F:06B6	gr_zones_clear	[high] set all 41 hotspot rects to -1
+0C7F:0714	gr_wait_buttons_up	[high] loop until mouse buttons released, animating cursor
+0C7F:073F	gr_fade	[high] fade(ms, dBright, dVolume): time-based palette scale e5ef->e5eb (level 7318/731E) + music volume (0EF6:1625)
+0C7F:08FC	gr_blend3	[low] combines three mm blocks through asm 2599:04AD in mapped chunks
+0C7F:0A51	gr_draw_strip	[low] draws vertical strip/columns of a slot through EMS mapping ("İç hata!" bounds check)
+0D42:0005	snd_ems_map_sample	[med] DSMI MCPSampleRealAddress hook: maps EMS sample (1154:0688) -> real far ptr
+0D42:0041	snd_ems_save_map	[med] DSMI MCPEnableVirtualSamples hook (1154:0BAB)
+0D42:005E	snd_ems_restore_map	[med] DSMI MCPDisableVirtualSamples hook (1154:0BF4)
+0D42:007B	snd_identity_addr	[low] returns given far ptr (non-EMS address hook)
+0D42:0093	snd_timer_40hz	[med] timer routine (divisor 0x7485, ~40 Hz): guarded, EMS map save, 0EAE:0414, restore (iret)
+0D42:00CF	snd_getenv_hook	[med] DSMI GetEnvString hook -> getenv
+0D42:00EB	snd_setvect_hook	[med] DSMI SetVector hook -> getvect/setvect
+0D42:0120	snd_timer_100hz	[med] timer routine (divisor 0x2E9B, 100 Hz): guarded call to AMP poll 0EF6:0F4C (iret)
+0D42:014F	snd_play_sample	[med] play sample slot (table de38, 0x17 bytes/entry) on channel via CDI (0EAE:008F/01B4/00B8)
+0D42:01F0	snd_load_sound	[med] load sound file by name into sample slot ("%s. ses dosyası bulunamadı")
+0D42:044D	snd_load_sample_ems	[med] reads sample data into EMS-backed mm block for DSMI
+0DB7:0009	ctl_ctrlbrk_handler	[high] ctrlbrk() callback: allows 3 breaks (counter 7510) then aborts
+0DB7:0026	ctl_install	[high] hook INT23h (ctl_int23), INT09h (ctl_int09), INT00h (ctl_div0); ctrlbrk(ctl_ctrlbrk_handler); flag 750A|=0x10
+0DB7:00B3	ctl_uninstall	[high] restore INT00/09/23 vectors
+0DB7:00F6	ctl_div0_isr	[high] INT0 handler: returns AX=EAX=0xFFFF, skips 3-byte faulting instruction
+0DB7:0135	ctl_int23_isr	[high] Ctrl-C/Ctrl-Break: fatal exit message
+0DB7:0174	ctl_int09_isr	[high] INT9 hook: only traps Ctrl+Alt+Del (scancode 53h), else chains to BIOS
+0DB7:01E3	ctl_flush_keys	[high] while(kbhit()) getch()
+0DB7:01F4	ctl_timer_tick	[high] timer service routine @100Hz: ms clock DGROUP:E74A (dword) += 10
+0DB7:021E	ctl_timer_install	[high] tsAddRoutine(ctl_timer_tick, 0x2E9B) -> 100 Hz
+0DB7:022F	ctl_free_checked	[med] mm_free(*pp,file,line) then *pp=NULL (fatal if NULL)
+0DB7:027E	ctl_dds_timer_init	[med] DDS init (0DF2:0000) + timer service init (10EF:007D)
+5447:0000	fm_cmp_decode_huge	[high] CMP RLE decoder, 32-bit lengths, EMS window remap every 48K (listing: ovl5313 tail)
+5447:043B	fm_cmp_decode	[high] CMP RLE decoder: c>0x80 run of (c-0x80) x next byte; else copy c literal bytes; returns bytes written (listing 5447:038F)
+5447:052A	fm_load_cmp	[high] fm_load_cmp(memtype,name,slot): read u16 w,u16 h, allocate slot w*h, decode (listing 5447:047E)
+5447:0873	fm_filelength	[high] file length via tell/seek end/seek back (listing 5447:07C7)
+5447:08B9	fm_load_pal	[high] fm_load_pal(name,first,count): read count*3 bytes into palette e5ef+first*3 (listing 5447:080D)
+5447:093A	fm_load_file	[high] fm_load_file(memtype,name,block): load whole file into (new) mm block, chunked through EMS (listing 5447:088E)
+5447:0B5F	fm_change_ext	[med] returns malloc'd copy of path with extension replaced (listing 5447:0AB3)
+5511:0000	ogr_int10	[high] INT 10h with AX=arg (mode 13h/12h/03h set) (listing 5447:0BDE)
+5511:000A	ogr_set_map_mask	[high] OUT 3C4 word (mask<<8)|02 (listing 5447:0BE8)
+5511:0018	ogr_set_split_line	[high] CRTC line compare = 2*n (reg18 = n2 mod 255 (sic), bit8->CR07.4, bit9->CR09.6); unused (listing 5447:0BF6)
+5511:0090	ogr_set_start_addr	[high] wait 3DA retrace set->clear, CRTC 0Ch/0Dh = start (u32) (listing 5447:0C6E)
+5511:00E1	ogr_screen_on	[high] read 3DA, write 20h to 3C0 (PAS=1, display on)
+5511:00FD	ogr_screen_off	[high] read 3DA, write 00h to 3C0 (PAS=0, blank)
+5511:0119	ogr_black_palette	[high] zero work palette e5eb and load it, brightness 7318=0
+5511:015B	ogr_clear_screen	[high] memset32 64000 bytes of slot 0 (screen) to 0
+5511:017C	ogr_mouse_init	[high] INT33 fn0/fn3, mouse x shift (7325) if x==320, alloc cursor buffers (15x15, 90x15), cursor window 0..319/0..199
+5511:02A1	ogr_mouse_set_pos	[high] INT33 fn4 (x<<shift,y)
+5511:02F3	ogr_mouse_set_window	[high] INT33 fn7/fn8 ranges; updates 7314/7316 limits
+5511:03DF	ogr_palette_step_fade	[med] stepwise fade of palette toward target/black by n per step with tick delay
+5511:06F0	ogr_init	[high] VGA check INT10 AX=1A00, slot0 = A000:0000 320x204 (0xFF00), alloc 2 palettes (768), mode 13h
+5511:0830	ogr_copy_pal_entries	[low] copies 3 bytes +12h..14h to +3Ch.. and 0x18 bytes block (struct helper)
+559A:0000	o559A_fatal	[high] fatal error(file,line,msg,code): prints, stops sound/DDS/CD, closes files, mode 3, Turkish font, exit(0)
+559A:01F3	o559A_load_trdos_font	[high] load TRDOS.DAT 8x16 font via INT10 AX=1100 (text mode Turkish font)
+559A:0291	o559A_beep	[med] sound(freq); delay(ms); nosound()
+559A:02AD	o559A_clear_tables	[med] zero 90 surface handles (e29b) and 49 sample slots (de34, 0x17 bytes)
+55CC:0000	oses_init	[high] read SES.CFG (13-byte driver name, 0x5C SDI config, u16 at 8DDA), DDS load .DSD, hook MCP/SDI imports, timers
+55CC:01F3	oses_load_sample	[med] load a sample file into EMS block (OSES.L)
+5737:0000	o5737_cd_drive_info	[med] MSCDEX INT2F AX=1501 drive device list
+5737:0048	o5737_cd_read_cfg	[low] fopen of a CD config, returns byte +4
+5737:0071	o5737_nop	[med] empty
+5737:0072	o5737_cd_request	[high] MSCDEX INT2F AX=1510 send device request (drive, req far)
+5737:0086	o5737_cd_ioctl	[high] build IOCTL input(0x4402)/output(0x4403) request and send
+5737:00CF	o5737_cd_reset	[med] IOCTL output code 2 (reset drive)
+5737:00EA	o5737_cd_detect	[high] INT2F AX=1500 install check; IOCTL 0Ah audio disk info
+5737:0144	o5737_cd_stop	[high] device request 85h STOP AUDIO (if CD audio active 8F4E)
+5737:0198	o5737_cd_init	[med] reset + detect, sets 8F4E=1
+5737:01A9	o5737_cd_qchannel	[med] IOCTL input 0Ch audio Q-channel info
+5737:01DF	o5737_msf_to_sectors	[med] red-book MSF -> sector arithmetic
+5737:024F	o5737_cd_track_info	[med] IOCTL input 0Bh audio track info
+5737:0291	o5737_cd_vtoc_ok	[high] INT2F AX=1505 read volume descriptor; 1 if CF clear. Disc-present check of the FRPOS video op 3FD1:1540 when 16E0:3D5C==1 (never in this build: main clears 3D5C)
+5737:02D0	o5737_cd_play	[high] Q-channel poll: 1 while start < head < start+len-4, else 0 (track ended); menus loop with play_track(0)
+5737:0361	o5737_cd_status	[low] IOCTL input (audio status)
+5737:0396	o5737_cd_play_track	[low] play a track / loop management (uses 0C7F cursor, 7318 etc.)
