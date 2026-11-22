@@ -20,3 +20,5 @@ Thumbs.db
 /lale.ini
 /src/gen/
 /export/
+__pycache__/
+*.pyc

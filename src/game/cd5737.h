@@ -44,4 +44,7 @@ uint16_t cd5737_active(void);           /* 16E0:8F4E */
 uint32_t cd5737_start(void);            /* 16E0:8F50 */
 uint32_t cd5737_length(void);           /* 16E0:E8D4 */
 
+/* Test-only: pointers into the module's state (see cd5737.c). */
+void *cd5737_test_ptr(int which);
+
 #endif

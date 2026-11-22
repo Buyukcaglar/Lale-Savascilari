@@ -292,7 +292,11 @@ static void set_window_icon(SDL_Window *w)
 
 static int host_open_window(void)
 {
-    if (!SDL_CreateWindowAndRenderer("Istanbul Efsaneleri - Lale Savascilari", 960, 720,
+    /* "İstanbul Efsaneleri - Lale Savaşçıları" in UTF-8 (SDL's encoding), written
+     * with escapes so the source's own encoding cannot change it. */
+    static const char window_title[] =
+        "\xC4\xB0stanbul Efsaneleri - Lale Sava\xC5\x9F\xC3\xA7\xC4\xB1lar\xC4\xB1";
+    if (!SDL_CreateWindowAndRenderer(window_title, 960, 720,
                                      SDL_WINDOW_RESIZABLE, &window, &renderer)) {
         SDL_Log("window: %s", SDL_GetError());
         return -1;

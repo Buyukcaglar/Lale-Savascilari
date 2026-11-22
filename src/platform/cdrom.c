@@ -290,10 +290,14 @@ void mscdex_send_request(uint8_t drive, uint8_t *req, uint8_t *xfer)
 {
     if (!g.mscdex)
         return;                         /* INT 2Fh falls through, nothing written */
-    if (drive != CDROM_DRIVE_INDEX) {
-        set_status(req, ST_DONE | ST_ERROR | ERR_UNKNOWN_UNIT);
-        return;
-    }
+    if (drive != CDROM_DRIVE_INDEX)
+        return;                         /* MSCDEX: CF set, AX = 000Fh (invalid
+                                           drive); the driver is not called and
+                                           the request header stays untouched
+                                           (RBIL INT 2F/AX=1510h; DOSBox-X
+                                           SendDriverRequest).  The game's
+                                           intr() ignores CF/AX. */
+    req[1] = 0;                         /* MSCDEX fills in the subunit */
     if (!g.open) {
         set_status(req, ST_DONE | ST_ERROR | ERR_NOT_READY);
         return;

@@ -80,6 +80,8 @@ int main(void)
     CHECK(o5737_msf_to_sectors(0x000200) == 0);            /* 00:02:00 */
     CHECK(o5737_msf_to_sectors(0x010000) == 4350);
     CHECK(o5737_msf_to_sectors(0x000000) == 0xFFFFFF6Au);  /* -150, 32-bit wrap */
+    /* no MSCDEX: INT 2Fh AX=1505h comes back with the carry clear -> "ok" */
+    CHECK(o5737_cd_vtoc_ok() == 1);
 
     /* --- cue parsing --- */
     CHECK(cdrom_open("one.cue") == 0);
@@ -93,6 +95,7 @@ int main(void)
     CHECK(cd5737_port_enable("test.cue") == 0);
     CHECK(cd5737_active() == 1);
     CHECK(cdrom_leadout() == 600);
+    CHECK(o5737_cd_vtoc_ok() == 1);        /* drive D:, sector 16 is in the data track */
 
     /* track 2: length = start(3) - start(2) */
     CHECK(o5737_cd_play_track(2, -1) == 1);
@@ -140,6 +143,7 @@ int main(void)
     CHECK(o5737_cd_play_track(9, 5) == 0);
 
     cdrom_close();
+    CHECK(o5737_cd_vtoc_ok() == 0);        /* MSCDEX there, drive empty */
     if (!failures)
         printf("test_cdaudio: all checks passed\n");
     return failures ? 1 : 0;

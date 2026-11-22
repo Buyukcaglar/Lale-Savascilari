@@ -13,10 +13,10 @@ equivalent, no decompilation needed).
 | 3 | Formats documented, with Python viewers | FLiB, PAL, PUR, RES, CMP verified; GRP/SAV/FRPOS/GFL/AMF described, not yet tool-verified |
 | 4 | Platform layer: VGA emulation, SDL3 host, timer, input, audio | VGA: modes 13h/X/12h scan-out, BIOS tables and DACs verified against DOSBox-X; virtual CD drive + CD-music option; next: SDL3 window/timer/input loop |
 | 5 | Engine (ALTDUZEY) decompiled | all engine layers below the UI done and integrated (2026-11-21): 103/103 differential tests in one DLL, exact Borland far-heap layout; GRTEXT (10/10) + INTRFACE (34/34) done, 17 tests, in base (120/123 green; the 3 are the 3DQUICK tests, merged by WP16). Game-module wave WP13–17 done and integrated (2026-11-21): every function of IST.EXE is decompiled; shared DLL 218/219 before the last battle test landed; whole-game verification (docs/VERIFY.md): the intro matches the original in DOSBox-X from start-up to the menu (200 samples, 0–50 s; EMS double-mapping fix); scripted play-through play3 (read-count sync + poke/srand anchors) matches the original exactly at every checkpoint – menu, chargen x4, district, save, door/treasure event, battle start + 12 battle keys (registers, DAC, screen, VRAM, DGROUP; GRP.DAT and SAKLA001.SAV byte-identical) – except one checkpoint inside the clock-timed fade into the story. Fixed on the way: save description buffer, DDS driver load via vfs (lowwater 6E06/DE30 now match), DOSBox-X SB16 IRQ 7 (voice wait). play3's chargen-fade checkpoint now anchored on the story video's frame (identical). play4 (2026-11-21, with sound on both sides): spell battle lost to the dog's AI, game over + load, second battle won, item exchange, goods/weapon shops (buy/sell by keys and mouse), food stall, camp, save – all 112 checkpoints identical (DGROUP minus host/clock fields, screen, DAC); SAKLA002.SAV differs only in the description tail, uninitialised stack in the original; no port bugs found, new clock-relative `@n` script timing. Doctor (district 4 only) not covered. Lale64.exe (was lale.exe) runs the intro (start-up matches the DOSBox-X oracle in EMS/DAC/VGA/screen; DSMI driver-load heap block and 3 DSMI values differ – open). Earlier: infrastructure done (2026-11-20): DGROUP model `dg[]`, emulated PC `pc.h`, Unicorn differential harness, SDL3 host loop; wave 1 (EMS/MEMMAN/NKONTROL, DSMI DDS/timer, 386 blitters + 3D quads, file layer + Borland stdio, AMP player, MCP mixer) in progress |
-| 6 | Game modules decompiled | – |
+| 6 | Game modules decompiled | done (2026-11-21): main, DEMOLAR, CHARGEN, FRPOS, 3DQUICK, 3DSYS, ISOSYS, GFL – see "Decompiled modules" |
 | 7 | DSMI audio decompiled | done: player, loader, CDI, MCP mixer (verified); audio-backend wiring pending (NSES/OSES wave) |
-| 8 | Full-game verification against DOSBox-X | – |
-| 9 | macOS build | – |
+| 8 | Full-game verification against DOSBox-X | play3, play4, play4load identical at every checkpoint (docs/VERIFY.md). Decision (user, 2026-11-22): the save description's tail after its NUL stays zeros in the port (uninitialised stack in the original, never read). Gap wave started 2026-11-22: doctor event (district 4), ISOSYS Ctrl-Break / sound-on / door wall without bar picture, 3DQUICK 100x100 + rotate speed 2, three untested 3DSYS functions, CD audio vs the original code |
+| 9 | macOS build | – (on the Mac mini, same sources) |
 
 ## Function status
 
@@ -28,7 +28,7 @@ equivalent, no decompilation needed).
 
 | Module | Functions | State |
 |---|---|---|
-| ovl5737 CD audio (`src/game/cd5737.c`) | 15/15 | draft, unit-tested (`tests/test_cdaudio.c`); oracle check pending |
+| ovl5737 CD audio (`src/game/cd5737.c`) | 15/15 | verified (2026-11-22, `tests/py/test_cd5737.py`, 16 tests: every device request, return value and DGROUP write vs the original code over an MSCDEX model; 466/468 instructions run, the 2 others unreachable). Fixed: `vtoc_ok` without MSCDEX / wrong drive / audio-only disc, stack reuse in `play_track`, `read_cfg` (was a stub); `cdrom.c` now leaves the request untouched for a non-CD drive and fills in the subunit, as MSCDEX does. Not compared: `drive_info` without MSCDEX (uninitialised far pointer in the original, no callers) |
 | Borland `rand/srand` (`src/rtl/bc_rand.c`) | 2/2 | verified (differential, 4 seeds × 2000 steps) |
 | FILEMAN `fm_cmp_decode` (`src/engine/fileman.c`) | 1/7 | verified (differential, game CMP files + random) |
 | DSMI DDS registry seg0DF2 (`src/dsmi/dds.c`) | 11/11 | verified (differential); DDSLoadDriver maps .DSD names to native drivers |
