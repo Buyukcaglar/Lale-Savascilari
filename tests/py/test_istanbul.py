@@ -162,12 +162,11 @@ def startup_ignore(dgo, dgc):
     add(0xE73E, 0xE74A, 'NKONTROL: saved INT 08h/09h vectors (BIOS/DOS addresses)')
     add(0xE764, 0xE766, 'int86 result flags: CPU bits 12-14 (DOSBox-X 486: 7212h, port 0212h)')
     add(0x85A0, 0x8614, 'DSMI amp/timer service: tick times and rate accumulators (real time)')
-    # KNOWN DIFFERENCES (open, DSMI): the native MCP mixer keeps its tables
-    # and DMA buffer outside the far heap and does not register the
-    # SDIDetect/Query exports, so the heap low-water mark differs, and the
-    # SB16 driver's SDI device record (7BC8..) is not filled
-    add(0x6E06, 0x6E0A, 'KNOWN: g_mm_conv_lowwater - the MCP buffers are not on the far heap')
-    add(0x7BC8, 0x7BE8, 'KNOWN: SDI device record of the SB16 driver, not filled by the native MCP')
+    # AMP's private interrupt stack (ampInterrupt, 0EF6:0F64: SS:SP :=
+    # DGROUP:7BE4, old SS:SP saved at 7BE4/7BE6): the original leaves the
+    # frames of the last timer interrupt there (return addresses into
+    # seg0EF6, DS, locals); the port has no 8086 stack (src/dsmi/amp.c)
+    add(0x7AE3, 0x7BE8, "AMP's private interrupt stack: frames of the last timer tick (no stack in C)")
     return ign
 
 
@@ -184,25 +183,14 @@ def test_startup_oracle():
     # far heap: the chain in runtime segments on both sides
     ch_o, cv_o = orig_heap(m)
     ch_c, cv_c, _ = sc
-    # KNOWN DIFFERENCE (open, DSMI): when the SB16 driver is loaded the
-    # original allocates, besides the image, the SDIDetect/Query export
-    # nodes and the mixer's tables (404h paragraphs) and DMA buffer (1F8h);
-    # the native MCP keeps those outside the far heap.  Checked: the chain
-    # up to the driver load, and every block allocated after the mixer's
-    # tables (same sizes, same order).
+    # (until 2026-11-21 the DSMI driver load differed here: the driver file
+    # is now read through the game's file layer and the native MCP takes
+    # its tables (404h paragraphs) and DMA buffer (1F8h) from the far heap)
     split = next((i for i, (a, b) in enumerate(zip(ch_o, ch_c)) if a != b), None)
-    if split is None:
-        check(ch_o == ch_c, f'oracle: heap chain {len(ch_o)}/{len(ch_c)} blocks')
-    else:
-        check(split >= 60, f'oracle: heap chain differs early, at block {split}: '
-                           f'{ch_o[split:split + 3]} vs {ch_c[split:split + 3]}')
-        after = next((i for i in range(split, len(ch_o)) if ch_o[i][1] == 0x404 and ch_o[i][2]), None)
-        tail_o = [(n, u) for _, n, u in ch_o[after + 1:]] if after is not None else None
-        tail_c = [(n, u) for _, n, u in ch_c[len(ch_c) - len(tail_o):]] if tail_o else None
-        check(tail_o is not None and tail_o == tail_c,
-              f'oracle: heap blocks after the mixer tables {tail_o} vs {tail_c}')
-        print(f'      known: heap chain equal for {split} blocks, then the DSMI driver load '
-              f'differs ({len(ch_o)} vs {len(ch_c)} blocks; {len(tail_o or [])} later blocks equal)')
+    check(ch_o == ch_c, f'oracle: heap chain {len(ch_o)}/{len(ch_c)} blocks, first difference at '
+                        f'{split}: {ch_o[split:split + 3] if split is not None else ""} vs '
+                        f'{ch_c[split:split + 3] if split is not None else ""}')
+    check(cv_o == tuple(cv_c), f'oracle: heap first/last/rover {cv_o} vs {cv_c}')
 
     # EMS: the handles the game allocated (DOSBox-X's handle 0 is its own)
     eo = orig_ems(dos)

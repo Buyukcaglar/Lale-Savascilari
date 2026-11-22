@@ -3,13 +3,16 @@
 pair.py - run one input script on both sides and compare (docs/VERIFY.md).
 
     python -u tools/verify/pair.py <script.txt> <tag> [--only port|dbx] [--port 7777] [--keep]
+                                   [--install <file>=<NAME> ...]
 
 Resets the game folders (out/verify/game_port, game_dbx: files the game
 writes - GRP.DAT, saves - restored from orig/), runs the port
 (out/windows/Lale64.exe -> out/verify/p_<tag>) and the original in DOSBox-X
 (dbx_replay.py -> out/verify/d_<tag>), then vcompare.py and a byte diff of
 the files the game wrote.  --keep leaves the game folders as the previous
-run left them (a script that loads the saves of that run).
+run left them (a script that loads the saves of that run).  --install
+copies a prepared file into both game folders after the reset (a save built
+by mksave.py: `--install out/verify/scripts/play5.sav=SAKLA001.SAV`).
 """
 import argparse
 import os
@@ -31,6 +34,12 @@ def reset(game):
         shutil.copyfile(os.path.join(ROOT, 'orig', f), os.path.join(game, f))
 
 
+def install(game, items):
+    for it in items or ():
+        src, _, name = it.partition('=')
+        shutil.copyfile(src, os.path.join(game, name or os.path.basename(src)))
+
+
 def written(game):
     out = {}
     for f in os.listdir(game):
@@ -46,6 +55,8 @@ def main():
     ap.add_argument('--only')
     ap.add_argument('--keep', action='store_true',
                     help='keep the game folders (the saves of the previous run: load tests)')
+    ap.add_argument('--install', action='append', metavar='FILE=NAME',
+                    help='copy FILE into both game folders as NAME (after the reset)')
     ap.add_argument('--port', type=int, default=7777)
     ap.add_argument('--exe', default=os.path.join(ROOT, 'out', 'windows', 'Lale64.exe'))
     a = ap.parse_args()
@@ -54,6 +65,7 @@ def main():
     if a.only != 'dbx':
         if not a.keep:
             reset(gp)
+        install(gp, a.install)
         shutil.rmtree(po, ignore_errors=True)
         os.makedirs(po)
         subprocess.run([a.exe, '--game-dir', gp, '--script', a.script, '--out', po],
@@ -61,6 +73,7 @@ def main():
     if a.only != 'port':
         if not a.keep:
             reset(gd)
+        install(gd, a.install)
         shutil.rmtree(do, ignore_errors=True)
         with open(os.path.join(V, f'd_{a.tag}.log'), 'w') as log:
             subprocess.run([sys.executable, '-u', os.path.join(HERE, 'dbx_replay.py'), a.script,

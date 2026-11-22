@@ -115,9 +115,13 @@ static void shop_food(void)
     fr_redraw();
 }
 
-/* hard-coded key "31313127": the doctor (revives a member above -5 hp for
-   BBAB kIvrIk).  The 40-byte text buffer leaks on the "too poor" path, as
-   in the original. */
+/* hard-coded key "31313127": the doctor ("havalI mehtap"): for BBAB kIvrIk
+   a member whose health is -5 or lower gets health 1; anybody else is "not
+   dead, pick another" (asked again), Esc / the right button gives up.
+   Every way out but "too poor" puts the party back on its previous cell
+   (fr_redraw); the 40-byte text buffer leaks on the "too poor" path, as in
+   the original.  Whole-game check against the original: play5
+   (docs/VERIFY.md), all four ways out. */
 static void shop_doctor(void)
 {
     char *buf;

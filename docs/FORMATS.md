@@ -291,7 +291,7 @@ order by s3d_read_save (303F:3F95). Little-endian words; party records as in GRP
 | 1496 | 11 | BBB7 |
 | 1507 | 11 | BBAC |
 | 1518 | 2+2 | BB8A, BB88: city map marker x, y |
-| 1522 | 2 | BBAB: the doctor's fee byte written as a word (the second byte repeats BBAC[0]); on loading it is re-rolled to random(100)+101 |
+| 1522 | 2 | BBAB: the doctor's fee byte written as a word (the second byte repeats BBAC[0]). A complete save keeps its fee on loading (the re-roll random(100)+101 only runs when the last read came up short: play5 loads a save with fee 106 and the original asks 106, docs/VERIFY.md); a new fee is rolled on arriving in a district |
 
 After reading, the loader loads the portraits "s" + name (16E0:269B + 0Dh × record word +42h) into
 pictures 47h-4Ah, loads the district and enters the 3D view; the view size comes from the big-view option.
@@ -306,8 +306,8 @@ file offsets (header included); the interpreter's PC is the word 16E0:BB98.
 
 **Map cells.** Cell (x, y) is 15 bytes at map byte 20 + (y·width + x)·15. Bytes 11..14 are the event
 key: each byte (≤ 20h, else fatal 51h) printed `%d` with a leading 0 below 10, giving 8 characters.
-"00000000" = no event. Fixed keys (trigger 2 only): "31313127" doctor (revive a member above −5 HP
-for the BBAB fee), "31313128" food (random(5)+2 per living member, clears hunger word 11h),
+"00000000" = no event. Fixed keys (trigger 2 only): "31313127" doctor (for the BBAB fee a member whose health is −5 or lower gets health 1; anybody
+else is "not dead, pick another"; too little money: "bu para yetmez!"), "31313128" food (random(5)+2 per living member, clears hunger word 11h),
 "31313129" weapon shop (item exchange mode 1, icon 2Bh), "31313130" goods shop (mode 2, icon 2Ch),
 "31313131" sets 3D5E bit 2 (any other key clears it). Otherwise the event number is, in 8-bit
 arithmetic, `(b13 − m27)·32 − sign(b13 − m27) + b14 − m28` with m27/m28 = map file bytes 27h/28h.

@@ -515,6 +515,174 @@ def play4load(path):
     s.wait(1000).quit().write(path)
 
 
+# ---- play5: district 4 (PC4) from a prepared save (tools/verify/mksave.py) ----
+# (11,12) facing south -> the fortune-teller (10,13), event 18
+D4_TO_GYPSY = ['UP', 'RIGHT', 'UP']
+# (10,13) facing west -> the doctor (8,11) through the sign of (9,10) (event 16)
+D4_TO_DOCTOR = ['LEFT', 'LEFT', 'UP', 'LEFT', 'UP', 'UP', 'UP', 'UP', 'LEFT', 'UP', 'UP', 'LEFT', 'UP',
+                'UP', 'RIGHT', 'UP']
+# the doctor's cell again: every way out of the event but "too poor" puts
+# the party back on (9,11), still facing west
+D4_DOCTOR_AGAIN = ['UP']
+# (8,11) facing west -> the hotel room (12,9) (key 31313131) through the signs
+# of (9,10) and (14,9) (event 13)
+D4_TO_HOTEL = ['LEFT', 'LEFT', 'UP', 'LEFT', 'UP', 'UP', 'UP', 'UP', 'RIGHT', 'UP', 'UP', 'UP', 'UP', 'UP',
+               'RIGHT', 'UP', 'UP', 'RIGHT', 'UP', 'UP']
+# (12,9) facing west -> the hotel keeper (13,8), event 11
+D4_TO_KEEPER = ['LEFT', 'LEFT', 'UP', 'LEFT', 'UP']
+D4_DOCTOR, D4_SIGN, D4_HOTEL_SIGN = (8, 11), (9, 10), (14, 9)
+HP3 = 0x99A6 + 0x5C * 3 + 0x3A          # rifki's health word
+KEY_H = 0x2368                          # 'h': hayIr (second answer)
+
+
+def step_of(start, keys, cell):
+    """index of the key that enters `cell` (start: x, y, facing 0 north .. 3 west)"""
+    x, y, f = start
+    for i, k in enumerate(keys):
+        if k == 'LEFT':
+            f = (f + 3) % 4
+        elif k == 'RIGHT':
+            f = (f + 1) % 4
+        else:
+            x, y = x + (0, 1, 0, -1)[f], y + (-1, 0, 1, 0)[f]
+            if (x, y) == cell:
+                return i
+    raise ValueError(cell)
+
+
+def portrait_click(s, p, seed, gap=1200):
+    """left click on member p's portrait (3D view zones 1..4: x 197..229,
+    y 2 + 38 (p - 1) .. +32; the point is inside with and without the
+    cursor's hot point offset), driver coordinates"""
+    x, y = 2 * 205, 10 + 38 * (p - 1)
+    s.srand(quiet_seed(seed)).mouse(x, y, 0, gap // 4).mouse(x, y, 1, gap // 4)
+    return s.mouse(x, y, 0, gap // 2)
+
+
+SIGN_WAIT = 14000       # a one-line sign: 240 rounds of 20 ms (far longer in DOSBox-X)
+SHOP_WAIT = 8000        # a shop's greeting: 40 rounds
+
+
+def play5(path, stop=None):
+    """from the prepared save play5.sav (installed as SAKLA001.SAV by
+    `pair.py --install`): main menu, load, then district 4 (PC4):
+    the fortune-teller (event 18: question, pay 5, four texts, two music
+    changes, findminmax + say), the doctor (key 31313127) four times -
+    refuse; accept and pick members that are not dead (F1, a click on
+    portrait 2, F4), Esc; accept and pick the dead one (click on portrait
+    3): revived, fee paid; accept with too little money - the hotel room
+    (key 31313131: no encounters while camping) with a camp, the hotel
+    keeper (event 11), and a save to a new slot"""
+    s = Script(seed=1234)
+    s.at(50000).dump('d00_menu').key('DOWN', 1000).key('ENTER', 3000).dump('d01_loadmenu')
+    s.key('ENTER', 1000)                                    # the only entry: SAKLA001.SAV
+    for i, t in enumerate(range(s.t, s.t + 20000, 2000)):   # no portrait blink can start
+        s.at(t).srand(quiet_seed(0x6000 + 0x10 * i))
+    s.at(s.t + 20000).srand(quiet_seed(0x6100)).dump('d02_loaded')
+    s.after(XGAP)
+    # the fortune-teller: the first text is followed by the question at once
+    rwalk(s, D4_TO_GYPSY, 0x6200)
+    s.wait(3000).srand(quiet_seed(0x6300)).dump('d03_gypsy_q')
+    rkey(s, KEY_E, 0x6310, 5000).dump('d04_gypsy_text')     # pay 5; the first of four texts
+    s.sync(FR_FLAGS + 12, 0x0010).srand(quiet_seed(0x6320))  # .. flag 100, then music 1 (fades)
+    quiet_wait(s, 12000, 0x6330).dump('d05_gypsy_done')
+    if stop == 'gypsy':
+        return s.quit().write(path)
+    # the doctor, first visit: refuse
+    i = step_of((10, 13, 3), D4_TO_DOCTOR, D4_SIGN)
+    rwalk(s, D4_TO_DOCTOR, 0x6400, extra={i: SIGN_WAIT})
+    s.wait(SHOP_WAIT).srand(quiet_seed(0x6600)).dump('d06_doctor_q')
+    rkey(s, KEY_H, 0x6610, 4000).dump('d07_refused')
+    # second visit: accept, pick members who are not dead, cancel
+    rwalk(s, D4_DOCTOR_AGAIN, 0x6700)
+    s.wait(SHOP_WAIT).srand(quiet_seed(0x6800)).dump('d08_doctor_q2')
+    rkey(s, KEY_E, 0x6810, 3000).dump('d09_who')
+    rkey(s, K['F1'], 0x6820, 3000).dump('d10_not_dead_f1')
+    portrait_click(s, 2, 0x6830).wait(1800).dump('d11_not_dead_click2')
+    rkey(s, 0x3E00, 0x6840, 3000).dump('d12_not_dead_f4')
+    rkey(s, 'ESC', 0x6850, 4000).dump('d13_cancelled')
+    if stop == 'doctor2':
+        return s.quit().write(path)
+    # third visit: the dead member, by a click on his portrait
+    rwalk(s, D4_DOCTOR_AGAIN, 0x6900)
+    s.wait(SHOP_WAIT).srand(quiet_seed(0x6A00)).dump('d14_doctor_q3')
+    rkey(s, KEY_E, 0x6A10, 3000).dump('d15_who')
+    portrait_click(s, 3, 0x6A20, gap=1200)
+    s.sync(HP3, 1).srand(quiet_seed(0x6A30))                # revived (two more texts follow)
+    quiet_wait(s, 12000, 0x6A40).dump('d16_revived')
+    # fourth visit: accept, too poor
+    rwalk(s, D4_DOCTOR_AGAIN, 0x6B00)
+    s.wait(SHOP_WAIT).srand(quiet_seed(0x6C00)).dump('d17_doctor_q4')
+    rkey(s, KEY_E, 0x6C10, 0)
+    quiet_wait(s, 8000, 0x6C20).dump('d18_too_poor')
+    if stop == 'doctor':
+        return s.quit().write(path)
+    # the hotel: two signs on the way, the room, a camp in it
+    start = (8, 11, 3)
+    rwalk(s, D4_TO_HOTEL, 0x6D00, extra={step_of(start, D4_TO_HOTEL, D4_SIGN): SIGN_WAIT,
+                                         step_of(start, D4_TO_HOTEL, D4_HOTEL_SIGN): SIGN_WAIT})
+    s.srand(quiet_seed(0x6F00)).dump('d19_hotel_room')
+    # the camp advances one minute per 50 ms of clock plus its drawing (more
+    # emulated time in DOSBox-X): the checkpoint inside it is anchored on the
+    # calendar minute (3D64: 9:56 + 24), not on the clock
+    rkey(s, key_of('k'), 0x6F10, 0).sync(0x3D64, 20).dump('d20_camp')
+    s.wait(40000).srand(quiet_seed(0x6F20)).dump('d21_rested')
+    rwalk(s, D4_TO_KEEPER, 0x7000, extra={len(D4_TO_KEEPER) - 1: 20000})
+    s.srand(quiet_seed(0x7100)).dump('d22_keeper')
+    rkey(s, 0x1F73, 0x7200).dump('d23_savemenu')            # S: the new slot is entry 2
+    s.key('DOWN', 1000).key('ENTER', 1500).text('ef', 400).key('ENTER', 1500).key('ENTER', 4000)
+    s.srand(quiet_seed(0x7210)).dump('d24_saved')
+    if stop == 'save':
+        return s.wait(1000).quit().write(path)
+    # 3DSYS keys no other play-through uses (from (13,8) facing north)
+    s.wait(XGAP)
+    rkey(s, 'DOWN', 0x7300).dump('d25_back')                # a step back to (13,9)
+    rkey(s, key_of('4'), 0x7310).dump('d26_sidestep_l')     # sidesteps: (12,9), the hotel room,
+    rkey(s, key_of('6'), 0x7320).dump('d27_sidestep_r')     # and back to (13,9)
+    rkey(s, 'PGDN', 0x7330, 4000).dump('d28_bigview')       # the 200x200 view
+    rkey(s, 'RIGHT', 0x7340).dump('d29_bigview_turn')
+    rkey(s, 'PGUP', 0x7350, 4000).dump('d30_smallview')
+    rkey(s, K['F1'], 0x7360, 4000).dump('d31_charscr1')     # the character screen
+    rkey(s, 0x3D00, 0x7370, 3000).dump('d32_charscr3')      # F3: the revived member
+    rkey(s, 'ESC', 0x7380, 5000).dump('d33_view')
+    rkey(s, key_of('t'), 0x7390, 3000).dump('d34_options')  # the options list
+    rkey(s, 'ESC', 0x73A0, 3000).dump('d35_view')
+    # N: where are we?  With flag 82 the city map (har4.cmp) first; both
+    # waits (2000 and 2400 rounds) are ended by a key
+    rkey(s, key_of('n'), 0x73B0, 0)
+    quiet_wait(s, 8000, 0x73C0).dump('d36_citymap')
+    s.srand(quiet_seed(0x73D0)).key('SPACE', 4000).dump('d37_location')
+    s.srand(quiet_seed(0x73E0)).key('SPACE', 0)
+    quiet_wait(s, 10000, 0x73F0).dump('d38_view')
+    s.wait(1000).quit().write(path)
+
+
+def play5save(path):
+    play5(path, 'save')
+
+
+def startup(path):
+    """start-up check: dumps at the first input reads of the intro (250 ms,
+    1 s, 5 s of the game clock), no input - for
+    `vcompare.py --dg-detail --clock` (docs/VERIFY.md, "Start-up")"""
+    s = Script(seed=1234)
+    for t in (250, 1000, 5000):
+        s.at(t).dump(f's_{t:05d}')
+    s.at(6000).quit().write(path)
+
+
+def play5gypsy(path):
+    play5(path, 'gypsy')
+
+
+def play5doctor2(path):
+    play5(path, 'doctor2')
+
+
+def play5doctor(path):
+    play5(path, 'doctor')
+
+
 # the item exchange screen's zones (fr_item_exchange, read from a dump:
 # 16E0:E5F5 + 8 z): inventory slot s = 1..10 at x 7 + 17 (s - 1), y 44..59;
 # shop slot s at y 27..42; 26 exit (302..310, 3..13), 28 sell (270..282)

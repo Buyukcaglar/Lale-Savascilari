@@ -165,8 +165,9 @@ Flow (play3's prefix up to the dog battle, then):
   "evet", 12 paid, hunger cleared (`c24/c25`).
 * **Camp** (`k`, rest, `c26/c27`) and **save** to a new slot (SAKLA002,
   description "cd", `c28/c29`).
-* **Doctor**: not covered.  The only doctor event (key 31313127) is in
-  district 4 (PC4 at (8,11)), out of reach of a short script.
+* **Doctor**: not in play4 - the only doctor event (key 31313127) is in
+  district 4 (PC4 at (8,11)), out of reach of a short script; play5 below
+  gets there from a prepared save.
 
 Result (2026-11-21): **all 112 checkpoints of play4 are identical** -
 registers, DAC, screen, video memory and DGROUP (minus host fields; clock
@@ -209,8 +210,132 @@ Timing lessons (all in `mkscript.py`):
 * `vcompare.CLOCK_FIELDS` gained BBC4 (ISOSYS talking-face timer) and D534
   (the AI decision's clock word): clock stamps only.
 
+### play5: district 4 from a prepared save - doctor, fortune-teller, hotel, 3DSYS keys
+
+```
+python tools/verify/mksave.py play5 out/verify/scripts/play5.sav
+python tools/verify/mkscript.py play5 out/verify/scripts/play5.txt
+python -u tools/verify/pair.py out/verify/scripts/play5.txt play5 --install out/verify/scripts/play5.sav=SAKLA001.SAV
+```
+(port 25 s, DOSBox-X about 10 min.)
+
+**The save.**  `mksave.py` derives it from a save the original wrote itself
+(`tools/verify/saves/play4_SAKLA002.SAV`, play4's SAKLA002: district 1,
+party ali/ayse/rifki/zeki) and changes only: the description ("doktor" +
+NULs), position (11,12) facing south, district 3 (PC4), money 206, the
+health words of members 2-4 (1, -10, -2), and the three things
+`s3d_load_district(first)` sets on a real arrival (shop stocks BBB7/BBAC
+cleared, city-map marker BB8A/BB88 = 107/226).  Flags, time, music track,
+options and the fee byte (106) stay.  `pair.py --install FILE=NAME` copies
+it into both game folders after the reset.  The crafted save loads
+identically: `d02_loaded` is identical in DGROUP, screen and DAC.
+
+Flow (39 checkpoints `d00`..`d38`):
+
+* **Load** from the main menu (`d00_menu`, `d01_loadmenu`, `d02_loaded`).
+* **Fortune-teller** (10,13), event 18 - ops not used by play3/4: a
+  question (`d03_gypsy_q`), `pay 5` (op 26: 206 -> 201), four long texts
+  (`d04_gypsy_text` in the first), music 7 and back to 1 (op 25, with
+  fades), `findminmax` + `say 5` (ops 23, 17 with WHO), flag 100
+  (`d05_gypsy_done`).
+* **Doctor** (8,11), through the sign of (9,10) (event 16), four visits:
+  1. the fee question "visite : 106" (`d06_doctor_q`), `h`: refused
+     (`d07_refused`);
+  2. `e`, "kim servis istiyor ?" (`d09_who`), then members that are not
+     dead: F1 (health 4, `d10`), a click on portrait 2 (health 1, `d11`), F4
+     (health -2, `d12`) - "bu adam OlU deGil. baSkasInI seCin" each time -
+     and Esc (`d13_cancelled`, no money taken);
+  3. `e`, a click on portrait 3 (health -10): the four texts, health 1,
+     201 -> 95 (`d16_revived`);
+  4. `e` with 95 < 106: "bu para yetmez!" (`d18_too_poor`).
+
+  The event only distinguishes health <= -5 ("dead") from the rest.
+* **Hotel**: the sign of (14,9) (event 13), the room (12,9) with the fixed
+  key 31313131 (3D5E bit 2: no encounters while camping, `d19_hotel_room`),
+  a camp in it (`d20_camp` inside the rest, `d21_rested`: health 4/4/7/3),
+  the keeper (13,8), event 11 (`d22_keeper`).
+* **Save** to a new slot, SAKLA002 "ef" (`d23_savemenu`, `d24_saved`).
+* **3DSYS keys** no other play-through uses: a step back (`d25`), the
+  sidesteps `4`/`6` against doors (refused, `d26`/`d27`), PgDn/PgUp view
+  size with a turn in the 200x200 view (`d28`..`d30`), the character
+  screen F1 and F3 inside it (`d31`, `d32`, back `d33`), the options list
+  `t` (`d34`, Esc `d35`), `n`: the city map har4.cmp (flag 82, `d36`), the
+  location text (`d37`) and back through `s3d_enter_view` (`d38`).
+
+Result (2026-11-22): **all 39 checkpoints identical** - registers, DAC,
+screen, video memory and DGROUP (minus host fields; clock fields listed
+with `--clock`; the clocks themselves differ by up to 1 s at the same
+checkpoint, DOSBox-X's emulated loading and drawing time).  GRP.DAT and
+SAKLA001.SAV identical.  SAKLA002.SAV differs in 30 bytes, 0x0C-0x2F: again
+the tail of the description after its NUL, the original's uninitialised
+stack buffer ([bp-3CAh] of `s3d_save_load_menu`) - here it holds what the
+`s3d_read_save` of the main menu's load left at that stack depth
+("sinsan1.cmp", the last portrait name, return addresses); the port's
+static buffer is zero there.  The other 1494 bytes are equal.  No port bug
+was found.
+
+Two statements of the documentation were wrong and are corrected from the
+original's behaviour: a loaded save keeps its doctor's fee (FORMATS.md said
+it is re-rolled), and the doctor treats members at -5 or lower (not "above
+-5").
+
+Timing lessons:
+
+* Every way out of the doctor but "too poor" ends in `fr_redraw`, which
+  puts the party back on (9,11) still facing west: one Up re-enters.  "Too
+  poor" leaves it in the doctor's cell.
+* The checkpoint inside the camp was first taken 2 s after `k`: the port
+  was at 10:17, the original at 10:11 (one calendar minute per 50 ms of
+  clock *plus* the drawing, which costs emulated time in DOSBox-X).  It is
+  now anchored on the calendar minute (`sync 3D64 0014`): the first input
+  read of that minute's pass is the same point on both sides.
+* Long dialogs are anchored on what they set at their end: flag 100
+  (`sync B9D6 0010`) for the fortune-teller - its texts take 53 s in the
+  port and longer in DOSBox-X - and the revived member's health word
+  (`sync 9AF4 0001`) for the doctor; one-line signs get 14 s of clock.
+* The two waits of `n` (2000 and 2400 rounds) are ended by keys sent on
+  the clock (8 s and 4 s after the previous event).
+
+### Start-up (DSMI) - port vs original, 2026-11-22
+
+`python tools/verify/mkscript.py startup out/verify/scripts/startup.txt;
+python -u tools/verify/pair.py out/verify/scripts/startup.txt startup`, then
+`vcompare.py out/verify/p_startup out/verify/d_startup --dg-detail --clock`
+(dumps at 250 ms, 1 s and 5 s of the game clock), and
+`tests/py/test_istanbul.py` (`test_startup_oracle`: the far heap and DGROUP
+at main()'s call of the intro against a DOSBox-X memory capture).
+
+* **Driver-load heap block: gone.**  The far-heap chain at the end of
+  start-up is identical - 107 blocks, same first/last/rover, including the
+  mixer's DMA buffer (1F8h paragraphs) and tables (404h) - against the
+  capture of 2026-11-21 and a new one made with today's configuration (SB16
+  IRQ 7).  The test now checks the whole chain strictly.
+* **6E06 (conventional low-water) and DE30 (EMS low-water): identical** at
+  `s_01000`, `s_05000`, the menu checkpoints and in the test (the
+  `KNOWN` exemption of 6E06 is removed).
+* **7B70-7BE7** (the test called 7BC8.. "SDI device record"): it is AMP's
+  private interrupt stack (`ampInterrupt` switches SS:SP to DGROUP:7BE4);
+  the original leaves the frames of the last timer tick there (return
+  addresses 171A:0F46/0F79 = seg0EF6, DS, locals), the port has no 8086
+  stack and leaves zeros.  Host field, never read as data.
+* **DSMI time E798/E7A0, AMP last-tick time 85A2**: clock fields.  At game
+  clock 1000 the original's DSMI time is 10100 (0.1 ms units), the port's
+  10000: the DSMI timer starts before NKONTROL's clock and the start-up
+  in between costs emulated time in DOSBox-X, none in the port's virtual
+  time.  The timer-service slots 85CE.. differ only in their routine far
+  pointers (F000:FEA5 the old INT 8, 1969:0096, 1566:0120 ..., native
+  pointers in the port).
+* `s_00250` is not comparable: the original's first input read is at clock
+  440, still in text mode; `s_01000` and `s_05000` are identical in DGROUP
+  and differ on screen only by the intro video's frame (D618: frame 9 vs
+  4 at 1 s - the video starts later on the original's clock; the intro is
+  compared frame by frame with `frames_match.py`).
+
+No open DSMI start-up difference remains.
+
 `tools/verify/mkscript.py` builds the scripts (`play3` above; `play2` is
-the older version without the checkpoint neutralisation).
+the older version without the checkpoint neutralisation);
+`tools/verify/mksave.py` builds prepared saves.
 
 ## Port side
 
@@ -244,9 +369,11 @@ dumps A000 (chain-4) or the 4 planes and DGROUP.
 `<name>.vga` (misc, seq 0-4, gc 0-8, crtc 0-24, attr 0-20, DAC), `.vram`
 (chain-4: the CPU view of A000, else 4 planes), `.dg` (DGROUP), `.txt` (clock).
 
-* `tools/verify/pair.py <script> <tag> [--keep]` - both sides + vcompare + written
-  files; `--keep` does not reset the game folders (a script that loads
-  what the previous one saved: `play4load` after `play4`).
+* `tools/verify/pair.py <script> <tag> [--keep] [--install FILE=NAME]` - both sides +
+  vcompare + written files; `--keep` does not reset the game folders (a
+  script that loads what the previous one saved: `play4load` after
+  `play4`); `--install` copies a prepared file (a save of `mksave.py`)
+  into both game folders after the reset (`play5`).
 * `tools/verify/vcompare.py <port> <orig> [--png dir] [--dg-detail] [--clock]` - same-name
   checkpoints: registers, DAC, rendered picture, video memory, DGROUP.  DGROUP
   ignores: far pointers (heap/EMS/VGA, native in the port), relocated segment
