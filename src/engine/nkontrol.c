@@ -42,6 +42,8 @@ void ctl_install(void)
        E746 = getvect(09h); setvect(09h, ctl_int09_isr);
        E742 = getvect(00h); setvect(00h, ctl_div0_isr);
        harderr(ctl_ctrlbrk_handler); */
+    pc_set_int23(ctl_int23_isr);
+    pc_set_int09(ctl_int09_isr);
     g_sys_flags |= 0x10;
 }
 
@@ -54,6 +56,10 @@ void ctl_install(void)
 void ctl_uninstall(void)
 {
     /* if installed: setvect(00h, E742); setvect(09h, E746); setvect(23h, E73E) */
+    if (g_sys_flags & 0x10) {
+        pc_set_int23(NULL);
+        pc_set_int09(NULL);
+    }
     g_sys_flags &= (uint8_t)~0x10;
 }
 

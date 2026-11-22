@@ -863,14 +863,14 @@ uint8_t ui_play_voice(int16_t slot, uint16_t flags)
  * ui_wait_voice - wait until the voice's time (73D1) has come (calling
  * the idle callback), clear it, then with sound on wait until the voice
  * channel's position + 20h reaches the sample's length (Esc: return 1)
- * and set the silence SAMPLEINFO (DE1E) on it.  Returns 0.
+ * and set the silence SAMPLEINFO (DF1E) on it.  Returns 0.
  *
  * Original: IST.EXE 05DC:1D1B (INTRFACE.L), far cdecl.  The remaining time
  * is a 32-bit difference; the first wait only runs while its high word is
  * 0 and the low word <= 73D5, and it stops after the idle call that saw
  * a difference of 0.  No pending time (FFFFFFFFh): return 0 at once.
  * Port: polls through the idle callback's pc calls and ui_kbhit; the
- * SAMPLEINFO at DE1E is converted like nses.c's snd_sampleinfo.
+ * SAMPLEINFO at DF1E is converted like nses.c's snd_sampleinfo.
  * Verified: tests/py/test_intrface.py (test_voices).
  */
 int16_t ui_wait_voice(void)

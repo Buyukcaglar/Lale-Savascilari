@@ -459,8 +459,9 @@ void iso_battle(void)
             grt_tolower_inplace(&c8);
             ch = (uint8_t)c8;
             if (g_iso_key == 0xFFFF) {                           /* Ctrl-Break */
+                iso_dos_break((int16_t)g_iso_key);   /* INT 23h at the flush's kbhit(): iso.h */
                 ctl_flush_keys();
-                /* INT 1Bh: the BIOS break handler - nothing in the port */
+                /* C022: INT 1Bh (the break flag again) - never reached under DOS */
                 ui_getch();
             }
             g_iso_key >>= 8;
@@ -691,6 +692,7 @@ void iso_battle(void)
                         key2 = (int16_t)(ui_bioskey(1) >> 8);
                         gr_cursor_update((uint8_t)g_cursor_shape);
                     } while (key2 == 0);
+                    iso_dos_break(key2);         /* FFFFh >> 8 (SAR): Ctrl-Break, iso.h */
                     ctl_flush_keys();
                     iso_draw_char_frame(0, zone);
                     if (key2 == 0x4D)
@@ -732,6 +734,7 @@ void iso_battle(void)
                         key2 = (int16_t)(ui_bioskey(1) >> 8);
                         gr_cursor_update((uint8_t)g_cursor_shape);
                     } while (key2 == 0);
+                    iso_dos_break(key2);         /* Ctrl-Break, iso.h */
                     ctl_flush_keys();
                     for (g_bb53 = 1; g_bb53 <= 3; g_bb53++)
                         iso_draw_portrait(g_bb53, g_party_cur, 1);

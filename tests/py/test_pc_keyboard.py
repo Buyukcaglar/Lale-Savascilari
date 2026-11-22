@@ -65,3 +65,40 @@ def test_bioskey():
     seq = [1, 1, 0, 2, 0x12, 1, 0, 0x11, 0x10, 1, 0, 1, 0, 1, 0x11, 0, 1, 0, 0, 1, 1]
     run(keys, seq)
     run(keys[:3], [1, 0, 1, 0, 1, 0, 1, 2])
+
+
+def test_dos_break():
+    """Ctrl-Break as DOS handles it (pc.c): the BIOS empties the buffer and
+    leaves the word 0000h (bioskey(1) = FFFFh in Borland's RTL); the next
+    kbhit() - INT 21h AH=0Bh - issues INT 23h, once.  A typed Ctrl+C (2E03h)
+    is an ordinary key, as the original in DOSBox-X takes it.
+    C side only: this is DOS/BIOS behaviour, not game code."""
+    HANDLER = ctypes.CFUNCTYPE(None)
+    calls = []
+    h = HANDLER(lambda: calls.append(1))
+    set23 = fn('pc_set_int23', None, ctypes.c_void_p)
+    kbhit = fn('pc_kbhit', ctypes.c_int16)
+    getch = fn('pc_getch', ctypes.c_int16)
+    bioskey = fn('pc_bioskey', ctypes.c_int16, ctypes.c_int16)
+    brk = fn('pc_ctrl_break', None)
+    while kbhit():
+        getch()
+    try:
+        set23(ctypes.cast(h, ctypes.c_void_p))
+        c_push(0x2E03)
+        check(kbhit() == 1 and getch() == 3 and kbhit() == 0 and not calls,
+              'break: a typed ^C is an ordinary key')
+        c_push(0x1E61)
+        brk()
+        check(bioskey(1) == -1 and not calls, 'break: bioskey(1) after Ctrl-Break')
+        check(kbhit() == 1 and len(calls) == 1, 'break: kbhit() after Ctrl-Break')
+        check(kbhit() == 1 and len(calls) == 1, 'break: only once')
+        check(getch() == 0 and getch() == 0 and kbhit() == 0, 'break: the 0000h word')
+        # without a handler nothing happens
+        set23(None)
+        brk()
+        check(kbhit() == 1 and len(calls) == 1, 'break: no handler')
+        while kbhit():
+            getch()
+    finally:
+        set23(None)

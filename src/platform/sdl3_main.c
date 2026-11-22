@@ -125,7 +125,19 @@ static void key_down(const SDL_KeyboardEvent *k)
     uint8_t shift = (uint8_t)(((m & SDL_KMOD_RSHIFT) ? 1 : 0) | ((m & SDL_KMOD_LSHIFT) ? 2 : 0) |
                               ((m & SDL_KMOD_CTRL) ? 4 : 0) | ((m & SDL_KMOD_ALT) ? 8 : 0));
     pc_set_shift_flags(shift);
+    if (!k->down)
+        return;                                         /* release: shift flags only */
+    /* BIOS INT 09h: Ctrl-Break is Ctrl+Pause on the enhanced keyboard and
+       Ctrl+ScrollLock (scan 46h) on every keyboard */
+    if ((m & SDL_KMOD_CTRL) && !k->repeat &&
+        (k->scancode == SDL_SCANCODE_PAUSE || k->scancode == SDL_SCANCODE_SCROLLLOCK ||
+         k->scancode == SDL_SCANCODE_CANCEL)) {
+        pc_ctrl_break();
+        return;
+    }
     if (!sc)
+        return;
+    if (pc_int09(sc))                                   /* the game's INT 09h hook */
         return;
     last_scan = sc;
     if (sc >= 0x3B && sc <= 0x44) {                     /* F1..F10 with modifiers */

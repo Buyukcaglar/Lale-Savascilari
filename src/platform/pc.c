@@ -176,6 +176,50 @@ static int      khead, ktail;         /* BIOS ring: 15 usable entries */
 static int      pending_scan = -1;    /* getch(): second byte of an extended key */
 static uint8_t  shift_flags;
 
+/* Ctrl-C / Ctrl-Break as DOS handles them.
+ *   BIOS INT 09h on Ctrl-Break (Ctrl+Pause, Ctrl+ScrollLock): empties the
+ *   key buffer, stores the word 0000h and issues INT 1Bh; DOS's INT 1Bh
+ *   handler makes the console's next character a ^C.
+ *   DOS console calls that check for break - of those the game uses, only
+ *   kbhit() (INT 21h AH=0Bh; getch() is AH=07h, which does not check) -
+ *   then issue INT 23h.
+ *   A typed Ctrl+C (key word 2E03h) is NOT treated as a break: the original
+ *   in DOSBox-X, the project's reference, takes a buffered 2E03h at the main
+ *   menu as an ordinary key (checked 2026-11-22, script: menu, key 2E03,
+ *   dump).  MS-DOS itself is said to look for a waiting ^C in AH=0Bh too
+ *   and would break there; not verifiable here, so the reference wins.
+ * The game's INT 23h handler (NKONTROL ctl_int23_isr) ends the program;
+ * without a handler nothing happens here (DOS's own would abort the
+ * program; no game code runs kbhit() before ctl_install). */
+static void (*int23_handler)(void);
+static int  (*int09_handler)(uint8_t scan);
+static int    dos_break_pending;
+
+void pc_set_int23(void (*handler)(void))        { int23_handler = handler; }
+void pc_set_int09(int (*handler)(uint8_t scan)) { int09_handler = handler; }
+
+int pc_int09(uint8_t scan)
+{
+    return int09_handler ? int09_handler(scan) : 0;
+}
+
+static void dos_break_check(void)
+{
+    if (!dos_break_pending)
+        return;
+    dos_break_pending = 0;
+    if (int23_handler)
+        int23_handler();
+}
+
+void pc_ctrl_break(void)
+{
+    khead = ktail = 0;
+    pending_scan = -1;
+    kbuf[ktail++] = 0x0000;
+    dos_break_pending = 1;
+}
+
 void pc_key_push(uint16_t key)
 {
     int next = (ktail + 1) & 15;
@@ -189,6 +233,7 @@ int16_t pc_kbhit(void)
 {
     pc_poll();
     INPUT_READ();
+    dos_break_check();
     return (int16_t)(pending_scan >= 0 || khead != ktail);
 }
 

@@ -55,11 +55,29 @@ equivalent, no decompilation needed).
 | SYSTEMS seg0AC6 + NGRAPHS seg0C7F + OGRAPHS ovl5511 (`src/engine/systems.c, ngraphs.c, ographs.c`) | 52/52 | verified (23 tests: DGROUP, A000, VGA regs/DAC/planes, EMS); fade interpolation only at ms=0 |
 | main seg0546 + DEMOLAR ovl3C2D (`src/game/istanbul.c`, `demolar.c`) | 14/14 | partly verified (6 tests: waits, picture show/fade, zone outline, music off); open: intro/story/ending/credits need video/voice/music + real modules; main() start-up vs DOSBox-X oracle (integration pass) |
 | CHARGEN ovl39E5 (`src/game/chargen.c`) | 12/12 | verified (8 tests: stat rolls, draw, load/save GRP.DAT, cancel, full 4-member flow by keys and mouse, animations) |
-| ISOSYS battles ovl4595 (`src/game/iso*.c`) | 77/77 | verified (32 tests: rules, AI 96 seeded turns, every vecize, battlefield of all 18 maps, divide-by-zero via the INT 0 handler semantics, 8 whole scripted battles with real SAVAS.CKD graphics); open: Ctrl-Break, sound-on paths, door wall without bar picture (original blits garbage, port would crash on NULL – check whether game data contains it) |
+| ISOSYS battles ovl4595 (`src/game/iso*.c`) | 77/77 | verified (32 tests: rules, AI 96 seeded turns, every vecize, battlefield of all 18 maps, divide-by-zero via the INT 0 handler semantics, 8 whole scripted battles with real SAVAS.CKD graphics); 2026-11-22 (`test_iso_d.py`, 12 tests): Ctrl-Break (the original ends through its INT 23h handler at the next kbhit(); the port continued the battle – fixed), sound-on paths (same CDI/AMP call order and state in single calls and three whole battles), door wall without bar picture (cannot occur in the 18 shipped maps; forced, the original ends with internal error 10h and so does the port – no garbage blit, no crash) |
 | FRPOS shop/event scripts ovl3FD1 (`src/game/frpos*.c`) | 33/33 | verified (5 tests: every event/trigger of all 18 PCSn files, 33/33 opcodes; tools/frposdis.py) – in its own DLL, joins base after the wave |
 | 3DSYS exploration ovl303F (`src/game/s3d*.c`) | 32/32 | verified (charscr, loop, menus, panel, camp, move, keys, save write + read incl. the original's SAKLA001.SAV, district load/enter/location, all wall kinds); 2026-11-22 (`test_s3d_gap.py`): the portrait/zone routine 303F:27F7 (44 cases), and the two routines no code references – debug buffers 303F:23ED, map writer 303F:189D (written bytes identical) – verified |
 | 3DQUICK first-person renderer ovl2700 (`src/game/q3dview*.c`) | 36/36 | verified (15 tests: start-up tables over ~340 view sizes, all 18 maps x 4 facings, automap, animations); 2026-11-22 (`test_q3dview_gap.py`, 5 tests): rotations in the game's configuration (100 window, speed 9) identical in whole A000/surfaces/DGROUP; 100x100 render identical up to the floor/ceiling strips, where the original (and the port) loops forever in the strip blitter – the game never renders at 100x100; the "742 bytes" were the port missing the 64 KB offset wrap in `q3d_draw_quad_mapped` (only after an ignored fatal error) – fixed in `q3d.c` (`far_at`) |
 | 3D quads seg08D0 (`src/game/q3d.c`) | 7/7 | verified (differential, bit-exact x87 model); EMS lock wrapper by inspection |
+
+## Gap wave (2026-11-22)
+
+Engine and host fixes found while closing the gaps above:
+
+| Where | Problem | Fix |
+|---|---|---|
+| `src/engine/intrface.h` | `ui_wait_voice` set the silence sample from DGROUP:DE1E; the original pushes DF1Eh (05DC:1E3C: sound slot 0Ah, bosch.pur) | constant corrected; `test_iso_d.test_sound_silence_sample` |
+| `src/engine/systems.c` | `sys_blit` / `sys_blit_recolor` with a destination row above a conventional block (the big capital of a battle text box, y = -1 / -2) crashed; the original's huge pointer wraps to just below the block | those rows are dropped, the rest drawn as the original does; `test_iso_d.test_textbox_capital` (`sys_blit`; `sys_blit_recolor` by the same reasoning, no test reaches it) |
+| `src/game/q3d.c` | missing 64 KB offset wrap in the quad drawer (after an ignored fatal error only) | `far_at` |
+| `src/platform/cdrom.c` | request to a non-CD drive got a status written; MSCDEX leaves the header alone; subunit not filled in | as MSCDEX |
+| `src/platform/pc.c`, `nkontrol.c`, `sdl3_main.c` | Ctrl-Break could not be produced by the host | Ctrl+Pause / Ctrl+ScrollLock = BIOS Ctrl-Break (buffer emptied, word 0000h, INT 23h at the next kbhit()); the game's INT 09h hook is offered every make code. A typed Ctrl+C stays an ordinary key, as the original in DOSBox-X takes it at the main menu (MS-DOS itself may break there – not verifiable here) |
+| `src/platform/sdl3_main.c` | a key release was handled like a press: Esc, Enter, Tab, cursor and function keys were pushed twice in interactive play (scripts bypass the window) | releases only update the shift flags |
+
+Not covered by any test or play-through: right-button cancel at the doctor's prompt, the
+food stall of district 4 (needs flag 99), changing a setting in the options list, a
+successful sidestep, `o5737_cd_drive_info` without MSCDEX, the Ctrl-Break DOS sequence
+in DOSBox-X itself (modelled from documented BIOS/DOS behaviour).
 
 ## Analysis pipeline fixes (2026-11-20)
 

@@ -208,6 +208,28 @@ void sys_blit_cb(uint16_t sx, uint16_t sy, uint16_t w, uint16_t h, uint16_t dx,
 }
 
 /*
+ * rows_above_block - how many of the first `rows` destination rows of a blit
+ * piece lie below the start of a conventional block: dy is negative (as a
+ * 16-bit value) and (u32)dy * dstw + dx is past the block's end.  The
+ * original's huge-pointer add in mm_map wraps at 1 MB, so those rows land
+ * just below the block - for the screen (slot 0) at the top of conventional
+ * memory, 9FExxh/9FFxxh - and the following rows from the block's row 0
+ * (seen with the big capital of a battle text box: grt_draw_text draws its
+ * 19x19 cell at y - 5 = -1 / -2; tests/py/test_iso_d.py:test_textbox_capital).
+ * The port does not model the memory below a block: those rows are dropped
+ * and the others drawn where the original draws them.
+ */
+static uint16_t rows_above_block(const MmHandle *rec, uint16_t dy, uint16_t dstw,
+                                 uint16_t dx, uint16_t rows)
+{
+    uint16_t n;
+    if (rec->type != 0 || (int16_t)dy >= 0 || (uint32_t)dy * dstw + dx < rec->size)
+        return 0;
+    n = (uint16_t)-(int16_t)dy;
+    return n < rows ? n : rows;
+}
+
+/*
  * sys_blit - copy a w x h rectangle from (sx,sy) of src_slot to (dx,dy) of
  * dst_slot with the row routine fn (asm_copy_rect family, key FEh), in
  * pieces that fit both mapping windows.
@@ -219,7 +241,7 @@ void sys_blit_cb(uint16_t sx, uint16_t sy, uint16_t w, uint16_t h, uint16_t dx,
 void sys_blit(uint16_t sx, uint16_t sy, uint16_t w, uint16_t h, uint16_t dx, uint16_t dy,
               uint8_t src_slot, uint8_t dst_slot, SysRectFn fn)
 {
-    uint16_t slot = 0, srclen, dstlen, rows, a, b;
+    uint16_t slot = 0, srclen, dstlen, rows, a, b, above;
     uint16_t srcw = (uint16_t)g_surf_w(src_slot), dstw = (uint16_t)g_surf_w(dst_slot);
     MmHandle *srec = slot_rec(src_slot), *drec = slot_rec(dst_slot);
     uint8_t *srcp, *dstp;
@@ -238,7 +260,14 @@ void sys_blit(uint16_t sx, uint16_t sy, uint16_t w, uint16_t h, uint16_t dx, uin
         rows = (uint16_t)((a < b ? a : b) + 1);
         if (rows >= h)
             rows = h;
-        fn(srcp, 0, 0, w, rows, srcw, dstp, 0, 0, dstw, 0xFE);
+        above = rows_above_block(drec, dy, dstw, dx, rows);
+        if (above == 0)
+            fn(srcp, 0, 0, w, rows, srcw, dstp, 0, 0, dstw, 0xFE);
+        else if (above < rows)          /* dstp - offset = the block's start */
+            fn(srcp + (uint32_t)above * srcw, 0, 0, w, (uint16_t)(rows - above), srcw,
+               dstp - ((uint32_t)dy * dstw + dx) + dx
+                   + (uint32_t)(uint16_t)(dy + above) * dstw,
+               0, 0, dstw, 0xFE);
         sy += rows;
         dy += rows;
         h -= rows;
@@ -290,7 +319,7 @@ void sys_blit_recolor(uint16_t sx, uint16_t sy, uint16_t w, uint16_t h, uint16_t
                       uint16_t dy, uint8_t src_slot, uint8_t dst_slot,
                       uint8_t match, uint8_t color)
 {
-    uint16_t slot = 0, srclen, dstlen, rows, a, b, i;
+    uint16_t slot = 0, srclen, dstlen, rows, a, b, i, above;
     uint16_t srcw = (uint16_t)g_surf_w(src_slot), dstw = (uint16_t)g_surf_w(dst_slot);
     MmHandle *srec = slot_rec(src_slot), *drec = slot_rec(dst_slot);
     uint8_t *srcp, *dstp;
@@ -309,7 +338,11 @@ void sys_blit_recolor(uint16_t sx, uint16_t sy, uint16_t w, uint16_t h, uint16_t
         rows = (uint16_t)((a < b ? a : b) + 1);
         if (rows >= h)
             rows = h;
-        for (i = 0; i < rows; i++)
+        above = rows_above_block(drec, dy, dstw, dx, rows);
+        if (above != 0)                 /* dstp := where row `above` really is */
+            dstp = dstp - ((uint32_t)dy * dstw + dx) + dx
+                   + (uint32_t)(uint16_t)(dy + above) * dstw - (uint32_t)above * dstw;
+        for (i = above; i < rows; i++)
             mm_copy_recolor(srcp + (uint16_t)(i * srcw), dstp + (uint16_t)(i * dstw),
                             w, match, color);
         sy += rows;

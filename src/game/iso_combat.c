@@ -313,6 +313,7 @@ redraw:
         g_ui_list_key = (int16_t)((int16_t)key >> 8);
         ch = (char)(key & 0xFF);
         grt_tolower_inplace(&ch);          /* on the low byte of the int */
+        iso_dos_break((int16_t)key);       /* Ctrl-Break: INT 23h at the flush's kbhit(), iso.h */
         if (g_ui_list_key != 0)
             ui_flush_keys();
         gr_cursor_update((uint8_t)g_cursor_shape);

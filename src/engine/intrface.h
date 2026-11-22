@@ -86,7 +86,9 @@
 #define g_voice_sample_end   DG32(0x73CC)   /* u32  length of the playing voice sample */
 #define g_voice_end_time     DG32(0x73D1)   /* u32  clock when the voice's wait ends, -1 none */
 #define g_voice_len          DG16(0x73D5)   /* u16  that wait in clock units */
-#define UI_VOICE_SILENCE     0xDE1E         /* SAMPLEINFO set on the voice channel when done */
+#define UI_VOICE_SILENCE     0xDF1E         /* SAMPLEINFO of sound slot 0Ah (bosch.pur, the empty
+                                               sample) set on the voice channel when done:
+                                               05DC:1E3C PUSH DF1Eh */
 #define g_ui_frame_ticks     DG8(0xBB35)    /* u8   ui_wait_frames: n*(n+1) clock units/frame */
 #define g_ui_msg_buf         DGSTR(0xBACC)  /* char[] sprintf buffer of the voice errors */
 #define g_ui_dialog_result   DGS16(0xBB9E)  /* i16  ui_dialog_2198: 100 waiting, 0 / 1 */

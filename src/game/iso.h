@@ -184,6 +184,27 @@ _Static_assert(sizeof(IsoTmpl) == 0x2E, "IsoTmpl is 2Eh bytes");
 #define g_iso_encounter(i, w) DGS16((uint16_t)(0x5BDA + 6 * (i) + 2 * (w)))  /* group i 1..3:
                                                w 0 monster type (+100: allied), w 1 count */
 
+/* ---- Ctrl-Break ---------------------------------------------------------------
+ * On Ctrl-Break the BIOS keyboard handler (reached through NKONTROL's INT 09h
+ * hook) empties the keyboard buffer, stores the word 0000h in it and issues
+ * INT 1Bh, which makes DOS raise INT 23h at its next console call.  The
+ * game's INT 23h handler (ctl_int23_isr, 0DB7:0135) is fatal: "Tamam abi
+ * breyk, breyk, sitop !!!" and the game exits.  Borland's bioskey(1) gives
+ * FFFFh for the 0000h word; in every ISOSYS key loop the next DOS console
+ * call after that peek is the kbhit() (INT 21h AH=0Bh) of ctl_flush_keys -
+ * so the battle never gets past that flush.  The port has no DOS: a key
+ * loop calls iso_dos_break() with the peeked word before that flush.
+ * (iso_battle's own INT 1Bh + getch() after its flush, ovl4595:C022, is
+ * therefore never reached under DOS; it stays in the port for the case of
+ * a returning o559A_fatal - the test build.)
+ * Verified: tests/py/test_iso_d.py (test_ctrl_break_*). */
+void ctl_int23_isr(void);                   /* engine/nkontrol.h, 0DB7:0135 */
+static inline void iso_dos_break(int16_t key_word)
+{
+    if (key_word == -1)
+        ctl_int23_isr();
+}
+
 /* ---- functions (original address order) ------------------------------------ */
 void    iso_register_far_fns(void);         /* port: ui_register_far_fn for 1694:xxxx */
 

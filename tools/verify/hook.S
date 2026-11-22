@@ -425,10 +425,31 @@ int33:
     cmp $4, %ax
     je mset
     cmp $7, %ax
-    je mset
+    je mrange
     cmp $8, %ax
-    je mset
+    je mrange
     ljmp *%cs:old33
+mrange:
+    /* AX=7/8 clamp the driver's CURRENT position to the new range - and the
+       host pointer may have moved that since the last latch (seen 2026-11-22:
+       cursor at another place / another 3DSYS cursor shape E5E3 at
+       checkpoints after a window change, different ones in each run, while
+       the host mouse was in use).  Put the latched position back first. */
+    cmpb $0, %cs:mvalid
+    je mset
+    push %ax
+    push %bx
+    push %cx
+    push %dx
+    mov %cs:mxr, %cx
+    mov %cs:myr, %dx
+    mov $4, %ax
+    pushf
+    lcall *%cs:old33
+    pop %dx
+    pop %cx
+    pop %bx
+    pop %ax
 mset:
     pushf
     lcall *%cs:old33

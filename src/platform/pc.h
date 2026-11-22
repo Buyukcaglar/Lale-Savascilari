@@ -98,6 +98,14 @@ int16_t  pc_getch(void);
 int16_t  pc_bioskey(int16_t cmd);
 /* Shift-state byte (BDA 0040:0017). */
 uint8_t  pc_shift_flags(void);
+/* Break handling (see pc.c "Ctrl-C / Ctrl-Break"): setvect(23h) / setvect(09h)
+   of the game's handlers; pc_int09 = the host offers a make code to the
+   game's INT 09h hook first (1 = swallowed); pc_ctrl_break = the BIOS saw
+   Ctrl-Break. */
+void     pc_set_int23(void (*handler)(void));
+void     pc_set_int09(int (*handler)(uint8_t scan));
+int      pc_int09(uint8_t scan);
+void     pc_ctrl_break(void);
 void     pc_set_shift_flags(uint8_t f);
 
 /* ---- mouse (INT 33h) ------------------------------------------------------- */

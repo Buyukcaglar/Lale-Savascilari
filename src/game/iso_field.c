@@ -119,6 +119,19 @@ void iso_build_battlefield(void)
     for (x = 0; x < 0x1B; x++)
         for (y = 0; y < 0x1B; y++)
             g_iso_terrain(x, y) = 0;
+    /* door 5 = no door picture among the map's wall sets: a door wall then
+       becomes terrain 14, which has no pictures of its own.  iso_redraw
+       draws it with bar picture word 2632h (= g_iso_alive(0)) and wall top
+       20 = "picture 7" of the 6 in slot 18:
+         2632h = 0: the bar blit starts at x = FFCEh of yericon, past its
+           EMS block -> mm_map prints the page map, waits for a key and ends
+           the game with internal error 10h (MEMMAN.L line 748); the port
+           does the same through the same calls;
+         2632h = 1: bar picture 1, and the top is wall picture 1 shifted one
+           row plus 50 bytes behind the walls' block in the EMS heap.
+       No shipped map reaches this: the four without a wall set 2/3 (PC13,
+       14, 16, 18) have no set 8 either, which a door wall needs.
+       Verified: tests/py/test_iso_d.py (test_door14_*). */
     door = 5;
     for (i = 0; i < 4; i++) {
         if (WALL_PIC(i) == 3) {
