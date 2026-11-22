@@ -73,7 +73,14 @@ static uint8_t side_l(void) { return (uint8_t)((g_s3d_facing + 3) % 4); }
 static uint8_t side_r(void) { return (uint8_t)((g_s3d_facing + 1) % 4); }
 static uint8_t side_f(void) { return (uint8_t)(g_s3d_facing % 4); }
 
-/* 2700:3932 */
+/* 2700:3932.  Only ever run with the 200x200 view in the game (main sets
+   3AFF/3B01 = 200 before the tables are built; the rotations render before
+   they switch to 100 and after they switch back).  With 100x100 tables the
+   floor/ceiling strips keep the texture size (the strip blitter does not
+   scale) and the first one that passes the bottom of the view never
+   returns from sys_blit_0F21 (0 rows mapped at the end of the surface,
+   in the original and here): tests/py/test_q3dview_gap.py
+   (test_render_100, test_render_100_hang). */
 void q3d_render_view(uint8_t slot)
 {
     q3d_render_layer_far(slot);

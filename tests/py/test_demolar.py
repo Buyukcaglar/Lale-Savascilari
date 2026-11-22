@@ -11,7 +11,8 @@ from uiworld import run, ORIG_POLL_POINTS, pic, fit
 
 # port pc_poll() at these loop heads of the original:
 # demo_wait_key_or_delay 002C; demo_show_picture clock waits 03B0, 0438, 04A8
-ORIG_POLL_POINTS.extend((0x3C2D, o) for o in (0x002C, 0x03B0, 0x0438, 0x04A8))
+ORIG_POLL_POINTS.extend(_pt for _pt in [(0x3C2D, o) for o in (0x002C, 0x03B0, 0x0438, 0x04A8)]
+                        if _pt not in ORIG_POLL_POINTS)   # once, whatever the import order
 
 C = ctypes
 u8, i16, u16, vp = C.c_uint8, C.c_int16, C.c_uint16, C.c_void_p

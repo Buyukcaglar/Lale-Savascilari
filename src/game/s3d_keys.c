@@ -391,7 +391,8 @@ void s3d_handle_key(void)
  * created is fatal ("Dosya açılamadı!").  Unreferenced debug helper.
  *
  * Original: IST.EXE 303F:189D (3DSYS.L), far cdecl (char far *name).
- * Not compared yet (no test_save_map in tests/py/test_s3d_keys.py).
+ * Its thunk 1670:0039 is never called in the shipped game.
+ * Verified: tests/py/test_s3d_gap.py (test_save_map: the written bytes).
  */
 void s3d_load_file_error(const char *name)
 {

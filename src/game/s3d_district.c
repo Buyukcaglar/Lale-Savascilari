@@ -211,7 +211,9 @@ void s3d_load_district(int16_t district, uint8_t first)
  * After a fatal the original goes on reading the record (the port's
  * fatal does not return in the game; the tests' fatal returns, so a NULL
  * record is not dereferenced here).
- * Not compared on its own yet (no test_debug_buffers).
+ * Unreferenced in the shipped game (its thunk 1670:0070 is never called).
+ * Verified: tests/py/test_s3d_gap.py (test_debug_buffers: EMS and
+ * conventional surfaces, empty slots up to the second fatal).
  */
 void s3d_debug_buffers(uint8_t n)
 {
@@ -330,7 +332,10 @@ void s3d_redraw_screen(void)
  *
  * Original: IST.EXE 303F:27F7 (3DSYS.L), far cdecl (Ghidra splits it at
  * 280A).  Divisions are signed (IDIV).
- * Not compared on its own yet (no test_zones).
+ * Called by s3d_draw_party_panel (303F:2C92) and s3d_draw_portrait_hl
+ * (303F:7616); INTRFACE stores its thunk 1670:00A2 as a window callback
+ * (05DC:0A52).
+ * Verified: tests/py/test_s3d_gap.py (test_zones).
  */
 void s3d_draw_portrait(void)
 {

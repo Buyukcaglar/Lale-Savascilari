@@ -16,8 +16,9 @@ from uiworld import run, L, ORIG_POLL_POINTS
 # call they follow): the event loop's four button waits (cursor update), ui_wait_voice
 # (idle callback), ui_wait_frames and ui_message_box (cursor update),
 # ui_wait_click_or_key (gr_call_then_cursor)
-ORIG_POLL_POINTS.extend((0x05DC, o) for o in (0x1415, 0x145C, 0x151D, 0x1564, 0x1D87, 0x1E81, 0x2BFA,
-                                                0x2E2D))
+ORIG_POLL_POINTS.extend(_pt for _pt in [(0x05DC, o) for o in (0x1415, 0x145C, 0x151D, 0x1564, 0x1D87, 0x1E81, 0x2BFA,
+                                                0x2E2D)]
+                        if _pt not in ORIG_POLL_POINTS)   # once, whatever the import order
 
 C = ctypes
 u8, i16, u16, u32, vp = C.c_uint8, C.c_int16, C.c_uint16, C.c_uint32, C.c_void_p

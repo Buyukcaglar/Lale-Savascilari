@@ -22,6 +22,7 @@
  * point error instead; the turn animations never produce such quads.
  */
 #include "game/q3d.h"
+#include "platform/pc.h"
 
 #include <math.h>
 #include <string.h>
@@ -315,6 +316,22 @@ static void edge_scale(int16_t x, int16_t z, double a, double *p0, double *p1)
 }
 
 /*
+ * far_at - the byte ES:[BX+off] of the original's LES BX / ADD BX,off stores
+ * and loads (08D0:093A): the offset wraps at 64 KB inside the segment.  For
+ * a surface in the EMS page frame that is the frame's start (physical page
+ * 0), which matters when a surface mapped at page 2 does not fit - only
+ * after q3d_draw_quad's fatal error was ignored, never in the game
+ * (tests/py/test_q3dview_gap.py:test_rotate_wrap).  Conventional surfaces
+ * never reach 64 KB from their own segment start in the port's model.
+ */
+static inline const uint8_t *far_at(const uint8_t *base, uint16_t off)
+{
+    if (base >= pc_ems_frame && base < pc_ems_frame + sizeof pc_ems_frame)
+        return pc_ems_frame + (uint16_t)((uint16_t)(base - pc_ems_frame) + off);
+    return base + off;
+}
+
+/*
  * q3d_draw_quad_mapped - body of q3d_draw_quad once both surfaces are
  * mapped (see q3d_draw_quad).
  *
@@ -433,9 +450,9 @@ int16_t q3d_draw_quad_mapped(const uint8_t *src, int16_t src_w, uint8_t *dst, in
             uint16_t v = (uint16_t)((uint16_t)(int16_t)(r * h) - (uint16_t)vbias);
             uint16_t row = (uint16_t)(v / (uint16_t)span_full);
             uint16_t si = (uint16_t)(ucol + (int16_t)((int16_t)(tv + row) * src_w));
-            uint8_t al = src[si];
+            uint8_t al = *far_at(src, si);
             if (al != 0xFE)
-                dst[di] = al;
+                *(uint8_t *)far_at(dst, di) = al;
             di = (uint16_t)(di + dst_w);
         }
     }

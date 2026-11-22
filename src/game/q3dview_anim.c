@@ -765,7 +765,12 @@ static float rot_angle(int16_t i, int16_t n)
  *
  * Original: IST.EXE 2700:8197 (3DQUICK.L), far cdecl.  After the loop
  * (i >= n) the "last frame" for i = n - 1 is unreachable.
- * Verified: tests/py/test_q3dview_anim.py (test_rotate).
+ * 3DSYS only animates in the 100x100 window (speed 9; the 200 window gets
+ * speed 0).  With a 200x200 destination q3d_draw_quad is fatal (the
+ * 40000-byte surface does not fit the EMS window at physical page 2).
+ * Verified: tests/py/test_q3dview_anim.py (test_rotate) and
+ * tests/py/test_q3dview_gap.py (test_rotate_game: the game's projection
+ * 6D76/6D78, whole screen and every surface; test_rotate_wrap).
  */
 int16_t q3d_anim_rotate_left(void)
 {
@@ -825,7 +830,9 @@ int16_t q3d_anim_rotate_left(void)
  * the final frame i = n is drawn.  Returns 1.
  *
  * Original: IST.EXE 2700:8896 (3DQUICK.L), far cdecl.
- * Verified: tests/py/test_q3dview_anim.py (test_rotate).
+ * Verified: tests/py/test_q3dview_anim.py (test_rotate) and
+ * tests/py/test_q3dview_gap.py (test_rotate_game, test_rotate_wrap; see
+ * q3d_anim_rotate_left).
  */
 int16_t q3d_anim_rotate_right(void)
 {
