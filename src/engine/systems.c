@@ -208,25 +208,36 @@ void sys_blit_cb(uint16_t sx, uint16_t sy, uint16_t w, uint16_t h, uint16_t dx,
 }
 
 /*
- * rows_above_block - how many of the first `rows` destination rows of a blit
- * piece lie below the start of a conventional block: dy is negative (as a
- * 16-bit value) and (u32)dy * dstw + dx is past the block's end.  The
- * original's huge-pointer add in mm_map wraps at 1 MB, so those rows land
- * just below the block - for the screen (slot 0) at the top of conventional
- * memory, 9FExxh/9FFxxh - and the following rows from the block's row 0
- * (seen with the big capital of a battle text box: grt_draw_text draws its
- * 19x19 cell at y - 5 = -1 / -2; tests/py/test_iso_d.py:test_textbox_capital).
- * The port does not model the memory below a block: those rows are dropped
- * and the others drawn where the original draws them.
+ * Blits whose destination starts outside a conventional block.
+ *
+ * dy is negative as a 16-bit value (the big capital of a battle text box:
+ * grt_draw_text draws its 19x19 cell at y - 5 = -1 / -2 on the screen), so
+ * (u32)dy * dstw + dx is far past the block's end.  The original's huge-
+ * pointer add in mm_map wraps at 1 MB: the piece starts at
+ * block + (offset mod 100000h) and its rows follow each other from there.
+ * With dstw = 320 that is 320 bytes below the block per negative row (the
+ * screen: 9FExxh/9FFxxh, the top of conventional memory) and the next rows
+ * are the block's rows 0, 1, ...; with other widths (a 100-wide surface:
+ * +3FF9Ch) the whole piece misses the block.
+ * The port does not model the memory around a block: out_of_block() says
+ * whether a piece starts outside, row_in_block() gives the offset of row i
+ * if all of it lies inside - those rows are drawn where the original draws
+ * them, the others dropped.
+ * Verified: tests/py/test_iso_d.py:test_textbox_capital (sys_blit on the
+ * screen), tests/py/test_q3dview_gap.py:test_render_100 (100-wide surface).
  */
-static uint16_t rows_above_block(const MmHandle *rec, uint16_t dy, uint16_t dstw,
-                                 uint16_t dx, uint16_t rows)
+static int out_of_block(const MmHandle *rec, uint16_t dy, uint16_t dstw, uint16_t dx)
 {
-    uint16_t n;
-    if (rec->type != 0 || (int16_t)dy >= 0 || (uint32_t)dy * dstw + dx < rec->size)
-        return 0;
-    n = (uint16_t)-(int16_t)dy;
-    return n < rows ? n : rows;
+    /* only offsets that wrap at 1 MB: a start merely past the block's end is
+       the next heap block in the port's heap model as in the original */
+    return rec->type == 0 && (uint32_t)dy * dstw + dx >= 0x100000;
+}
+
+static int row_in_block(const MmHandle *rec, uint16_t dy, uint16_t dstw, uint16_t dx,
+                        uint16_t i, uint16_t w, uint32_t *rel)
+{
+    *rel = ((uint32_t)dy * dstw + dx + (uint32_t)i * dstw) & 0xFFFFF;
+    return *rel < rec->size && *rel + w <= rec->size;
 }
 
 /*
@@ -241,7 +252,7 @@ static uint16_t rows_above_block(const MmHandle *rec, uint16_t dy, uint16_t dstw
 void sys_blit(uint16_t sx, uint16_t sy, uint16_t w, uint16_t h, uint16_t dx, uint16_t dy,
               uint8_t src_slot, uint8_t dst_slot, SysRectFn fn)
 {
-    uint16_t slot = 0, srclen, dstlen, rows, a, b, above;
+    uint16_t slot = 0, srclen, dstlen, rows, a, b;
     uint16_t srcw = (uint16_t)g_surf_w(src_slot), dstw = (uint16_t)g_surf_w(dst_slot);
     MmHandle *srec = slot_rec(src_slot), *drec = slot_rec(dst_slot);
     uint8_t *srcp, *dstp;
@@ -260,14 +271,29 @@ void sys_blit(uint16_t sx, uint16_t sy, uint16_t w, uint16_t h, uint16_t dx, uin
         rows = (uint16_t)((a < b ? a : b) + 1);
         if (rows >= h)
             rows = h;
-        above = rows_above_block(drec, dy, dstw, dx, rows);
-        if (above == 0)
+        if (!out_of_block(drec, dy, dstw, dx)) {
             fn(srcp, 0, 0, w, rows, srcw, dstp, 0, 0, dstw, 0xFE);
-        else if (above < rows)          /* dstp - offset = the block's start */
-            fn(srcp + (uint32_t)above * srcw, 0, 0, w, (uint16_t)(rows - above), srcw,
-               dstp - ((uint32_t)dy * dstw + dx) + dx
-                   + (uint32_t)(uint16_t)(dy + above) * dstw,
-               0, 0, dstw, 0xFE);
+        } else {                        /* runs of rows that lie in the block */
+            uint8_t *base = dstp - ((uint32_t)dy * dstw + dx);
+            uint32_t rel, rel0 = 0;
+            uint16_t i, run = 0, first = 0;
+            for (i = 0; i <= rows; i++) {
+                int in = i < rows && row_in_block(drec, dy, dstw, dx, i, w, &rel);
+                if (in && run != 0 && rel == rel0 + (uint32_t)run * dstw) {
+                    run++;
+                    continue;
+                }
+                if (run != 0)
+                    fn(srcp + (uint32_t)first * srcw, 0, 0, w, run, srcw, base + rel0,
+                       0, 0, dstw, 0xFE);
+                run = 0;
+                if (in) {
+                    first = i;
+                    rel0 = rel;
+                    run = 1;
+                }
+            }
+        }
         sy += rows;
         dy += rows;
         h -= rows;
@@ -319,7 +345,7 @@ void sys_blit_recolor(uint16_t sx, uint16_t sy, uint16_t w, uint16_t h, uint16_t
                       uint16_t dy, uint8_t src_slot, uint8_t dst_slot,
                       uint8_t match, uint8_t color)
 {
-    uint16_t slot = 0, srclen, dstlen, rows, a, b, i, above;
+    uint16_t slot = 0, srclen, dstlen, rows, a, b, i;
     uint16_t srcw = (uint16_t)g_surf_w(src_slot), dstw = (uint16_t)g_surf_w(dst_slot);
     MmHandle *srec = slot_rec(src_slot), *drec = slot_rec(dst_slot);
     uint8_t *srcp, *dstp;
@@ -338,13 +364,17 @@ void sys_blit_recolor(uint16_t sx, uint16_t sy, uint16_t w, uint16_t h, uint16_t
         rows = (uint16_t)((a < b ? a : b) + 1);
         if (rows >= h)
             rows = h;
-        above = rows_above_block(drec, dy, dstw, dx, rows);
-        if (above != 0)                 /* dstp := where row `above` really is */
-            dstp = dstp - ((uint32_t)dy * dstw + dx) + dx
-                   + (uint32_t)(uint16_t)(dy + above) * dstw - (uint32_t)above * dstw;
-        for (i = above; i < rows; i++)
-            mm_copy_recolor(srcp + (uint16_t)(i * srcw), dstp + (uint16_t)(i * dstw),
-                            w, match, color);
+        if (!out_of_block(drec, dy, dstw, dx)) {
+            for (i = 0; i < rows; i++)
+                mm_copy_recolor(srcp + (uint16_t)(i * srcw), dstp + (uint16_t)(i * dstw),
+                                w, match, color);
+        } else {
+            uint8_t *base = dstp - ((uint32_t)dy * dstw + dx);
+            uint32_t rel;
+            for (i = 0; i < rows; i++)
+                if (row_in_block(drec, dy, dstw, dx, i, w, &rel))
+                    mm_copy_recolor(srcp + (uint16_t)(i * srcw), base + rel, w, match, color);
+        }
         sy += rows;
         dy += rows;
         h -= rows;
