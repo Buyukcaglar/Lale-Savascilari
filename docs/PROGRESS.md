@@ -74,6 +74,11 @@ Engine and host fixes found while closing the gaps above:
 | `src/platform/pc.c`, `nkontrol.c`, `sdl3_main.c` | Ctrl-Break could not be produced by the host | Ctrl+Pause / Ctrl+ScrollLock = BIOS Ctrl-Break (buffer emptied, word 0000h, INT 23h at the next kbhit()); the game's INT 09h hook is offered every make code. A typed Ctrl+C stays an ordinary key, as the original in DOSBox-X takes it at the main menu (MS-DOS itself may break there – not verifiable here) |
 | `src/platform/sdl3_main.c` | a key release was handled like a press: Esc, Enter, Tab, cursor and function keys were pushed twice in interactive play (scripts bypass the window) | releases only update the shift flags |
 
+Final state of the wave (2026-11-23, build of commit cfcacce): differential suite 256/256
+(out/base); play4 112/112 checkpoints, play4load and play5 (39/39) identical to the original in
+DOSBox-X apart from the save description tail (kept as zeros, see milestone 8) - play4 and
+play4load were run on the build before the last `sys_blit` correction, play5 after it.
+
 Not covered by any test or play-through: right-button cancel at the doctor's prompt, the
 food stall of district 4 (needs flag 99), changing a setting in the options list, a
 successful sidestep, `o5737_cd_drive_info` without MSCDEX, the Ctrl-Break DOS sequence
