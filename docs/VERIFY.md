@@ -296,6 +296,113 @@ Timing lessons:
 * The two waits of `n` (2000 and 2400 rounds) are ended by keys sent on
   the clock (8 s and 4 s after the previous event).
 
+### play6: district 4 after flag 99 - sidesteps, options, right button, food stall
+
+```
+python tools/verify/mksave.py play6 out/verify/scripts/play6.sav
+python tools/verify/mkscript.py play6 out/verify/scripts/play6.txt
+python -u tools/verify/pair.py out/verify/scripts/play6.txt play6 --install out/verify/scripts/play6.sav=SAKLA001.SAV
+```
+(port 15 s, DOSBox-X about 10 min; `play6side`, `play6opt1`, `play6opt`,
+`play6doctor`, `play6food` stop after a part.)
+
+**The save.**  As play5's (same base, same `patch`), plus what the story of
+district 4 leaves behind once its shops are open.  The doors of the food
+stall (16,9), the weapon shop (8,16) and the goods shop (3,17) carry event
+12, whose trigger 1 says "kapalI" and cancels the move while **flag 99** is
+clear.  Flag 99 is set in one place only (all 18 PCS files and the code
+searched): event 10 of PCS4, trigger 2 of the cell (16,0) - the landing of
+the stairs out of the cellar of Yeni Camii.  With flag 31 set it shows Seyh
+cehalet flying away ("Cok geC kalDIk..."), plays music 1 and sets 99.  The
+chain that leads there, each flag set by the event named: 29 (event 1,
+(0,19): tabIk vesile takes the party to the resistance; without it the
+mosque is "closed for repairs"), 97 (event 2, (8..10,5): the battle with the
+birds at the mosque's doors), 30 (event 3, (9,1): the bird that tells of the
+cellars), 98 (event 4, (7,0): the battle at the hidden door), 31 (event 5,
+(3,3): Seyh cehalet in the cellar; event 6 then teleports to (14,0)), 99.
+`mksave.py play6` sets these six flags and music track 1 (event 10's
+`music 1` comes right before its `setflag 99`), position (10,7) facing
+north, money 126, health 4 / 1 / -10 / -2 as in play5, and hunger words
+40 / 36 / 30 / 44 (the base save was written right after a meal: all 0).
+Not reproduced: the optional loot of events 1 and 5 (three weapons, a
+purse) and the flags of the optional battles (109, 110).
+
+Flow (46 checkpoints `e00`..`e30`):
+
+* **Load** (`e00_menu`, `e01_loadmenu`, `e02_loaded`).
+* **Sidesteps** in the open street in front of the mosque: facing north
+  `4` -> (9,7) (`e03_side_l`), `6` -> (10,7) (`e04_side_r`); a turn to the
+  east (`e05_east`), `4` -> (10,6) (`e06_side_l_east`), `6` -> (10,7)
+  (`e07_side_r_east`).  All four succeed.
+* **Options list** (`t`, `e08_options`).  It holds seven entries: walking /
+  door animation, battle speed (0..9), game music, battle music, sound
+  effects, difficulty, view size.  Each is changed once by a left click on
+  it (`e09_opt1_anim` .. `e09_opt7_view`: animation off, speed 5 -> 6, game
+  music off, battle music off, effects off, difficulty 0 -> 1, view 200 ->
+  100) and then back by keys with the pointer moved off the list
+  (`e10_opt7_view` .. `e10_opt1_anim`, Down/Up + Enter; speed 6 -> 7).
+  Entry 7 switching to the big view sets the animation byte, so the Enter on
+  entry 1 switched it off again and one more Enter restores it
+  (`e10_opt1_anim_on`).  Esc closes (`e11_view`); opened again
+  (`e12_options`) and closed with the right button (`e13_view`).  Final
+  option bytes 1 7 1 1 1 0 1.
+* **Doctor** (8,11), three visits: `e` and at "kim servis istiyor ?"
+  (`e15_who`) the **right mouse button**: cancelled, no money taken
+  (`e16_rclick_cancelled`); `e`, F2 (health 1: "bu adam OlU deGil",
+  `e18_not_dead_f2`) and the right button at that second prompt
+  (`e19_rclick_cancelled2`); `e`, F3 (health -10): revived, 126 -> 20
+  (`e21_revived`).
+* **Food stall**: the signs of (9,10) and (16,8) (event 15), the door cell
+  (16,9) - event 12 lets the party in (`e22_stall_door`) - and the stall
+  (15,9), key 31313128, three visits: the price question "adam baSI 3"
+  (`e23_food_q`), `h`: refused (`e24_food_refused`); price 4, `e`: the meal
+  picture (`e26_eating1`), 3 living members x 4 = 12 paid, 20 -> 8, the four
+  hunger words 55/51/40/44 -> 0 (`e26_fed1`); price 4 again, `e` with
+  8 < 12: "not enough money" (`e28_food_too_poor`), nothing changed
+  (`e28_food_left`).  These are all three branches of `shop_food`.
+* **Save** to a new slot, SAKLA002 "gh" (`e29_savemenu`, `e30_saved`).
+
+Result (2026-11-23): **all 46 checkpoints identical** - registers, DAC,
+screen, video memory and DGROUP (minus host fields; clock fields listed
+with `--clock`).  GRP.DAT and SAKLA001.SAV identical.  SAKLA002.SAV differs
+in 30 bytes, 0x0C-0x2F: the description tail after its NUL (the original's
+uninitialised stack buffer, the same bytes as in play5: "sinsan1.cmp" and
+return addresses; zeros in the port).  The other 1494 bytes are equal,
+among them the changed option bytes and the flags.  No port bug was found;
+no run showed a mouse-cursor-only difference.
+
+`s3d_apply_sound_options` and the options list: the list's own changes use
+blocking `gr_fade` calls (game music: 300 ms down, module stopped or
+started, 300 ms up; view size back to 100: 100 ms down and up), they leave
+the counters 3D6E / 3D70 / 3D72 at 0, so the idle callback has nothing to
+step after any entry - every options checkpoint, 3 s after the choice (8 s
+for entries 3 and 7), is identical without waiting for a fade.  The
+callback does step something later in play6: entering the roofed cell
+(16,9) makes `s3d_apply_daylight` set the brightness and tempo counters,
+which then move one step per 100 ms of clock.
+
+Timing lessons (both first-run differences were script timing):
+
+* `e22_stall_door` was first dumped 2.5 s after the step into (16,9): mid
+  fade (port 3D6E/3D70 = 11/-1, original 13/-3, 106 DAC entries, 7318,
+  731C).  Now 8 s later, after the fade.
+* `e26_eating1` was first dumped 1.2 s after `e`.  The meal picture has two
+  waits, 50 rounds inside `fr_show_icon` and 120 after it: 1 s + 2.4 s in
+  the port, about three times that in DOSBox-X, so the port was in the
+  second wait and the original in the first (same screen; EMS use 6E0A,
+  8702, DC00 and the handle of surface 42h differed).  Now anchored:
+  `fr_show_icon` frees surface 42h before loading and allocates it again
+  after its wait, and `sync E4AF 0000` is the first read of that wait.
+* A step's random encounter roll (`random(300) + 1 <=` the map's rate, 2 in
+  PC4) comes more than 8 draws after the key's re-seed: with the 8-draw
+  quiet seeds one step of the walk to the stall started a battle.  play6's
+  moves use 64 quiet draws (`rkey(..., n=64)`).
+* The options list's hotspots overlap ((24, 133 + 7i)-(162, 149 + 7i)) and
+  the first match wins, with no hot-point offset for the list's cursor:
+  entry i is clicked at y = 146 + 7i.  For the keys the pointer must be off
+  the list (an entry under it takes the selection back), and the list opens
+  on entry min(last choice, 3).
+
 ### Start-up (DSMI) - port vs original, 2026-11-22
 
 `python tools/verify/mkscript.py startup out/verify/scripts/startup.txt;

@@ -378,18 +378,20 @@ def quiet_wait(s, ms, seed, step=1000):
     return s.wait(ms % step)
 
 
-def rkey(s, k, seed, gap=XGAP):
-    """3D key (clock-relative) with a quiet re-seed in its read"""
-    return s.srand(quiet_seed(seed)).key(k, gap)
+def rkey(s, k, seed, gap=XGAP, n=8):
+    """3D key (clock-relative) with a quiet re-seed in its read (n quiet
+    draws: 64 also keeps the random encounter roll of a step, random(300)
+    + 1 <= the map's rate, from hitting - play6)"""
+    return s.srand(quiet_seed(seed, n)).key(k, gap)
 
 
-def rwalk(s, keys, seed, name=None, gap=XGAP, extra=None, syncs=None):
+def rwalk(s, keys, seed, name=None, gap=XGAP, extra=None, syncs=None, n=8):
     """3D keys; extra = {step: ms} waits after the moves that start a
     dialog, syncs = {step: (addr, word)} anchors on the flag word a dialog
     sets at its end (then XGAP more); dumps <name>_NN after each when name
     is given"""
     for i, k in enumerate(keys):
-        rkey(s, k, seed + 0x10 * i, gap + (extra or {}).get(i, 0))
+        rkey(s, k, seed + 0x10 * i, gap + (extra or {}).get(i, 0), n)
         if syncs and i in syncs:
             s.sync(*syncs[i]).srand(quiet_seed(seed + 0x10 * i + 8))
             quiet_wait(s, XGAP, seed + 0x10 * i + 9)
@@ -659,6 +661,176 @@ def play5(path, stop=None):
 
 def play5save(path):
     play5(path, 'save')
+
+
+# ---- play6: district 4 after flag 99 (tools/verify/mksave.py play6) ----
+# (10,7) facing east (after the sidesteps) -> the doctor (8,11) through the
+# sign of (9,10) (event 16)
+D4B_TO_DOCTOR = ['LEFT', 'LEFT', 'UP', 'LEFT', 'UP', 'UP', 'UP', 'UP', 'RIGHT', 'UP']
+# (9,11) facing west -> the food stall's door (16,9) (event 12: open with
+# flag 99) through the signs of (9,10) and (16,8) (event 15), then the
+# stall (15,9) (key 31313128)
+D4B_TO_FOOD = ['RIGHT', 'UP', 'UP', 'UP', 'UP', 'RIGHT', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP',
+               'RIGHT', 'UP', 'UP', 'RIGHT', 'UP']
+D4_FOOD_SIGN = (16, 8)
+OPT_BYTES = 0xBB34                      # the seven option bytes (s3d_options_menu)
+SURF42 = 0xE29F + 8 * 0x42              # handle of work surface 42h (0 = not allocated)
+
+
+def opt_xy(i):
+    """a point on entry i (1..7) of the options list: its hotspots are
+    (24, 133 + 7 i)-(162, 149 + 7 i), they overlap and the first one that
+    holds the cursor wins (the list's cursor shape has no hot point
+    offset): entry 1 is y 140..156, entry i > 1 is y 143 + 7 i .. 149 + 7 i"""
+    return 2 * 60, 146 + 7 * i
+
+
+def rclick(s, x, y, seed, gap=1200):
+    """right click (move, press, release), re-seeded"""
+    s.srand(quiet_seed(seed)).mouse(x, y, 0, gap // 4).mouse(x, y, 2, gap // 4)
+    return s.mouse(x, y, 0, gap // 2)
+
+
+FOOD_MEALS = 1                          # meals the 20 kIvrIk left after the doctor pay for
+OPT_NAMES = ['anim', 'bspeed', 'music', 'bmusic', 'sfx', 'level', 'view']
+
+
+def play6(path, stop=None):
+    """from the prepared save play6.sav (installed as SAKLA001.SAV): main
+    menu, load, then in district 4 (PC4) with flag 99 set: sidesteps with
+    free cells on both sides (4, 6, facing north and east), the options
+    list with every entry changed (by clicks, then back by keys), the
+    doctor's "who" prompt cancelled with the right mouse button, a revival
+    chosen with F3, the food stall behind the door of event 12 (refuse,
+    eat, not enough money) and a save"""
+    s = Script(seed=1234)
+    s.at(50000).dump('e00_menu').key('DOWN', 1000).key('ENTER', 3000).dump('e01_loadmenu')
+    s.key('ENTER', 1000)                                    # the only entry: SAKLA001.SAV
+    for i, t in enumerate(range(s.t, s.t + 20000, 2000)):   # no portrait blink can start
+        s.at(t).srand(quiet_seed(0x6000 + 0x10 * i))
+    s.at(s.t + 20000).srand(quiet_seed(0x6100)).dump('e02_loaded')
+    s.after(XGAP)
+    # sidesteps in the open street: (10,7) north -> (9,7) -> (10,7); east:
+    # -> (10,6) -> (10,7)
+    rkey(s, key_of('4'), 0x8000, n=64).dump('e03_side_l')
+    rkey(s, key_of('6'), 0x8010, n=64).dump('e04_side_r')
+    rkey(s, 'RIGHT', 0x8020).dump('e05_east')
+    rkey(s, key_of('4'), 0x8030, n=64).dump('e06_side_l_east')
+    rkey(s, key_of('6'), 0x8040, n=64).dump('e07_side_r_east')
+    if stop == 'side':
+        return s.wait(1000).quit().write(path)
+    # the options list: every entry once by a click, then back by keys
+    rkey(s, key_of('t'), 0x8100, 3000).dump('e08_options')
+    for i in range(1, 8):
+        x, y = opt_xy(i)
+        s.srand(quiet_seed(0x8100 + 0x10 * i)).mouse(x, y, 0, 400).mouse(x, y, 1, 400).mouse(x, y, 0, 0)
+        quiet_wait(s, 8000 if i in (3, 7) else 3000, 0x8200 + 0x40 * i)
+        s.dump(f'e09_opt{i}_{OPT_NAMES[i - 1]}')
+    if stop == 'opt1':
+        return s.wait(1000).quit().write(path)
+    # by keys, the pointer off the list (an entry under it would take the
+    # selection back): the list opens on entry min(last choice, 3)
+    s.srand(quiet_seed(0x83F0)).mouse(2 * 250, 60, 0, 1500)
+    for i in range(7, 0, -1):
+        for j, k in enumerate(['DOWN'] * (i - 3) + ['UP'] * (1 if i < 3 else 0)):
+            s.srand(quiet_seed(0x8400 + 0x10 * i + j)).key(k, 1000)
+        s.srand(quiet_seed(0x8408 + 0x10 * i)).key('ENTER', 0)
+        quiet_wait(s, 8000 if i in (3, 7) else 3000, 0x8500 + 0x40 * i)
+        s.dump(f'e10_opt{i}_{OPT_NAMES[i - 1]}')
+    # the big view switched the animations on (entry 7 sets byte 0), so the
+    # Enter above switched them off: once more, the state of the save but
+    # for the battle speed (5 -> 7)
+    s.srand(quiet_seed(0x86F0)).key('ENTER', 0)
+    quiet_wait(s, 3000, 0x86F8).dump('e10_opt1_anim_on')
+    s.srand(quiet_seed(0x8700)).key('ESC', 0)
+    quiet_wait(s, 4000, 0x8710).dump('e11_view')
+    rkey(s, key_of('t'), 0x8800, 3000).dump('e12_options')  # again: closed by the right button
+    rclick(s, 2 * 250, 100, 0x8810)
+    quiet_wait(s, 4000, 0x8820).dump('e13_view')
+    if stop == 'opt':
+        return s.wait(1000).quit().write(path)
+    # the doctor, first visit: accept, "who?", the right button: cancelled
+    start = (10, 7, 1)
+    rwalk(s, D4B_TO_DOCTOR, 0x8900, extra={step_of(start, D4B_TO_DOCTOR, D4_SIGN): SIGN_WAIT},
+          n=64)
+    s.wait(SHOP_WAIT).srand(quiet_seed(0x8A00)).dump('e14_doctor_q')
+    rkey(s, KEY_E, 0x8A10, 3000).dump('e15_who')
+    rclick(s, 2 * 100, 60, 0x8A20)
+    quiet_wait(s, 3000, 0x8A30).dump('e16_rclick_cancelled')
+    # second visit: a member who is not dead (F2), then the right button
+    rwalk(s, D4_DOCTOR_AGAIN, 0x8B00, n=64)
+    s.wait(SHOP_WAIT).srand(quiet_seed(0x8B10)).dump('e17_doctor_q2')
+    rkey(s, KEY_E, 0x8B20, 3000)
+    rkey(s, 0x3C00, 0x8B30, 3000).dump('e18_not_dead_f2')
+    rclick(s, 2 * 100, 60, 0x8B40)
+    quiet_wait(s, 3000, 0x8B50).dump('e19_rclick_cancelled2')
+    # third visit: the dead member by F3: revived, 126 -> 20
+    rwalk(s, D4_DOCTOR_AGAIN, 0x8C00, n=64)
+    s.wait(SHOP_WAIT).srand(quiet_seed(0x8C10)).dump('e20_doctor_q3')
+    rkey(s, KEY_E, 0x8C20, 3000)
+    rkey(s, 0x3D00, 0x8C30, 0)
+    s.sync(HP3, 1).srand(quiet_seed(0x8C40))                # revived (two more texts follow)
+    quiet_wait(s, 12000, 0x8C50).dump('e21_revived')
+    if stop == 'doctor':
+        return s.wait(1000).quit().write(path)
+    # the food stall: the signs of (9,10) and (16,8), the door of event 12
+    # (16,9), then the stall; every way out puts the party back on (16,9)
+    # facing west
+    start = (9, 11, 3)
+    i_door = step_of(start, D4B_TO_FOOD, (16, 9))
+    rwalk(s, D4B_TO_FOOD[:i_door + 1], 0x8D00,
+          extra={step_of(start, D4B_TO_FOOD, D4_SIGN): SIGN_WAIT,
+                 step_of(start, D4B_TO_FOOD, D4_FOOD_SIGN): SIGN_WAIT}, n=64)
+    # past event 12 (not "kapalI").  (16,9) is a roofed cell: on entering
+    # it s3d_apply_daylight sets the brightness and tempo counters
+    # 3D70/3D6E and s3d_apply_sound_options steps them, one step per
+    # 100 ms of clock (the idle callback) - let it end
+    quiet_wait(s, 8000, 0x8F00).dump('e22_stall_door')
+    rwalk(s, D4B_TO_FOOD[i_door + 1:], 0x8F10, n=64)
+    s.wait(SHOP_WAIT).srand(quiet_seed(0x8F40)).dump('e23_food_q')   # the price, "evet / hayIr"
+    rkey(s, KEY_H, 0x8F50, 4000).dump('e24_food_refused')
+    for n in range(FOOD_MEALS):
+        rwalk(s, ['UP'], 0x9000 + 0x100 * n, n=64)
+        s.wait(SHOP_WAIT).srand(quiet_seed(0x9040 + 0x100 * n)).dump(f'e25_food_q{n + 2}')
+        # evet: the meal picture (ikon 102) with two waits, 50 rounds inside
+        # fr_show_icon and 120 after it - 1 s + 2.4 s in the port, about
+        # three times that in DOSBox-X, so no clock offset is inside the
+        # same wait on both sides.  Anchor: fr_show_icon frees surface 42h
+        # (its handle E4AF) before loading and allocates it again after
+        # its wait: the first read with E4AF = 0 is in the first wait.
+        # Then "afiyet olsun", the money, hunger cleared
+        rkey(s, KEY_E, 0x9050 + 0x100 * n, 0).sync(SURF42, 0).dump(f'e26_eating{n + 1}')
+        quiet_wait(s, 16000, 0x9060 + 0x100 * n).dump(f'e26_fed{n + 1}')
+    rwalk(s, ['UP'], 0x9800, n=64)
+    s.wait(SHOP_WAIT).srand(quiet_seed(0x9840)).dump('e27_food_q_poor')
+    rkey(s, KEY_E, 0x9850, 600).dump('e28_food_too_poor')   # the message (60 rounds)
+    quiet_wait(s, 10000, 0x9860).dump('e28_food_left')
+    if stop == 'food':
+        return s.wait(1000).quit().write(path)
+    rkey(s, 0x1F73, 0x9900).dump('e29_savemenu')            # S: the new slot is entry 2
+    s.key('DOWN', 1000).key('ENTER', 1500).text('gh', 400).key('ENTER', 1500).key('ENTER', 4000)
+    s.srand(quiet_seed(0x9910)).dump('e30_saved')
+    s.wait(1000).quit().write(path)
+
+
+def play6side(path):
+    play6(path, 'side')
+
+
+def play6opt1(path):
+    play6(path, 'opt1')
+
+
+def play6opt(path):
+    play6(path, 'opt')
+
+
+def play6doctor(path):
+    play6(path, 'doctor')
+
+
+def play6food(path):
+    play6(path, 'food')
 
 
 def startup(path):

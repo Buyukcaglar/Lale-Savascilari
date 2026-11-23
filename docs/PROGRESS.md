@@ -79,10 +79,25 @@ Final state of the wave (2026-11-23, build of commit cfcacce): differential suit
 DOSBox-X apart from the save description tail (kept as zeros, see milestone 8) - play4 and
 play4load were run on the build before the last `sys_blit` correction, play5 after it.
 
-Not covered by any test or play-through: right-button cancel at the doctor's prompt, the
-food stall of district 4 (needs flag 99), changing a setting in the options list, a
-successful sidestep, `o5737_cd_drive_info` without MSCDEX, the Ctrl-Break DOS sequence
-in DOSBox-X itself (modelled from documented BIOS/DOS behaviour).
+Second round (2026-11-23):
+
+* **play6** (crafted save with the district-4 story flags 29, 97, 30, 98, 31, 99): right
+  button at the doctor's "who" prompt, the food stall behind the flag-99 door (refuse, eat,
+  too poor), every entry of the options list changed by mouse and back by keys, successful
+  sidesteps in both directions - 46 checkpoints identical (docs/VERIFY.md).
+* **Ctrl-C / Ctrl-S**: settled from Microsoft's published MS-DOS source (v2.0 binary, v4.0
+  source): INT 21h AH=0Bh - kbhit() - reads a waiting ^C and issues INT 23h, reads ^S and
+  the next character; AH=07h - getch() - never checks.  The port follows MS-DOS
+  (`src/platform/pc.c`); DOSBox-X's DOS does not look at the character, so the original
+  there breaks only on Ctrl-Break - the one deliberate difference from the reference.
+  ^P / ^N (printer echo) are not modelled.
+* **Key release fix** confirmed in the live window: key messages posted to Lale64.exe, one
+  intro screen per Esc, one menu entry per Down/Up.
+
+Still not covered: the closed shop doors of district 4 (flag 99 clear) and its weapon and
+goods shops, the options list by mouse hover + Enter, `o5737_cd_drive_info` without
+MSCDEX, the Ctrl-Break sequence inside DOSBox-X itself, MS-DOS versions after 4.0 for the
+^C check (not in the published source).
 
 ## Analysis pipeline fixes (2026-11-20)
 

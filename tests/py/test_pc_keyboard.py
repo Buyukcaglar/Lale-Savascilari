@@ -68,10 +68,13 @@ def test_bioskey():
 
 
 def test_dos_break():
-    """Ctrl-Break as DOS handles it (pc.c): the BIOS empties the buffer and
-    leaves the word 0000h (bioskey(1) = FFFFh in Borland's RTL); the next
-    kbhit() - INT 21h AH=0Bh - issues INT 23h, once.  A typed Ctrl+C (2E03h)
-    is an ordinary key, as the original in DOSBox-X takes it.
+    """Ctrl-C / Ctrl-S / Ctrl-Break at kbhit() as MS-DOS handles them (pc.c,
+    from the published MS-DOS source: STATCHK): kbhit() - INT 21h AH=0Bh -
+    reads a ^C at the head of the buffer and issues INT 23h; reads a ^S and
+    the character after it (waiting for it) and reports a character; getch()
+    - AH=07h - never checks.  Ctrl-Break: the BIOS empties the buffer and
+    leaves the word 0000h (bioskey(1) = FFFFh in Borland's RTL), the next
+    kbhit() issues INT 23h, once.
     C side only: this is DOS/BIOS behaviour, not game code."""
     HANDLER = ctypes.CFUNCTYPE(None)
     calls = []
@@ -81,24 +84,53 @@ def test_dos_break():
     getch = fn('pc_getch', ctypes.c_int16)
     bioskey = fn('pc_bioskey', ctypes.c_int16, ctypes.c_int16)
     brk = fn('pc_ctrl_break', None)
-    while kbhit():
-        getch()
-    try:
-        set23(ctypes.cast(h, ctypes.c_void_p))
-        c_push(0x2E03)
-        check(kbhit() == 1 and getch() == 3 and kbhit() == 0 and not calls,
-              'break: a typed ^C is an ordinary key')
-        c_push(0x1E61)
-        brk()
-        check(bioskey(1) == -1 and not calls, 'break: bioskey(1) after Ctrl-Break')
-        check(kbhit() == 1 and len(calls) == 1, 'break: kbhit() after Ctrl-Break')
-        check(kbhit() == 1 and len(calls) == 1, 'break: only once')
-        check(getch() == 0 and getch() == 0 and kbhit() == 0, 'break: the 0000h word')
-        # without a handler nothing happens
-        set23(None)
-        brk()
-        check(kbhit() == 1 and len(calls) == 1, 'break: no handler')
+
+    def drain():
         while kbhit():
             getch()
+
+    set23(None)
+    drain()
+    try:
+        # no handler: the ^C is read, nothing else happens
+        c_push(0x2E03)
+        check(kbhit() == 0 and not calls, 'break: ^C without a handler')
+        set23(ctypes.cast(h, ctypes.c_void_p))
+        # getch() returns a ^C like any character
+        c_push(0x2E03)
+        check(getch() == 3 and not calls, 'break: getch() must not check for ^C')
+        # kbhit() reads it and issues INT 23h; the key behind it stays
+        c_push(0x2E03)
+        c_push(0x1E61)
+        check(kbhit() == 1 and len(calls) == 1, f'break: kbhit() on ^C, calls {len(calls)}')
+        check(getch() == 0x61 and kbhit() == 0 and len(calls) == 1, 'break: key after ^C')
+        # only the head of the buffer is looked at
+        c_push(0x1E61)
+        c_push(0x2E03)
+        check(kbhit() == 1 and len(calls) == 1 and getch() == 0x61, 'break: ^C second in line')
+        check(kbhit() == 0 and len(calls) == 2, 'break: ^C reached')
+        # ^S: read together with the next character; "available" is reported
+        c_push(0x1F13)
+        c_push(0x1E61)
+        c_push(0x3062)
+        check(kbhit() == 1 and len(calls) == 2, 'break: ^S + key')
+        check(getch() == 0x62 and kbhit() == 0, 'break: the key after ^S was taken')
+        # ^S then an extended key: the 00h is taken, the scan code remains
+        c_push(0x1F13)
+        c_push(0x3B00)
+        check(kbhit() == 1 and getch() == 0x3B and kbhit() == 0, 'break: ^S + F1')
+        # ^S then ^C breaks
+        c_push(0x1F13)
+        c_push(0x2E03)
+        check(kbhit() == 1 and len(calls) == 3, 'break: ^S + ^C')
+        check(kbhit() == 0, 'break: nothing left after ^S + ^C')
+        # Ctrl-Break
+        c_push(0x1E61)
+        brk()
+        check(bioskey(1) == -1 and len(calls) == 3, 'break: bioskey(1) after Ctrl-Break')
+        check(kbhit() == 1 and len(calls) == 4, 'break: kbhit() after Ctrl-Break')
+        check(kbhit() == 1 and len(calls) == 4, 'break: only once')
+        check(getch() == 0 and getch() == 0 and kbhit() == 0, 'break: the 0000h word')
     finally:
         set23(None)
+        drain()

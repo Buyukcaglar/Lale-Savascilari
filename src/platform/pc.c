@@ -176,21 +176,37 @@ static int      khead, ktail;         /* BIOS ring: 15 usable entries */
 static int      pending_scan = -1;    /* getch(): second byte of an extended key */
 static uint8_t  shift_flags;
 
-/* Ctrl-C / Ctrl-Break as DOS handles them.
- *   BIOS INT 09h on Ctrl-Break (Ctrl+Pause, Ctrl+ScrollLock): empties the
- *   key buffer, stores the word 0000h and issues INT 1Bh; DOS's INT 1Bh
- *   handler makes the console's next character a ^C.
- *   DOS console calls that check for break - of those the game uses, only
- *   kbhit() (INT 21h AH=0Bh; getch() is AH=07h, which does not check) -
- *   then issue INT 23h.
- *   A typed Ctrl+C (key word 2E03h) is NOT treated as a break: the original
- *   in DOSBox-X, the project's reference, takes a buffered 2E03h at the main
- *   menu as an ordinary key (checked 2026-11-22, script: menu, key 2E03,
- *   dump).  MS-DOS itself is said to look for a waiting ^C in AH=0Bh too
- *   and would break there; not verifiable here, so the reference wins.
+/* Ctrl-C / Ctrl-Break / Ctrl-S as MS-DOS handles them at kbhit().
+ *
+ * Borland's kbhit() is INT 21h AH=0Bh, getch() is AH=07h.  From Microsoft's
+ * published MS-DOS source (github.com/microsoft/MS-DOS, v4.0/src/DOS:
+ * CPMIO2.ASM $STD_CON_INPUT_STATUS, CTRLC.ASM STATCHK/INCHK/CNTCHAND,
+ * CPMIO.ASM $RAW_CON_INPUT; the same logic is in the v2.0 MSDOS.SYS binary):
+ *   AH=0Bh calls STATCHK, which peeks the console's next character:
+ *     ^C (03h)  is read and INT 23h issued (CNTCHAND);
+ *     ^S (13h)  is read, DOS waits until another character is there and
+ *               reads that one too (INCHK) - if it is ^C, INT 23h; AH=0Bh
+ *               then returns "character available" (the flags of INCHK's
+ *               last compare) although it was taken;
+ *     ^P / ^N   are read and toggle the printer echo - NOT modelled (the
+ *               flags the call returns with were not established);
+ *   AH=07h never checks: a ^C comes back as the character 03h.
+ * Only the head of the buffer is looked at.
+ * Ctrl-Break (v4.0/src/BIOS/MSCON.ASM CBREAK: INT 1Bh stores 03h in the CON
+ * driver's look-ahead byte): the BIOS empties the key buffer, stores the
+ * word 0000h and issues INT 1Bh; the console's next character is then a ^C,
+ * so the next kbhit() issues INT 23h.  The 0000h word stays for the BIOS
+ * (Borland's bioskey(1) returns FFFFh for it).
+ *
  * The game's INT 23h handler (NKONTROL ctl_int23_isr) ends the program;
  * without a handler nothing happens here (DOS's own would abort the
- * program; no game code runs kbhit() before ctl_install). */
+ * program; no game code runs kbhit() before ctl_install).
+ *
+ * Difference from the project's reference: DOSBox-X's DOS does not look at
+ * the character in AH=0Bh, so the original run there takes a buffered ^C at
+ * the main menu as an ordinary key (checked 2026-11-22) and breaks only on
+ * Ctrl-Break.  The port follows MS-DOS, the system the game was made for.
+ * Verification scripts never send 03h or 13h. */
 static void (*int23_handler)(void);
 static int  (*int09_handler)(uint8_t scan);
 static int    dos_break_pending;
@@ -203,13 +219,44 @@ int pc_int09(uint8_t scan)
     return int09_handler ? int09_handler(scan) : 0;
 }
 
-static void dos_break_check(void)
+/* STATCHK; returns 1 when AH=0Bh has to report a character whatever the
+   buffer holds (after ^S) */
+static int dos_break_check(void)
 {
-    if (!dos_break_pending)
-        return;
-    dos_break_pending = 0;
-    if (int23_handler)
-        int23_handler();
+    uint8_t c;
+    if (dos_break_pending) {          /* the look-ahead ^C of Ctrl-Break */
+        dos_break_pending = 0;
+        if (int23_handler)
+            int23_handler();
+        return 0;
+    }
+    if (pending_scan >= 0 || khead == ktail)
+        return 0;
+    c = (uint8_t)kbuf[khead];
+    if (c == 0x03) {
+        khead = (khead + 1) & 15;
+        if (int23_handler)
+            int23_handler();
+        return 0;
+    }
+    if (c == 0x13) {
+        uint16_t k;
+        khead = (khead + 1) & 15;     /* eat ^S, wait for a character, read it */
+        while (khead == ktail) {
+            pc_poll();
+            INPUT_WAKE();
+        }
+        k = kbuf[khead];
+        khead = (khead + 1) & 15;
+        c = (uint8_t)k;
+        if (c == 0 || c == 0xE0)      /* extended key: the 00h was read, the
+                                         scan code is the console's next byte */
+            pending_scan = k >> 8;
+        else if (c == 0x03 && int23_handler)
+            int23_handler();
+        return 1;
+    }
+    return 0;
 }
 
 void pc_ctrl_break(void)
@@ -233,7 +280,8 @@ int16_t pc_kbhit(void)
 {
     pc_poll();
     INPUT_READ();
-    dos_break_check();
+    if (dos_break_check())
+        return 1;
     return (int16_t)(pending_scan >= 0 || khead != ktail);
 }
 

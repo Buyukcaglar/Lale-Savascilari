@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
 mksave.py - build a prepared SAKLAnnn.SAV for a verification script
-(docs/VERIFY.md, play5; format: docs/FORMATS.md "SAKLAnnn.SAV").
+(docs/VERIFY.md, play5 and play6; format: docs/FORMATS.md "SAKLAnnn.SAV").
 
     python tools/verify/mksave.py play5 out/verify/scripts/play5.sav
+    python tools/verify/mksave.py play6 out/verify/scripts/play6.sav
 
 The base is a save the original IST.EXE wrote itself in DOSBox-X:
 tools/verify/saves/play4_SAKLA002.SAV (the save of play4: district 1,
@@ -22,6 +23,7 @@ DESC, FLAGS, STATS, OPTS = 0, 62, 94, 1464
 POS, DISTRICT, MUSIC, BB6D, TIME = 1473, 1478, 1480, 1482, 1490
 STOCK_W, STOCK_G, MARK, FEE = 1496, 1507, 1518, 1522
 ST_HP = 0x3A                     # health word of a 5Ch stat record (word 1Dh)
+ST_HUNGER = 0x22                 # hunger word (word 11h): + (5 - endurance/100, min 1) per 10 minutes
 
 
 def patch(d, x, y, facing, district, money, hp, desc):
@@ -54,6 +56,51 @@ def play5(base):
     (wounded), rifki -10 (dead: the only state the doctor treats, <= -5),
     zeki -2 (down but not dead)."""
     return patch(base, 11, 12, 2, 3, 206, (None, 1, -10, -2), 'doktor')
+
+
+def set_flags(d, flags):
+    """set FRPOS event flags (flag n: byte n/8, bit n%8 of the block at 62)"""
+    d = bytearray(d)
+    for n in flags:
+        d[FLAGS + n // 8] |= 1 << (n % 8)
+    return bytes(d)
+
+
+# The story of district 4 (PCS4) up to the point where its shops open.  The
+# doors of the food stall (16,9), the weapon shop (8,16) and the goods shop
+# (3,17) carry event 12, whose trigger 1 says "kapalI" and cancels the move
+# while flag 99 is clear.  Flag 99 is set only by event 10 (cell (16,0), the
+# landing of the stairs out of the cellar of Yeni Camii, trigger 2): with
+# flag 31 set it shows Seyh cehalet flying away, plays music 1 and sets 99.
+# The chain that leads there, each flag set by the event named:
+#   29  event 1  (0,19)  tabIk vesile takes the party to the resistance
+#                        (without it Yeni Camii is "closed for repairs")
+#   97  event 2  (8..10,5) the battle with the birds at the mosque's doors
+#   30  event 3  (9,1)   the bird that tells of the cellars (opens event 4)
+#   98  event 4  (7,0)   the battle at the hidden door
+#   31  event 5  (3,3)   Seyh cehalet in the cellar (battle, the purse);
+#                        event 6 (3,2) then teleports to (14,0)
+#   99  event 10 (16,0)  "Cok geC kalDIk..." - music 1, the shops open
+PC4_STORY_FLAGS = (29, 97, 30, 98, 31, 99)
+
+
+def play6(base):
+    """district 3 (PC4) after Seyh cehalet's escape: the flags of
+    PC4_STORY_FLAGS and music track 1 (event 10's `music 1` comes right
+    before its `setflag 99`).  (10,7) facing north, in the open street in
+    front of Yeni Camii (free cells on all four sides: the sidesteps).
+    Money 126: the doctor's fee is 106 (kept from the base save), so the
+    "who" prompt is reached, and after one revival 20 are left for the
+    food stall (random(5)+2 per living member: 6..18 for three) - one meal,
+    then not enough.  Health as in play5 (ali 4, ayse 1, rifki -10 = dead,
+    zeki -2); hunger words set to what a party that walked that far has
+    (the base save was written right after a meal: all 0), so that the
+    meal's effect shows."""
+    d = bytearray(patch(base, 10, 7, 0, 3, 126, (None, 1, -10, -2), 'lokanta'))
+    for i, v in enumerate((40, 36, 30, 44), 1):
+        struct.pack_into('<h', d, STATS + 0x5C * i + ST_HUNGER, v)
+    struct.pack_into('<h', d, MUSIC, 1)
+    return set_flags(d, PC4_STORY_FLAGS)
 
 
 def main():
