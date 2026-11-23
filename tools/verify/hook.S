@@ -25,6 +25,17 @@
  *     type 7 srand   DGROUP:94C4 (RTL random state) := b:a
  *     type 8 poke    DGROUP:a := b, c = 1 (byte) or 2 (word); a script
  *                    `poke addr bytes...` is split into such events
+ *     type 9 kbd     a = a keyboard scan-code byte, sent through the 8042
+ *                    (command D2h: "write keyboard output buffer") so that
+ *                    IRQ 1, the game's INT 09h hook, the BIOS and DOS of
+ *                    DOSBox-X handle it as a key of the keyboard (Ctrl-Break,
+ *                    Ctrl+Alt+Del); interrupts are enabled until the byte has
+ *                    been read from port 60h
+ *   INT 23h: at every check the hook puts its wrapper int23 in front of
+ *   whatever handler IVT[23h] holds (the game installs its own in
+ *   ctl_install).  When DOS issues INT 23h the wrapper captures the VGA
+ *   state and passes MARKER_BP with marker_ev = FFFEh (the `int23` dump of
+ *   dbx_replay.py), then jumps to the handler.
  *   Type bit 80h: t is a read count (+n): due n counted reads after the
  *   read that applied the previous event, or at a wake-up of a blocking
  *   read.  Type bit 40h: t is clock-relative (@n): due when the clock is
@@ -70,6 +81,7 @@ mvalid:     .byte 0             /* mxr/myr hold the position the game/script set
 mxr:        .word 0
 myr:        .word 0
 last_clock: .long 0             /* clock at the last applied event (@n) */
+old23:      .long 0             /* the INT 23h handler the wrapper chains to */
     .org 0x100
 vgabuf:     .space 829          /* misc, seq 0-4, gc 0-8, crtc 0-24, attr 0-20, dac 768 */
 
@@ -97,6 +109,7 @@ check:
     push %es
     mov %cs, %ax
     mov %ax, %ds
+    call watch23
     addw $1, nchecks
     adcw $0, nchecks+2
     cmpb $0, count_it
@@ -191,7 +204,24 @@ due:
     je ev_srand
     cmp $8, %ax
     je ev_poke
+    cmp $9, %ax
+    je ev_kbd
     jmp next_ev                   /* 5/6 sync: only an anchor */
+ev_kbd:                           /* scan byte a through the 8042 (D2h) */
+    call kbc_wait_in
+    mov $0xD2, %al
+    out %al, $0x64
+    call kbc_wait_in
+    mov 6(%bx), %al
+    out %al, $0x60
+    mov $0xFFFF, %cx              /* until IRQ 1 has read it (OBF clear) */
+    sti
+1:  in $0x64, %al
+    test $1, %al
+    jz 2f
+    loop 1b
+2:  cli
+    jmp next_ev
 ev_poke:                          /* DGROUP:a := b (c = 1: byte, 2: word) */
     mov dgseg, %es
     mov 6(%bx), %di
@@ -262,6 +292,67 @@ done:
 marker_bp:
     nop
     ret
+
+/* 8042 input buffer empty (bounded) */
+kbc_wait_in:
+    push %cx
+    mov $0xFFFF, %cx
+1:  in $0x64, %al
+    test $2, %al
+    jz 2f
+    loop 1b
+2:  pop %cx
+    ret
+
+/* ds = cs: keep IVT[23h] pointing at int23, remembering what it held */
+watch23:
+    push %es
+    xor %ax, %ax
+    mov %ax, %es
+    cmpw $int23, %es:0x8C
+    jne 1f
+    mov %cs, %ax
+    cmp %es:0x8E, %ax
+    je 2f
+1:  mov %es:0x8C, %ax
+    mov %ax, old23
+    mov %es:0x8E, %ax
+    mov %ax, old23+2
+    movw $int23, %es:0x8C
+    mov %cs, %es:0x8E
+2:  pop %es
+    ret
+
+/* ---- INT 23h (issued by DOS) ------------------------------------------------- */
+int23:
+    push %ax
+    push %bx
+    push %cx
+    push %dx
+    push %si
+    push %di
+    push %ds
+    push %es
+    mov %cs, %ax
+    mov %ax, %ds
+    movb $0, in_dos               /* DOS does not return to our INT 21h call */
+    movw $0xFFFE, marker_ev
+    mov dgseg, %es
+    mov %es:0xE74A, %ax
+    mov %ax, clock_at
+    mov %es:0xE74C, %ax
+    mov %ax, clock_at+2
+    call capture_vga
+    call marker_bp
+    pop %es
+    pop %ds
+    pop %di
+    pop %si
+    pop %dx
+    pop %cx
+    pop %bx
+    pop %ax
+    ljmp *%cs:old23
 
 /* ---- VGA registers + DAC -> vgabuf (ds = cs) ----------------------------- */
 capture_vga:

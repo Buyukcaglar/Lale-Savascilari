@@ -102,8 +102,16 @@ static int16_t take_status(void)
 /*
  * o5737_cd_drive_info - INT 2Fh AX=1501h (drive device list): remember the
  * first drive's subunit and copy the device driver's name.
- * Original: ovl5737:0000.  No callers in IST.EXE.
+ * Original: ovl5737:0000.  No callers in IST.EXE (only its own overlay
+ * thunk, stub16D3:0043).
  * Port: the virtual drive has subunit 0 and is named "MSCD001".
+ * Without MSCDEX the original is not comparable by construction: INT 2Fh
+ * AX=1501h writes nothing, so the subunit is an uninitialised stack byte and
+ * the "device header" an uninitialised stack far pointer; memccpy then copies
+ * from that pointer + 0Ah (with zeroed stack: 0000:000A, inside the IVT -
+ * machine-dependent bytes).  The port has a drive in every configuration, so
+ * it always takes the MSCDEX path.
+ * Verified: with MSCDEX, tests/py/test_cd5737.py; without, not comparable (above).
  */
 const char *o5737_cd_drive_info(void)
 {

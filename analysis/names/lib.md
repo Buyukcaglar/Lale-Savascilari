@@ -138,7 +138,7 @@ Each wrapper selects the device from the channel argument and forwards the remai
 - cmd 0x80: instrument (arg).
 - cmd 0x81–0x97: effects.
 - row 0xFF: end of track.
-- cmd 0xFF entries (496 of them in the shipped files) are ignored because the index exceeds 0x18.
+- the 496 entries with row FFh in the shipped files are the end-of-track markers (`FF FF FF`, docs/FORMATS.md "AMF"), not commands.
 
 **Track state:** 32 × 45 bytes at DGROUP `7C91`.
 

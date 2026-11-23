@@ -833,6 +833,304 @@ def play6food(path):
     play6(path, 'food')
 
 
+def load_slot1(s, p):
+    """main menu, load menu, SAKLA001.SAV (the prepared save), 20 s with
+    quiet re-seeds; dumps <p>00_menu, <p>01_loadmenu, <p>02_loaded"""
+    s.at(50000).dump(f'{p}00_menu').key('DOWN', 1000).key('ENTER', 3000).dump(f'{p}01_loadmenu')
+    s.key('ENTER', 1000)
+    for i, t in enumerate(range(s.t, s.t + 20000, 2000)):   # no portrait blink can start
+        s.at(t).srand(quiet_seed(0x6000 + 0x10 * i))
+    s.at(s.t + 20000).srand(quiet_seed(0x6100)).dump(f'{p}02_loaded')
+    return s.after(XGAP)
+
+
+# ---- play7: district 4 before flag 99 (tools/verify/mksave.py play7) ----
+# legs planned over the map's walls (out/verify/h/path.py), each with the
+# events on its way: (10,7) north -> the food stall's door (16,9) (signs
+# (16,8)); a closed door cancels the move, the party stays on the cell
+# before it with the same facing
+D4C_TO_STALL_DOOR = ['RIGHT', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'RIGHT', 'UP', 'UP']
+# (16,8) south -> the weapon shop's door (8,16), past the hotel sign (14,9)
+D4C_TO_WEAPON_DOOR = ['RIGHT', 'UP', 'UP', 'LEFT', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'RIGHT', 'UP',
+                      'UP', 'UP', 'UP', 'UP', 'LEFT', 'UP', 'RIGHT', 'UP', 'UP', 'LEFT', 'UP', 'LEFT',
+                      'UP']
+# (7,16) east -> the goods shop's door (3,17), past the sign of (2,17) (event 14)
+D4C_TO_GOODS_DOOR = ['LEFT', 'UP', 'LEFT', 'UP', 'UP', 'UP', 'UP', 'UP', 'LEFT', 'UP', 'UP', 'LEFT',
+                     'UP']
+# (2,17) east -> the landing (14,0), event 10: Seyh cehalet flies away, flag 99
+D4C_TO_LANDING = ['LEFT', 'UP', 'UP', 'RIGHT', 'UP', 'LEFT', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP',
+                  'UP', 'RIGHT', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP',
+                  'LEFT', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP']
+# (14,0) north -> the weapon shop (8,17) through its open door (8,16)
+D4C_TO_WEAPONS = ['LEFT', 'LEFT', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP',
+                  'UP', 'UP', 'UP', 'RIGHT', 'UP', 'UP', 'UP', 'UP', 'UP', 'LEFT', 'UP', 'RIGHT',
+                  'UP', 'UP', 'LEFT', 'UP', 'LEFT', 'UP', 'RIGHT', 'UP']
+# (8,16) south (back from the shop) -> the goods shop (4,17) through (3,17)
+D4C_TO_GOODS = ['RIGHT', 'UP', 'RIGHT', 'UP', 'LEFT', 'UP', 'UP', 'UP', 'UP', 'UP', 'LEFT', 'UP', 'UP',
+                'LEFT', 'UP', 'UP']
+
+
+def walk_signs(s, keys, start, seed, signs):
+    """rwalk with SIGN_WAIT after the steps that enter one of `signs`"""
+    extra = {}
+    for c in signs:
+        try:
+            extra[step_of(start, keys, c)] = SIGN_WAIT
+        except ValueError:
+            pass
+    return rwalk(s, keys, seed, extra=extra, n=64)
+
+
+D4_SIGNS = [(16, 8), (14, 9), (2, 17), (9, 10)]
+
+
+def play7(path, stop=None):
+    """from play7.sav (installed as SAKLA001.SAV): district 4 with the story
+    flags up to 31 but not 99 - the three doors of event 12 closed
+    ("kapalI", move cancelled), the landing (14,0) (event 10: flag 99,
+    music 1), the doors open: the weapon shop and the goods shop of
+    district 4 (shop(): every buy/sell path), then the options list driven
+    by the pointer hovering over an entry and Enter"""
+    s = Script(seed=1234)
+    load_slot1(s, 'g')
+    for name, keys, start, seed in (('g03_stall', D4C_TO_STALL_DOOR, (10, 7, 0), 0xA000),
+                                    ('g04_weapon', D4C_TO_WEAPON_DOOR, (16, 8, 2), 0xA100),
+                                    ('g05_goods', D4C_TO_GOODS_DOOR, (7, 16, 1), 0xA300)):
+        walk_signs(s, keys[:-1], start, seed, D4_SIGNS)
+        rkey(s, 'UP', seed + 0xE0, 0, n=64)                 # into the door: "kapalI"
+        s.wait(1000).dump(f'{name}_kapali')
+        quiet_wait(s, 6000, seed + 0xF0).dump(f'{name}_closed')
+    if stop == 'closed':
+        return s.wait(1000).quit().write(path)
+    rwalk(s, D4C_TO_LANDING[:-1], 0xA400, n=64)
+    rkey(s, 'UP', 0xA600, 0, n=64)
+    s.wait(5000).srand(quiet_seed(0xA610)).dump('g06_landing')    # the first picture
+    s.sync(FR_FLAGS + 12, 0x000E).srand(quiet_seed(0xA620))        # flags 97, 98 + 99
+    quiet_wait(s, 12000, 0xA630).dump('g07_flag99')
+    if stop == 'landing':
+        return s.wait(1000).quit().write(path)
+    walk_signs(s, D4C_TO_WEAPONS, (14, 0, 0), 0xA700, D4_SIGNS)
+    s.wait(SHOP_WAIT).srand(quiet_seed(0xA900)).dump('g08_weapons')
+    shop(s, 'g09_weapons', 0xAA00)
+    walk_signs(s, D4C_TO_GOODS, (8, 16, 2), 0xAB00, D4_SIGNS)
+    s.wait(SHOP_WAIT).srand(quiet_seed(0xAC00)).dump('g10_goods')
+    shop(s, 'g11_goods', 0xAD00)
+    if stop == 'shops':
+        return s.wait(1000).quit().write(path)
+    # the options list by hover + Enter: the entry under the pointer becomes
+    # the selection, Enter changes it (battle speed 5 -> 6, difficulty
+    # 0 -> 1 and back, sound effects off and on)
+    rkey(s, key_of('t'), 0xAE00, 3000).dump('g12_options')
+    for j, i in enumerate((2, 6, 6, 5, 5)):
+        x, y = opt_xy(i)
+        s.srand(quiet_seed(0xAE10 + 0x10 * j)).mouse(x, y, 0, 1500).dump(f'g13_hover{j}_{OPT_NAMES[i - 1]}')
+        s.srand(quiet_seed(0xAE18 + 0x10 * j)).key('ENTER', 0)
+        quiet_wait(s, 3000, 0xAF00 + 0x40 * j).dump(f'g14_enter{j}_{OPT_NAMES[i - 1]}')
+    s.srand(quiet_seed(0xB000)).key('ESC', 0)
+    quiet_wait(s, 4000, 0xB010).dump('g15_view')
+    s.wait(1000).quit().write(path)
+
+
+def play7closed(path):
+    play7(path, 'closed')
+
+
+def play7landing(path):
+    play7(path, 'landing')
+
+
+def play7shops(path):
+    play7(path, 'shops')
+
+
+STORY_PIC = 0x555C                      # "sbd00.cmp": byte 4 counts the picture groups
+
+
+def play8(path, stop=None):
+    """from play8.sav: district 2 (PC2), one step into (19,19) - event 2,
+    silikon baba: icon, say, a long text, then the story slideshow (FRPOS op
+    27 -> demo_story_scene: 8 picture groups, pages read aloud), the closing
+    texts and flag 4.  Dumps at each new picture group (anchored on the
+    name's digit) and after the event"""
+    s = Script(seed=1234)
+    load_slot1(s, 'h')
+    rkey(s, 'UP', 0xC000, 0, n=64)
+    # the icon (ikon34.cmp) costs DOSBox-X emulated loading time: anchored on
+    # the first read with the cursor hidden for the say (E5F3 = 0)
+    s.wait(1000).sync(0xE5F3, 0).srand(quiet_seed(0xC010)).dump('h03_baba')
+    for g in range(1, 8):
+        s.sync(STORY_PIC + 4, 0x2E30 + g).after(1500).srand(quiet_seed(0xC100 + g))
+        s.dump(f'h04_group{g}')
+    s.sync(FR_FLAGS, 0x0016).srand(quiet_seed(0xC200))                # flag 4 (1, 2 from the base)
+    quiet_wait(s, 8000, 0xC210).dump('h05_done')
+    s.wait(1000).quit().write(path)
+
+
+CREDIT_LINE = 0xBACC                    # the THANX.DOC line being scrolled in (lower-cased)
+# first words of distinct lines once demo_credits_exit has processed them:
+# "Pc Programlama", "El Cizimleri", "YardImcI grafik", "Oyun Deneme", "Sesler"
+CREDIT_ANCHORS = [('pc', 0x6370), ('el', 0x6C65), ('ya', 0x6179), ('oy', 0x796F), ('se', 0x6573)]
+
+
+def credits_dumps(s, p):
+    """the credits scroll by the clock from their own start, which comes
+    later in DOSBox-X (loading costs emulated time): dumps anchored on the
+    line being read in, and 1.5 s after it"""
+    for w, v in CREDIT_ANCHORS:
+        s.sync(CREDIT_LINE, v).dump(f'{p}_{w}')
+        s.after(1500).dump(f'{p}_{w}_later')
+    return s
+
+
+GFL_FRAME = 0xD618                      # last frame processed by the player
+
+
+def play9(path, credits_click=False):
+    """from play9.sav: district 18 with flag 156: one key and the 3DSYS
+    loop calls demo_ending - the SON video (957 frames), soon/devam with
+    palette step fades, "kayIt yapIlacak dosyayI seCin", the save menu in
+    mode 1 (a new slot), then the credits (THANX.DOC over grup.cmp, music
+    11).  Dumps in the video (key frames 300 and 900, which streaming never
+    drops), at each wait of the ending, in the save menu and every 3 s of
+    the credits"""
+    s = Script(seed=1234)
+    load_slot1(s, 'f')
+    rkey(s, 'LEFT', 0xD000, 0)
+    for fr in (300, 900):
+        s.sync(GFL_FRAME, fr).srand(quiet_seed(0xD010 + fr)).dump(f'f03_video{fr}')
+    s.sync(GFL_FRAME, 956).after(8000).dump('f04_soon')     # inside ui_wait_click_or_key(1000)
+    s.key('SPACE', 12000).dump('f05_devam')                 # step fades, cross-fade, 2 s wait
+    s.wait(4000).dump('f06_message')                        # the message box (wait 140 rounds)
+    s.wait(6000).dump('f07_savemenu')
+    s.key('DOWN', 1000).key('ENTER', 1500).text('son', 400).key('ENTER', 1500).key('ENTER', 0)
+    credits_dumps(s, 'f08_credits')
+    s.wait(1000).quit().write(path)
+
+
+def playq(path):
+    """quick start (main menu entry 3, "Cabuk basla": GRPHAZIR.DAT): the
+    new-game set-up of main() without chargen, then district 0"""
+    s = Script(seed=1234)
+    s.at(50000).dump('q00_menu').key('DOWN', 800).key('DOWN', 800).dump('q01_menu3')
+    s.key('ENTER', 20000)
+    t0 = s.t
+    for i in range(4):                                      # the story videos, as play3
+        s.key('ESC', 3000)
+    # the opening dialogue (clock-timed text boxes) is over by t0 + 72 s; no
+    # portrait blink may start: quiet seeds every second from the first Esc
+    # (the 3D view can be up before the last one)
+    for i, t in enumerate(range(t0 + 500, t0 + 72000, 1000)):
+        s.at(t).srand(quiet_seed(0xE000 + 0x10 * i, 64))
+    s.at(t0 + 72000).srand(quiet_seed(0xE100)).dump('q02_district0')
+    s.after(XGAP)
+    rkey(s, 'RIGHT', 0xE200).dump('q03_turn')
+    s.wait(1000).quit().write(path)
+
+
+def playx(path):
+    """main menu entry 4 ("dos'a CIk"): o5737_cd_stop and the credits,
+    dumped every 3 s"""
+    s = Script(seed=1234)
+    s.at(50000).dump('x00_menu').keys('DOWN', 'DOWN', 'DOWN', gap=800).dump('x01_menu4')
+    s.key('ENTER', 0)
+    credits_dumps(s, 'x02_credits')
+    s.wait(1000).quit().write(path)
+
+
+# play10: from play6.sav, (10,7) north -> (19,18), event 20 of PC4 (with
+# flags 29 and 99: the leave-district dialog, op 33), past the hotel sign
+D4_TO_LEAVE = ['RIGHT', 'UP', 'UP', 'UP', 'UP', 'RIGHT', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP', 'UP',
+               'UP', 'UP', 'UP', 'LEFT', 'UP', 'UP', 'UP', 'UP', 'UP']
+
+
+def play10(path):
+    """from play6.sav: district 4 -> the cell of event 20 (19,18): the
+    leave-district dialog (s3d_leave_district) answered "hayIr" (move
+    cancelled), then again "evet": fade, the district's exit video if its
+    roll says so, music 1, the city map (demo_city_map_travel): the marker
+    starts in rectangle 4 (Eminonu; Enter, "h": back), 14 steps up and
+    60 left into rectangle 10, Enter, "e" - then the arrival there"""
+    s = Script(seed=1234)
+    load_slot1(s, 'm')
+    walk_signs(s, D4_TO_LEAVE[:-1], (10, 7, 0), 0xF000, D4_SIGNS)
+    rkey(s, 'UP', 0xF1F0, 0, n=64)
+    s.wait(6000).srand(quiet_seed(0xF200)).dump('m03_leave_q')
+    rkey(s, KEY_H, 0xF210, 4000, n=64).dump('m04_stayed')
+    rkey(s, 'UP', 0xF220, 0, n=64)
+    s.wait(6000).srand(quiet_seed(0xF230)).dump('m05_leave_q2')
+    rkey(s, KEY_E, 0xF240, 0, n=64)
+    quiet_wait(s, 30000, 0xF250).dump('m06_citymap')
+    s.key('ENTER', 1500).dump('m07_enter_q')
+    s.key(KEY_H, 1500).dump('m08_back')
+    for i in range(14):
+        s.key('UP', 300)
+    s.dump('m09_up14')
+    for i in range(60):
+        s.key('LEFT', 300)
+    s.dump('m10_left60')
+    s.key('ENTER', 1500).dump('m11_enter_q2')
+    s.key(KEY_E, 0)
+    for i in range(15):                                     # the new district: load, arrival
+        s.wait(2000).srand(quiet_seed(0xF300 + 0x10 * i))
+    s.dump('m12_arrived')
+    rkey(s, 'RIGHT', 0xF400).dump('m13_turn')
+    s.wait(1000).quit().write(path)
+
+
+def kbd(s, *codes):
+    """scan-code bytes through the keyboard controller (hook.S type 9 /
+    sdl3_main.c sc_kbd), one input read"""
+    return s.emit('kbd ' + ' '.join(f'{c:02X}' for c in codes))
+
+
+CTRL_BREAK = (0x1D, 0xE0, 0x46, 0xE0, 0xC6, 0x9D)   # Ctrl+Pause on the enhanced keyboard
+CTRL_ALT_DEL = (0x1D, 0x38, 0x53, 0xD3, 0xB8, 0x9D)
+
+
+def playbrk(path):
+    """Ctrl-Break at the main menu: DOS issues INT 23h at the game's next
+    kbhit(), the game's handler ends it ("breyk"); the `int23` dump is taken
+    on both sides as INT 23h is issued"""
+    s = Script(seed=1234)
+    s.at(50000).dump('b00_menu')
+    kbd(s, *CTRL_BREAK)
+    s.wait(5000).dump('b01_not_reached')      # only if no INT 23h came
+    s.wait(1000).quit().write(path)
+
+
+def quick_district(s, p):
+    s.at(50000).key('DOWN', 800).key('DOWN', 800).key('ENTER', 20000)
+    t0 = s.t
+    for i in range(4):
+        s.key('ESC', 3000)
+    for i, t in enumerate(range(t0 + 500, t0 + 72000, 1000)):
+        s.at(t).srand(quiet_seed(0xE000 + 0x10 * i, 64))
+    s.at(t0 + 72000).srand(quiet_seed(0xE100)).dump(f'{p}00_district0')
+    return s.after(XGAP)
+
+
+def playbrk3d(path):
+    """Ctrl-Break in the 3D view (quick start, district 0)"""
+    s = Script(seed=1234)
+    quick_district(s, 'k')
+    s.srand(quiet_seed(0xE200))
+    kbd(s, *CTRL_BREAK)
+    s.wait(5000).dump('k01_not_reached')
+    s.wait(1000).quit().write(path)
+
+
+def playcad(path):
+    """Ctrl+Alt+Del in the 3D view: the game's INT 09h hook swallows Del,
+    sets the reset flag and raises INT 1Bh; INT 23h at the next kbhit()
+    ("birisi bilgisayarI resetlemeye CalIStI galiba!")"""
+    s = Script(seed=1234)
+    quick_district(s, 'r')
+    s.srand(quiet_seed(0xE200))
+    kbd(s, *CTRL_ALT_DEL)
+    s.wait(5000).dump('r01_not_reached')
+    s.wait(1000).quit().write(path)
+
+
 def startup(path):
     """start-up check: dumps at the first input reads of the intro (250 ms,
     1 s, 5 s of the game clock), no input - for

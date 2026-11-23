@@ -173,10 +173,10 @@ For each function the work goes:
 ## 5. Repository layout
 
 ```
-docs/        PLAN.md, FORMATS.md, MODULES.md, PROGRESS.md, notes
+docs/        PLAN.md (module map in §2), FORMATS.md, PROGRESS.md, VERIFY.md, DECOMPILING.md, …
 tools/       RE tooling (Python, Ghidra scripts) – see tools/README.md
 analysis/    curated analysis outputs (generated drafts under analysis/ghidra_*/ are ignored)
-src/game/    decompiled game modules (istanbul.c, 3dsys.c, isosys.c, …)
+src/game/    decompiled game modules (istanbul.c, s3d_*.c, iso_*.c, frpos*.c, …)
 src/engine/  decompiled ALTDUZEY library (fileman, memman, ngraphs, nses, nkontrol, …)
 src/dsmi/    decompiled DSMI mixer/player (portable)
 src/rtl/     Borland-compatible runtime pieces
@@ -198,11 +198,16 @@ tests/       differential tests
 
 1. **Foundation** – unpacker, segment model, Ghidra pipeline, FPU fix, listings ✔
 2. **Inventory** – identify every RTL/DSMI function, name the ALTDUZEY API and the game
-   modules; `docs/MODULES.md`.
-3. **Formats** – CMP images, PAL, KOR, RES, RIX fonts, GFL/GHD video, AMF, PUR/SND,
-   FRPOS scripts, SAV/GRP.DAT, with Python viewers to prove understanding.
+   modules; module map in §2, names in `analysis/names.tsv` and `analysis/names/*.md` ✔
+   (2026-11-20/21).
+3. **Formats** – CMP images, PAL, KOR, RES, RIX blend tables, GFL/GHD video, AMF, PUR/SND,
+   FRPOS scripts, SAV/GRP.DAT, with Python viewers/checkers to prove understanding ✔
+   (2026-11-23, [`FORMATS.md`](FORMATS.md); `tools/fmtcheck.py` for KOR/RIX/AMF).
 4. **Platform + engine** – SDL3 backend, then FILEMAN, MEMMAN, NGRAPHS, NKONTROL, SYSTEMS,
-   INTRFACE, NSES. First milestone: intro screens render identically.
-5. **Game modules** – ISTANBUL → DEMOLAR → 3DQUICK/3DSYS → CHARGEN → FRPOS → ISOSYS → GFL.
-6. **Audio** – DSMI MCP mixer + AMP player decompiled, compared against DOSBox-X captures.
-7. **Full-game verification**, then the macOS build ✔ (2026-11-23, [`MACOS.md`](MACOS.md)).
+   INTRFACE, NSES. First milestone: intro screens render identically ✔ (2026-11-21).
+5. **Game modules** – ISTANBUL → DEMOLAR → 3DQUICK/3DSYS → CHARGEN → FRPOS → ISOSYS → GFL ✔
+   (2026-11-21: every function of IST.EXE decompiled).
+6. **Audio** – DSMI MCP mixer + AMP player decompiled, compared against DOSBox-X captures ✔
+   (bit-exact mixer, identical CDI call streams; sound on in every play-through).
+7. **Full-game verification**, then the macOS build ✔ (2026-11-23, [`VERIFY.md`](VERIFY.md),
+   [`MACOS.md`](MACOS.md)); function status: `python tools/funcstatus.py`.

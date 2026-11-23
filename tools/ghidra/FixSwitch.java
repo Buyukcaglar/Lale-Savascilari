@@ -16,6 +16,12 @@
 //     found:
 //        JMP word ptr CS:[BX + 2N]     N case values at CS:T, N targets at CS:T+2N
 //
+//  C) inline index table without a bound (hand-written RTL assembly, e.g.
+//     __xcvt at 0000:0B08 dispatching on the float/double/long double size)
+//        SHL BX,1
+//        JMP word ptr CS:[BX + T]      T = end of the JMP; the table runs up
+//                                      to the lowest target (cases follow it)
+//
 // Repeats until no new table is found (resolved targets may hold switches
 // themselves).  Arg 0 (optional): a TSV report path.
 //@category Lale
@@ -66,6 +72,29 @@ public class FixSwitch extends GhidraScript {
         return true;
     }
 
+    /** Form C: an unbounded index (no CMP) whose table directly follows the
+     *  JMP and whose cases follow the table.  The table ends where the lowest
+     *  target begins; every entry must point past the table into the segment. */
+    int inlineCount(Instruction ins, int seg, int disp) {
+        int jmpEnd = (((SegmentedAddress) ins.getAddress()).getSegmentOffset() + ins.getLength()) & 0xFFFF;
+        if (disp != jmpEnd) return -1;
+        int lowest = 0x10000, n = 0;
+        try {
+            while (disp + 2 * n < lowest && n <= 512) {
+                Address wa = at(seg, disp + 2 * n);
+                if (currentProgram.getMemory().getBlock(wa) == null) return -1;
+                int off = getShort(wa) & 0xFFFF;
+                if (off < disp + 2 * (n + 1)
+                        || currentProgram.getMemory().getBlock(at(seg, off)) == null) return -1;
+                lowest = Math.min(lowest, off);
+                n++;
+            }
+        } catch (Exception e) {
+            return -1;
+        }
+        return disp + 2 * n == lowest ? n : -1;
+    }
+
     @Override
     public void run() throws Exception {
         l = currentProgram.getListing();
@@ -108,6 +137,9 @@ public class FixSwitch extends GhidraScript {
                 } else if (movCX != null && movBX != null && disp == 2 * movCX) {
                     form = "search"; n = (int) (long) movCX; tbl = (int) (long) movBX;
                     first = tbl + 2 * n;
+                } else if (shl) {
+                    n = inlineCount(ins, seg, disp);
+                    if (n > 0) { form = "inline"; tbl = disp; first = disp; }
                 }
                 if (form == null || n <= 0 || n > 512) {
                     unresolved++;

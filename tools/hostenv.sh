@@ -12,7 +12,7 @@ esac
 if [ "$HOST_OS" = windows ]; then BAT=.bat; else BAT=; fi
 if [ -z "$PY" ]; then
   if [ -x "$ROOT/.tools/venv/bin/python" ]; then PY="$ROOT/.tools/venv/bin/python"
-  elif command -v python3 >/dev/null 2>&1; then PY=python3
+  elif python3 -c "" >/dev/null 2>&1; then PY=python3   # (Windows: python3 may be the Store alias stub)
   else PY=python; fi
 fi
 native() { if [ "$HOST_OS" = windows ]; then cygpath -w "$1"; else printf '%s\n' "$1"; fi; }

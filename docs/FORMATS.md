@@ -114,29 +114,104 @@ type-2 frame k goes to half `(k / fps + 1) & 1` of a looping 2 × abytes sample.
 a delta frame due after skipped frames is not shown, and streaming jumps to the next
 type ≠ 0 frame.
 
-## Formats documented in the inventory notes (to be verified with tools)
+## Formats from the inventory notes – where they are now
 
-| Format | Where |
+The first inventory (`analysis/names/gameA.md`, `gameB.md`, `lib.md`) listed these; each now has
+a section here, built from the decompiled code:
+
+| Format | Section |
 |---|---|
-| SAKLA###.SAV (1,524 bytes, incl. stack-garbage quirks) | `analysis/names/gameA.md` |
-| Map banks ("AmBk", 15-byte cells), district table 16E0:2E31 | `analysis/names/gameA.md` |
-| FRPOS scripts PCn/PCSn (container, +10 text encoding, 33 opcodes) | `analysis/names/gameA.md` |
-| Monster/weapon/spell/combatant tables in DGROUP | `analysis/names/gameB.md` |
-| AMF modules (DSMI v1, 8–14), DSD driver container ("DS") | `analysis/names/lib.md` |
+| SAKLA###.SAV | "SAKLAnnn.SAV (saved game)" – verified |
+| Map banks ("AmBk", 15-byte cells) | "FRPOS event scripts PCn / PCSn" – verified (cells, event keys); wall-set bytes 3..6 of the map: "KOR" below |
+| FRPOS scripts PCn/PCSn | "FRPOS event scripts PCn / PCSn" – verified |
+| Combatant / template tables | "ISOSYS battle state (DGROUP)" – partly verified |
+| AMF modules | "AMF – DSMI module" – verified |
+| DSD driver container ("DS") | "DSD – DSMI driver" – verified |
 
-## TRDOS.DAT – partial
+Not file formats, and not documented here: the district table 16E0:2E31 (18 × 1Dh: far
+pointers to the map name "pcN", the genitive name, four GFL names day-in/night-in/day-out/night-out
+at +08..+14, the horizon picture at +18, then a byte at +1C; see `S3D_DISTRICT_TAB` in
+`src/game/s3d.h`), and the fields of three DGROUP tables: the monster types 1287 + 2Eh·t
+(23 words; only how the battle copies them into the templates is in the ISOSYS section), the
+weapons 0E7F + 0Eh·k (7 words; word 0 = the monster type it gets +1 to hit and +2 damage against, `iso_combat.c`) and the
+vecizes 007E + 16h·s (11 parameter words, `VECIZE_PARAM` in `iso_spell.c`). The meaning of most
+of their fields is only guessed in `analysis/names/gameB.md` and has not been checked.
 
-4096 bytes = 256 glyphs × 16 rows, 1 bit per pixel, MSB = leftmost (8×16 VGA-style font).
+## TRDOS.DAT – verified (`o559A_load_trdos_font` 559A:01F3, tests/py/test_fatal.py)
+
+4096 bytes = 256 glyphs × 16 rows, 1 bit per pixel, MSB = leftmost: the 8×16 code page 857
+(Turkish DOS) text-mode font (e.g. glyph 98h is İ). A plain DOS file next to IST.EXE, opened with
+`fopen("TRDOS.DAT", "rb")` (not through the CKD archives). `o559A_load_trdos_font` reads 1000h
+bytes into a malloc'd buffer and loads them into the VGA character generator with INT 10h
+AX=1100h (BH=10h bytes per glyph, BL=0 block 0, CX=100h glyphs from DX=0, ES:BP = buffer), then
+frees the buffer. Called by `ist_main` at start-up and by `o559A_fatal` after switching back to
+text mode 3, so the exit and error messages show Turkish letters. A missing file only prints
+"Turkce Dos Fontu bulunamadi."; a short file leaves the buffer's old bytes in the rest of the font.
 
 ## PAL – verified (data side)
 
 768 bytes = 256 × (R, G, B), 6-bit VGA DAC values (0–63). Four 48-byte files hold
 16-colour partial palettes.
 
-## PUR / SND – partial
+## PUR / SND – verified (loader and players; the DEMOLAR callers against DOSBox-X: para00.snd in the story slideshow, docs/VERIFY.md play8; buun.pur in the new-game intro, play3/playq)
 
-Headerless unsigned 8-bit mono PCM (silence = 0x80). The `.PUR` files are effects (196);
-`PARA*.SND` are long recordings. The sample rate comes from the code (todo).
+Headerless unsigned 8-bit mono PCM (silence = 0x80; the MCP mixer reads byte 0 as −128).
+SOUNDS.CKD holds 196 `.PUR` files (effects, voices) and `PARA00.SND`..`PARA09.SND` (narration,
+125–489 KB). Nothing in a file gives its rate: every caller passes one.
+
+**Loading** (`oses_load_sample` 55CC:01F3, tests/py/test_sound.py on real files): the file goes
+into sample slot n (0..30h; record DE34 + 17h·n = MEMMAN reference, SAMPLEINFO from +4); the
+callers here all load into EMS (type 1), in pieces of at most FF00h bytes. With
+flags bit 1 the rest continues in slots n+1, n+2 … (up to 30h), each marked 200h in the sound
+table but the last; without it only the first piece is loaded. Flags bit 0 stores each piece
+reversed (table flag 100h).
+
+**Sound table** 16E0:22DB + 11h·n, n = 0..32 (from INTRFACE's side; `g_snd_name`/`g_snd_rate`
+in `src/engine/intrface.h`): `char name[13]; u16 rate; u16 flags`. `ui_load_voice(n, rate, …)`
+(05DC:192D) loads slot n on demand and plays it on the last two channels; `iso_play_sfx`,
+3DSYS, the door animation (slot = wall set + 0Dh) and FRPOS op 12 (slot 9) pass the table rate.
+
+| n | name | rate | flags (hex) | n | name | rate | flags (hex) |
+|---|---|---|---|---|---|---|---|
+| 0 | kufurbuf | 21000 | 03 | 16 | kapi1.pur | 11000 | 15 |
+| 1 | adim1.pur | 4000 | 37 | 17 | kapi4.pur | 22000 | 15 |
+| 2 | olum.pur | 44100 | 23 | 18 | kapi5.pur | 11000 | 15 |
+| 3 | vurus.pur | 8000 | 13 | 19 | kapi6.pur | 11000 | 15 |
+| 4 | vurama.pur | 7500 | 13 | 20 | kapi7.pur | 10000 | 15 |
+| 5 | iska.pur | 6000 | 13 | 21 | merdalt.pur | 32000 | 04 |
+| 6 | adim2.pur | 11000 | 37 | 22 | merdust.pur | 32000 | 04 |
+| 7 | adim3.pur | 40000 | 37 | 23 | kanat.pur | 44000 | 33 |
+| 8 | uzmen.pur | 20000 | 13 | 24 | surt.pur | 30000 | 33 |
+| 9 | bhasar.pur | 34000 | 07 | 25–28 | sw1..sw4.pur | 11000 | 23 |
+| 10 | bosch.pur | 21000 | 07 | 29–32 | fw1..fw4.pur | 44100 | 23 |
+| 11 | adim5.pur | 40000 | 37 |  |  |  |  |
+| 12 | adim8.pur | 44000 | 37 |  |  |  |  |
+| 13 | viyk.pur | 8500 | 33 |  |  |  |  |
+| 14 | kapi1.pur | 11000 | 15 |  |  |  |  |
+| 15 | kapi2.pur | 11000 | 15 |  |  |  |  |
+
+Values read from IST.EXE's DGROUP (records 33..48 are empty). Flags: 1 never freed;
+2 / 4 select the slot for the voice modes of `ui_init_voices` (mode 0 loads the slots without 4,
+mode 1 those without 2, mode 3 those with both); 8 play the continuation pieces too and wait;
+10h random pitch, `rate + (rand()·(rate/5) >> 15) − rate/10` (±10 %; the shifted product is
+cut to 16 bits); 20h voiced: in battle
+`iso_play_sfx` (ovl4595:214E) scales the rate by the speaker's voice class; 100h/200h set at
+run time (above).
+
+**Voice class rate** `iso_sfx_rate(who, base)` (ovl4595:255B, tests/py/test_iso.py):
+`r · base / 7500` (u32, capped at FFFFh), r from the byte table 16E0:1E8D + who (monster type):
+class 0/2 6000, 1 7500, 3 7000, 4 6500, 5 4500, 6 20000, 7 8500, 9 44000, others 22000; the party
+(who > 40) 7500. The vecize voices (`vecizeNN.pur`, `fecizeNN.pur`, `cevapNN.pur`,
+`fevapNN.pur`) are loaded into slot 21h and played at `iso_sfx_rate(speaker, 44100)`
+(`iso_speak_vecize`, tests/py/test_iso_d.py test_sound_speak); `ui_play_voice` plays the
+continuation pieces at the same rate.
+
+**Others** (not covered by tests yet): `PARA*.SND` - `demo_story_scene` (3C2D:1108) loads
+`paraNN.snd` for each slide into slot 21h with flags 2 (EMS pieces in slots 21h..) and plays it at
+4E52h = 20050 Hz (`ui_load_voice(21h, 20050, 0, 0)`, then `ui_play_voice`); the last digit
+(byte 5 of the name) is incremented per slide and never reset. `buun.pur` (new-game intro, `demo_load_sounds`) goes into
+slot 2Fh with loop end 46E3h and plays at 2134h = 8500 Hz. The streaming player `snd_load_sound`
+(0D42:01F0, 60000-byte ring in slot 30h) has no caller in the listing.
 
 ## RES – verified
 
@@ -241,11 +316,151 @@ just before writing, +42 portrait 1..16.  On load the race name (+4A of the name
 is filled from the 11-byte table at 16E0:2638.  Bytes the game never set are written as
 they are in DGROUP (zero in a new game).
 
-## Todo
+## KOR – coordinate tables – verified (`tools/fmtcheck.py kor`: all 59 files)
 
-KOR, RIX, AMF (DSMI module), PCn/PCSn (FRPOS scripts), GRP.DAT, SAKLA###.SAV.
+Two unrelated layouts share the extension ("Kordinat dosyası"). The CKD lookup falls back to a
+plain DOS file, which is how `orig/BOSCH.KOR` is found.
 
-## ISOSYS battle state (DGROUP) – partly verified (`src/game/iso*.c`, tests/py/test_iso.py)
+### 3D/*.KOR – wall-set texture rectangles (`q3d_load_kor` 2700:1E06, tests/py/test_q3dview.py test_load_kor)
+
+On entering a district `s3d_load_district` takes the wall-set number N of each of the four map
+bytes 3..6 (kept at 16E0:9F10 + 2i; 0 = none; the name tables go up to 9 = merdust/merdalt) and
+loads `duvarN.kor` into KOR slot i and `kapiN.kor` into slot 4 + i (16E0:B3E8 + 0Eh·slot).
+Before each call it presets the slot to version 1, n 6, {hdr0, w, h} = {0, 200, 200} for walls
+and {0EBh, 200, 200} for doors. A missing file is the normal case: the slot then draws with the
+default piece table (16E0:B72A, 37 × 12h bytes).
+
+| off | size | field |
+|---|---|---|
+| 0 | i16 | version; anything but 1 is fatal (line 1F7h, "Kordinat dosyasi versiyonu desteklenmiyor") |
+| 2 | u16 | n = header bytes that follow; read unchecked into the slot from its +4 (n > 6 would overwrite the slot's piece pointer) |
+| 4 | n | i16 hdr0, i16 w, i16 h: w × h = the view size the records were made for |
+| 4+n | 37 × 14 | one record per wall piece i: i16 tx, ty, tw, th, dx, dy, flags |
+
+The records are read only if `filelength − 4 > n`; then the slot gets a copy of the default
+table in which piece i takes the source rectangle (tx, ty, tw, th), the size w × h = tw × th, the
+offset (dx, dy) added to its position and `flags` (bit 0 mirrored, bit 1 scaled), clipped to the
+view. If the view (100×100 low detail, 200×200) differs from the header's w × h, flag 2 is set on
+every piece and size and offset are scaled by the default piece's w/tw and h/th (quirks: see
+`q3d_load_kor`). Of the header only hdr0 is used later: wall pieces of a slot with hdr0 = 0 are
+drawn with `q3d_draw_strip_a`, otherwise with `q3d_draw_strip_b` (side pieces take their texture
+0EBh pixels further right when facing north or west; walls on sides 2/3 facing the viewer borrow
+the opposite piece's rectangle, mirrored); the door animation's mirroring for facing 2/3 also
+tests hdr0 ≠ 0 (`door_mirror` in `src/game/q3dview_anim.c`).
+
+Shipped files, all with version 1, n 6 and header {0, 200, 200}:
+
+| file | size | content |
+|---|---|---|
+| DUVAR4, DUVAR8 | 528 | header + 37 records (74 pieces: flags 0 ×41, 1 ×16, 2 ×17) |
+| KAPI4, KAPI5, KAPI6, KAPI8 | 10 | header only: the slot keeps the default table, but hdr0 becomes 0 instead of the door preset 0EBh |
+
+### SAVAS/*.KOR, BOSCH.KOR – sprite frame boxes (`iso_draw_sprite` ovl4595:0387, tests/py/test_iso.py, tests/py/test_chargen.py)
+
+72 bytes = 6 records × 6 i16: `x1, y1, x2, y2` (inclusive box of the frame in the sprite sheet
+`<name>.CMP`), `ax, ay` (anchor). The sheet pixel (ax, ay) is drawn at (x − 4, y − 8) for the
+unit position (x, y); mirrored frames keep that (the box is flipped around it). Unit frame
+f = 1..8 (facing 1..4, +4 = attack; the death frame +100 only computes the position) maps to
+record `f − 1` for f = 1..3, `f − 2` for f = 5..7, and records 1 / 4 mirrored for f = 4 / 8.
+The HP bar goes at the box centre − 13 (0Dh) on both axes.
+
+ISOSYS (`iso_load_battle_gfx` ovl4595:0570) loads the seven sprites of a battle (party slots
+0Bh..0Eh from the portrait names, or `karafa` for all four with event flag 8Dh set and 8Fh
+clear; monster groups 0Fh..11h from the short names 16E0:2185 + 9·type, `bosch` when that name
+is empty) and each one's `.KOR` into a 1F8h-byte block (16E0:E337) at 48h·(slot − 0Bh); CHARGEN (`cg_load_char_graphics` 39E5:011F) loads one into a
+48h-byte block. The loader reads whole files: a larger `.KOR` would overrun the next sprite's
+record. Shipped: 52 files in SAVAS.CKD and `orig/BOSCH.KOR` (picture `IVIR/BOSCH.CMP`), all 72
+bytes, every box inside its CMP. The anchor of record 3 (attack, facing 1) lies outside its box
+in 19 of them (BOLONEZ, CEHALET, …). SAVAS pictures without a `.KOR` are not sprites: ANAKES,
+DUVARIC1..9/A/B, TABLETUR, YERICON.
+
+## RIX – blend table – verified (`blend_lookup` in src/engine/blit386.c, tests/py/test_blit386.py, tests/py/test_graphics.py test_rix; `tools/fmtcheck.py rix`)
+
+32640 bytes = 256·255/2, no header: for every pair of different colours a ≠ b, the colour of
+their 50 % mix. Packed upper triangle, row by row: with lo = min(a, b), hi = max(a, b) the entry
+is at `lo·(509 − lo)/2 − 1 + hi` (16-bit), so row lo holds (lo, lo+1) … (lo, 255): (0, 1) at 0,
+(0, 255) at 254, (1, 2) at 255, (254, 255) at 32639. blend(a, a) = a without a lookup.
+
+Users (hand-written 386 code, 2599): `asm_tint_rect` 2599:0440 (every pixel p ≠ c of a
+rectangle becomes blend(p, c); `gr_draw_strip` 0C7F:0A51 "RenkFiltre", fatal 70h when less than
+7F80h bytes of the table are mapped), `asm_blend_span` 2599:04AD (`gr_blend3` 0C7F:08FC, the
+cross-fades of `demo_show_picture`) and `asm_upscale_view2x` 2599:0500 (the in-between pixels of
+the doubled low-detail 3D view). `sys_load_rix` 0AC6:1AA0 loads the file into an EMS block of
+C001h bytes (16E0:E52F; the name is kept at E570 and a second load of the same name does
+nothing). After palette changes (callers in 3DSYS, ISOSYS and FRPOS) `sys_build_aa_table`
+0AC6:1A13 rewrites row 0 (pairs (0, i)) from the target palette 16E0:E5EF.
+
+| file | loaded by |
+|---|---|
+| XD.RIX | `s3d_load_district`; `demo_story_scene` when it ends |
+| XDINTRO.RIX | `ist_main` at start-up, `demo_intro_menu` (after acilisa.pal) |
+| XDEMO.RIX | `demo_story_scene` |
+| XDSON.RIX | `demo_ending` |
+
+Content (checked against the palettes, not needed by the code): an entry is the palette colour
+nearest to ((Ra + Rb) >> 1, (Ga + Gb) >> 1, (Ba + Bb) >> 1) by the sum of absolute differences,
+the first one on a tie. XDSON.RIX follows that rule over SOOON.PAL in all 32640 entries, XD.RIX
+over PAL3D.PAL (= orig/SONPAL.PAL) in all but 255, which all pair a colour with 254 or 255.
+XDINTRO.RIX and XDEMO.RIX match ACILISA.PAL / DEMO1.PAL in only 15232 / 9923 entries: the palettes
+they were made from are not identified. `sys_build_aa_table` uses the same average and distance
+(`sys_find_color` 0AC6:195E) but lets the last minimum win.
+
+## AMF – DSMI module – verified (`ampLoadAMF` 105B:008A in src/dsmi/amfload.c, tests/py/test_amp.py; `tools/fmtcheck.py amf`)
+
+The music of MUZIK.CKD: 15 modules, all version 14. `ampLoadModule` (105B:07F3) checks "AMF",
+copies 20 bytes of the name, forces 4 channels with the default pans for v1/v8, then
+`ampLoadAMF` reads from the start of the file. Layout as the loader reads it (v14 offsets):
+
+| off | size | field |
+|---|---|---|
+| 00 | 4 | `"AMF"` + version byte: 1, 8, 9, 10..14 accepted, else −3 |
+| 04 | 32 | song name |
+| 24 | u8 | instrument count |
+| 25 | u8 | order count (MODULE "patternCount") |
+| 26 | u16 | logical track count |
+| 28 | u8 | channels (v ≥ 9) |
+| 29 | 32 × i8 | channel pan −63..63, 100 = surround (v ≥ 12; v 9..11: 16 bytes, and below v11 replaced by the default table 16E0:85AA) |
+| 49 | u8, u8 | BPM, speed (v ≥ 13; else 125, 6) |
+| 4B | | orders: order count × { u16 rows (v14; else 64), channels × u16 track ref } |
+| | | instruments: count × 65 bytes (v < 10: 59) |
+| | | track map: track count × u16 stored-track number, 1-based |
+| | | stored tracks: max(map) × { u16 count, u8 type, count × {u8 row, u8 cmd, u8 arg} } (v1: 3 more bytes each) |
+| | | samples: raw 8-bit, by sample number; nothing follows |
+
+A track ref r points at logical track r (1-based, 0 = none); logical track j plays the stored
+track the map names (several may share one; count 0 = no data). Instrument (v ≥ 10):
+
+| off | size | field |
+|---|---|---|
+| 00 | u8 | type |
+| 01 | 32 | name |
+| 21 | 13 | file name |
+| 2E | u32 | sample number, 1-based (0 = none) |
+| 32 | u32 | length (the loader uses the low word) |
+| 36 | u16 | rate of C (c2spd) |
+| 38 | u8 | volume 0..64 |
+| 39 | u32, u32 | loop start, loop end (0 = no loop) |
+
+v < 10: u16 length, u16 rate, u8 volume, u16 loop start, u16 loop end (FFFFh: no loop) from +32.
+Sample k's length is taken from the instrument that first brings the sample count up to k; each
+sample gets a block of length + 16 bytes, and with DDS's "EMSAlloc"/"EMSCopyTo" exports a sample
+over 400h bytes moves to EMS.
+
+Track entries are read by `ampReadTrackRow` (0EF6:0955): all entries with row ≤ the current
+row; row FFh ends the track. cmd < 80h is a note (0 = stop, 7Fh = keep the note) with arg = volume
+(FFh = keep); cmd 80h..97h are commands (80h instrument, 81h speed, 82h volume slide, 83h volume,
+84h portamento, 86h tone portamento, 88h arpeggio, 89h vibrato, 8Ch pattern break, 8Dh position
+jump, 94h note cut, 95h tempo, …; see `src/dsmi/amp.c`).
+
+Shipped files: header 75 bytes, 31 instruments each, of which 3..13 are used (type 1, sample
+numbers 1, 2, 3 … in instrument order, unused ones in between with type 0, number 0, length 0);
+rate 8368 (89 instruments) or 8252 (2); 6 channels (ISTANBUL.AMF 8) panned −63, 63, 63, −63, …,
+the rest 0; header tempo 125/6 (effect 95h sets 120 or 144 in 11 places); every order 64 rows;
+6..108 logical over 6..89 stored tracks, all of type 0, 496 ending in `FF FF FF` and 4 empty.
+Commands used: 80h, 81h, 82h, 83h, 84h, 86h, 88h, 89h, 8Ch, 8Dh, 94h, 95h. Each file ends
+exactly after its last sample.
+
+## ISOSYS battle state (DGROUP) – partly verified (`src/game/iso*.c`, tests/py/test_iso.py, test_iso_b/c/d.py)
 
 The isometric battle (ovl4595 ISOSYS.L) keeps its whole state in DGROUP; nothing is
 read from a battle file of its own (the battlefield is built from the 3D map, the monster
@@ -255,10 +470,11 @@ group records and GRP.DAT's party records).  All words are little-endian i16.
 |---|---|
 | A08A + 28h·c, c = 1..28 | unit: +00 hp, +02 vecize points, +04 facing 1..4 (+4 attack frame, +100 death frame), +06 template g, +08 x, +0A y, +0C last target, +0E side (1 party/allies, 2 enemies), +10 charmer, +12 to-hit, +14 dodge, +16..+1E five status slots (duration·100 + id), +20 on-hit vecize, +22 stun turns, +24 was hit, +26 ?. Units 1..24 monsters (group (c-1)/8), 25..28 the party |
 | 9F18 + 2Eh·g | template (23 words). g 1..4 party members, 5..7 monster groups.  w1, w3, w9, w11, w16: kill value; w2 damage (hundreds·100 + base: random(h+1) + base); w5 armour; w7/w8 AP cost of attack 1/2 (−100 when > 100); w9 < 10 and w10 < 0: can be stunned |
+| 1287 + 2Eh·t | monster type t (23 words). The battle set-up (`iso_battle.c`) fills template 4 + i of group i (type at 5BDA + 6i; above 100: an allied group, 100 is subtracted) with words 2..19 of its type, word 1 = w1 + difficulty (option BB39)·w0, then adds 1 to word 3; an empty group gets words 1..19 = 0 |
 | 5BC2 + 6·g | group type of template g (footstep sounds; slayer weapons) |
 | C2CE + 38h·x + 2·y | occupancy grid 28×28: unit number or 0 |
 | C8EE + 38h·x + 2·y | terrain grid: 0 open, 1..9 floor tiles, ≥ 10 walls (picture 2616[t], top t+6); 6 and 8 and ≥ 10 block a step |
-| CF0E + 36h·… | mini-map colours |
+| CF0E + 36h·x + 2·y | mini-map colours, 27×27 |
 | 99A6 + 5Ch·p | party record (GRP.DAT): +06 practice, +08 experience, +0C..+1A stats grown by iso_xp_progress, +3A+2k weapon in hand k |
 | 9902 + 22h·p | growth marks: counter values at the last growth of each stat |
 | 9B7C + 24h·p | race words: +16 favourite enemy group, +18 hated group, +02..+12 growth modifiers |
@@ -300,11 +516,12 @@ pictures 47h-4Ah, loads the district and enters the 3D view; the view size comes
 
 Every district n (1..18) has a map **PCn** and a script bank **PCSn** in FRPOS.CKD. Both are AMOS
 banks: 20-byte header `"AmBk"`, BE16 bank number, BE16 flags, BE32 `80000000h | length`, `"Data    "`.
-3DSYS keeps the whole map file in an EMS block (record pointer 16E0:E33F) and a pointer to its byte
-20 (the cells) at 16E0:B9EC; the script file is the EMS block of 16E0:E34F. All offsets below are
+3DSYS keeps the whole map file in an EMS block (record pointer 16E0:E33F) and a pointer to the
+cells, file byte 2Bh, at 16E0:B9EC (s3d_load_district locks byte 14h first to read the map header -
+width, height, start ... - and then 2Bh, 303F s3d_district.c); the script file is the EMS block of 16E0:E34F. All offsets below are
 file offsets (header included); the interpreter's PC is the word 16E0:BB98.
 
-**Map cells.** Cell (x, y) is 15 bytes at map byte 20 + (y·width + x)·15. Bytes 11..14 are the event
+**Map cells.** Cell (x, y) is 15 bytes at file byte 2Bh + (y·width + x)·15 (byte 14h is the width, 15h the height). Bytes 11..14 are the event
 key: each byte (≤ 20h, else fatal 51h) printed `%d` with a leading 0 below 10, giving 8 characters.
 "00000000" = no event. Fixed keys (trigger 2 only): "31313127" doctor (for the BBAB fee a member whose health is −5 or lower gets health 1; anybody
 else is "not dead, pick another"; too little money: "bu para yetmez!"), "31313128" food (random(5)+2 per living member, clears hunger word 11h),

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 mksave.py - build a prepared SAKLAnnn.SAV for a verification script
-(docs/VERIFY.md, play5 and play6; format: docs/FORMATS.md "SAKLAnnn.SAV").
+(docs/VERIFY.md, play5 to play10; format: docs/FORMATS.md "SAKLAnnn.SAV").
 
     python tools/verify/mksave.py play5 out/verify/scripts/play5.sav
     python tools/verify/mksave.py play6 out/verify/scripts/play6.sav
@@ -43,7 +43,8 @@ def patch(d, x, y, facing, district, money, hp, desc):
             struct.pack_into('<h', d, STATS + 0x5C * i + ST_HP, v)
     d[STOCK_W:STOCK_W + 11] = bytes(11)
     d[STOCK_G:STOCK_G + 11] = bytes(11)
-    struct.pack_into('<hh', d, MARK, *marks[district])
+    if district - 1 < 12:          # s3d_load_district sets the marker only for these
+        struct.pack_into('<hh', d, MARK, *marks[district])
     assert len(d) == 1524
     return bytes(d)
 
@@ -69,7 +70,7 @@ def set_flags(d, flags):
 # The story of district 4 (PCS4) up to the point where its shops open.  The
 # doors of the food stall (16,9), the weapon shop (8,16) and the goods shop
 # (3,17) carry event 12, whose trigger 1 says "kapalI" and cancels the move
-# while flag 99 is clear.  Flag 99 is set only by event 10 (cell (16,0), the
+# while flag 99 is clear.  Flag 99 is set only by event 10 (cell (14,0), the
 # landing of the stairs out of the cellar of Yeni Camii, trigger 2): with
 # flag 31 set it shows Seyh cehalet flying away, plays music 1 and sets 99.
 # The chain that leads there, each flag set by the event named:
@@ -80,7 +81,7 @@ def set_flags(d, flags):
 #   98  event 4  (7,0)   the battle at the hidden door
 #   31  event 5  (3,3)   Seyh cehalet in the cellar (battle, the purse);
 #                        event 6 (3,2) then teleports to (14,0)
-#   99  event 10 (16,0)  "Cok geC kalDIk..." - music 1, the shops open
+#   99  event 10 (14,0)  "Cok geC kalDIk..." - music 1, the shops open
 PC4_STORY_FLAGS = (29, 97, 30, 98, 31, 99)
 
 
@@ -101,6 +102,34 @@ def play6(base):
         struct.pack_into('<h', d, STATS + 0x5C * i + ST_HUNGER, v)
     struct.pack_into('<h', d, MUSIC, 1)
     return set_flags(d, PC4_STORY_FLAGS)
+
+
+def play7(base):
+    """district 3 (PC4) one step before the end of its story: flags 29, 97,
+    30, 98, 31 (PC4_STORY_FLAGS without 99), so the doors of event 12 are
+    still "kapalI" and event 10 at (14,0) - Seyh cehalet flying away - is
+    due.  (10,7) facing north as play6.  300 kIvrIk for two shops."""
+    d = patch(base, 10, 7, 0, 3, 300, (), 'kapali')
+    return set_flags(d, PC4_STORY_FLAGS[:-1])
+
+
+def play8(base):
+    """district 1 (PC2) at (18,19) facing east, one step west of (19,19),
+    a cell of event 2: silikon baba and the story slideshow (FRPOS op 27,
+    demo_story_scene).  Flag 4 (set at the end of event 2) is clear in the
+    base save; nothing else changes but the position."""
+    return patch(base, 18, 19, 1, 1, 107, (), 'hikaye')
+
+
+def play9(base):
+    """district 17 (PC18) at (3,2) facing south, the cell next to event 5
+    (3,1, the last battle) - with flag 156 (9Ch) set, which event 5 sets
+    after the battle: the next pass of s3d_explore_loop that handles a key
+    calls demo_ending (the SON video, soon/devam, the save menu in mode 1,
+    the credits).  The city-map marker stays as in the base save
+    (s3d_load_district sets it only for districts 1..12)."""
+    d = patch(base, 3, 2, 2, 17, 107, (), 'son')
+    return set_flags(d, (156,))
 
 
 def main():

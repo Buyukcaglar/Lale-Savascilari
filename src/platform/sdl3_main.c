@@ -456,7 +456,7 @@ static int host_open_window(void)
  * events of the window are ignored.
  */
 enum { EV_KEY = 1, EV_MOUSE = 2, EV_MARK = 3, EV_BUTTONS = 4, EV_SYNC = 5, EV_SYNCNE = 6, EV_SRAND = 7,
-       EV_POKE = 8 };
+       EV_POKE = 8, EV_KBD = 9 };
 typedef struct ScriptEv { uint32_t t; int rel, type; int a, b, c; char name[64]; } ScriptEv;
 static ScriptEv *sc_ev;
 static int       sc_n, sc_next;
@@ -538,6 +538,18 @@ static int script_load(const char *path)
         }
         else if (strcmp(w2, "syncne") == 0 && n >= 4)
             sc_add(t, EV_SYNCNE, (int)strtol(w3, NULL, 16), (int)strtol(w4, NULL, 16), 0, NULL);
+        else if (strcmp(w2, "kbd") == 0 && n >= 3) {
+            /* scan-code bytes, one event each (dbx_replay.py: hook.S type 9) */
+            char *p = strstr(line, "kbd") + 3;
+            int i = 0;
+            for (;;) {
+                char *q;
+                unsigned long v = strtoul(p, &q, 16);
+                if (q == p) break;
+                sc_add(i++ ? 0 : t, EV_KBD, (int)(v & 0xFF), 0, 0, NULL);
+                p = q;
+            }
+        }
         else {
             sc_rel = 0;
             SDL_Log("script %s:%d: cannot parse", path, ln);
@@ -637,6 +649,49 @@ static void sc_dump(const ScriptEv *e, int idx)
     sc_write(e->name, "txt", txt, (size_t)n);
 }
 
+/* `kbd` events: the part of the BIOS INT 09h the verification scripts use,
+   after the game's INT 09h hook has seen the byte (as on the PC, where the
+   hook reads port 60h first): E0h prefix, Ctrl (1Dh) and Alt (38h) make /
+   break -> BDA 0040:0017 bits 2/3, Ctrl+ScrollLock (46h, also E0 46h =
+   Ctrl+Pause) -> Ctrl-Break.  Ctrl+Alt+Del that the game does not swallow
+   would reboot: not modelled (logged); other keys likewise. */
+static void sc_kbd(uint8_t b)
+{
+    static int e0;
+    uint8_t f = pc_shift_flags();
+    if (pc_int09(b)) {
+        e0 = 0;
+        return;
+    }
+    if (b == 0xE0) {
+        e0 = 1;
+        return;
+    }
+    switch (b & 0x7F) {
+    case 0x1D: f = (uint8_t)((b & 0x80) ? f & ~0x04 : f | 0x04); pc_set_shift_flags(f); break;
+    case 0x38: f = (uint8_t)((b & 0x80) ? f & ~0x08 : f | 0x08); pc_set_shift_flags(f); break;
+    case 0x46:
+        if (!(b & 0x80) && (f & 0x04))
+            pc_ctrl_break();
+        break;
+    default:
+        if (!(b & 0x80))
+            SDL_Log("script: kbd %s%02X not modelled", e0 ? "E0 " : "", b);
+        break;
+    }
+    e0 = 0;
+}
+
+/* INT 23h about to be issued: the `int23` checkpoint (dbx_replay.py: the
+   hook's INT 23h wrapper) */
+static void sc_int23(void)
+{
+    ScriptEv e;
+    memset(&e, 0, sizeof e);
+    snprintf(e.name, sizeof e.name, "int23");
+    sc_dump(&e, 0xFFFE);
+}
+
 static int sc_due(const ScriptEv *e, uint32_t clock, int wake)
 {
     if (e->type == EV_SYNC && DG16((uint16_t)e->a) != (uint16_t)e->b)
@@ -692,6 +747,9 @@ static void script_input_hook(int wake)
         case EV_POKE:                   /* DGROUP bytes (clock-timed state at a checkpoint) */
             if (e->c == 1) DG8((uint16_t)e->a) = (uint8_t)e->b;
             else           DG16((uint16_t)e->a) = (uint16_t)e->b;
+            break;
+        case EV_KBD:
+            sc_kbd((uint8_t)e->a);
             break;
         case EV_SYNC:                   /* only an anchor for the +n events after it */
         case EV_SYNCNE:
@@ -1017,6 +1075,7 @@ int main(int argc, char **argv)
         script_mode = 1;
         pc_set_virtual_time(1, step_us);
         pc_set_input_hook(script_input_hook);
+        pc_set_int23_observer(sc_int23);
         if (sc_seed >= 0)
             ist_time_override = sc_seed;
         SDL_Log("script %s: %d events, out %s, seed %d, step %u us", script_path, sc_n, sc_out,

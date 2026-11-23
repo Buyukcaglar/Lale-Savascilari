@@ -101,11 +101,17 @@ uint8_t  pc_shift_flags(void);
 /* Break handling (see pc.c "Ctrl-C / Ctrl-Break"): setvect(23h) / setvect(09h)
    of the game's handlers; pc_int09 = the host offers a make code to the
    game's INT 09h hook first (1 = swallowed); pc_ctrl_break = the BIOS saw
-   Ctrl-Break. */
+   Ctrl-Break (buffer emptied, word 0000h, INT 1Bh); pc_int1b = INT 1Bh
+   alone (DOS's handler: a ^C for the console's next character, so the next
+   kbhit() issues INT 23h) - what the game's INT 09h hook raises for a
+   trapped Ctrl+Alt+Del.  pc_set_int23_observer: called right before INT 23h
+   is issued (script mode: the `int23` checkpoint). */
 void     pc_set_int23(void (*handler)(void));
+void     pc_set_int23_observer(void (*observer)(void));
 void     pc_set_int09(int (*handler)(uint8_t scan));
 int      pc_int09(uint8_t scan);
 void     pc_ctrl_break(void);
+void     pc_int1b(void);
 void     pc_set_shift_flags(uint8_t f);
 
 /* ---- mouse (INT 33h) ------------------------------------------------------- */

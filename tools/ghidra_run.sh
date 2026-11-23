@@ -14,6 +14,9 @@
 #   -> ApplyNames    analysis/names.tsv
 #   -> ExportDecomp  analysis/ghidra_<exe>/*.c + functions.tsv
 #   -> ExportListing analysis/ghidra_<exe>/asm/*.asm + <exe>_fpu.bin
+# fpupatch.py skips the jump tables of build/ist_switches.tsv, which FixSwitch
+# writes: when a run changes that file (a fresh build/, a new table form) the
+# script runs the pipeline once more, so the image matches the tables found.
 set -e
 EXE=${1:-ist}
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -48,3 +51,10 @@ w() { native "$1"; }
   -max-cpu 8 2>&1 | grep -E "SetupIST|FixNear: re|PruneFunctions: rem|FixSwitch|FixFPU: patched|ApplyNames|ExportDecomp:|ExportListing|ERROR|Exception|error:|skipping" | head -40
 # every relative branch must resolve like the CPU would (catches language/context regressions)
 "$PY" "$ROOT/tools/branchcheck.py" "$OUT"
+SW="$ROOT/build/${EXE}_switches.tsv"
+if [ "$EXE" = ist ] && [ -z "$GHIDRA_RUN_AGAIN" ] && ! cmp -s "$SW" "$SW.prev" 2>/dev/null; then
+  cp "$SW" "$SW.prev"
+  echo "ghidra_run: switch tables changed - running again for fpupatch.py"
+  GHIDRA_RUN_AGAIN=1 exec "$0" "$@"
+fi
+cp "$SW" "$SW.prev" 2>/dev/null || true

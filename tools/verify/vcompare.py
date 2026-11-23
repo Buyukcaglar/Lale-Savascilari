@@ -158,7 +158,7 @@ CLOCK_FIELDS = [
     (0x73D1, 0x73D5, 'voice end time (73D1, absolute clock)'),
     (0x7C38, 0x85B0, 'AMP player state (music position; started at a load-time-dependent clock)'),
     (0x85CE, 0x8620, 'DSMI timer service slots (tick counters)'),
-    (0x86F8, 0x86FE, 'EMS page-map save (follows GFL ring streaming)'),
+    (0x86F8, 0x8700, 'EMS page-map save (follows GFL ring streaming)'),
     (0xBA82, 0xBA84, 's3d fade time (clock low word)'),
     (0xBBC4, 0xBBC6, 'ISOSYS turn-start timer (clock low word, iso_turn.c)'),
     (0xD534, 0xD536, 'ISOSYS AI decision clock (low word, iso_ai.c)'),
@@ -166,7 +166,7 @@ CLOCK_FIELDS = [
     (0xD608, 0xD61A, 'GFL file pos/start/frame times/last frames'),
     (0xDA30, 0xDA32, 'MEMMAN current EMS mapping (follows GFL streaming)'),
     (0xE798, 0xE7A4, 'DSMI time'),
-    (0xE7AC, 0xE7B2, 'EMS save-state page map (follows GFL streaming)'),
+    (0xE7AC, 0xE7B4, 'EMS save-state page map (follows GFL streaming)'),
 ]
 
 

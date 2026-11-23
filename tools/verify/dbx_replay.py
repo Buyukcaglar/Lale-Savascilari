@@ -80,6 +80,9 @@ def parse_script(path):
                 evs.append((t if i == 0 else 0, 8 | rel, addr + i, v, len(part), ''))
         elif k == 'syncne':                             # anchor: DGROUP word a != b
             evs.append((t, 6 | rel, int(w[2], 16), int(w[3], 16), 0, ''))
+        elif k == 'kbd':                                # scan-code bytes through the 8042
+            for i, x in enumerate(w[2:]):
+                evs.append((t if i == 0 else 0, 9 | rel, int(x, 16), 0, 0, ''))
         else:
             raise ValueError(f'{path}:{ln}: cannot parse')
     return evs, seed
@@ -159,7 +162,10 @@ class Replay:
         idx = struct.unpack_from('<H', hdr, 0x22)[0]
         clock = struct.unpack_from('<I', hdr, 0x24)[0]
         reads = struct.unpack_from('<I', hdr, 0x2C)[0]
-        t, ty, a, b, c, name = evs[idx]
+        if idx == 0xFFFE:                               # INT 23h issued by DOS (hook int23)
+            t, ty, a, b, c, name = 0, 3, 0, 0, 0, 'int23'
+        else:
+            t, ty, a, b, c, name = evs[idx]
         if a == 1:
             print(f'quit at clock {clock}', flush=True)
             return False
@@ -170,7 +176,7 @@ class Replay:
         open(p + '.dg', 'wb').write(self.rd(DGSEG, 0, 0x10000))
         open(p + '.txt', 'w').write(f'clock {clock}\nevent {idx}\nscript_time {t}\nreads {reads}\n')
         print(f'{name}: clock {clock} reads {reads}', flush=True)
-        return True
+        return name != 'int23'                          # the program ends in its handler
 
 
 def make_conf(game_dir, out):

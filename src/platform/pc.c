@@ -211,10 +211,21 @@ static uint8_t  shift_flags;
  * Ctrl-Break.  The port follows MS-DOS, the system the game was made for.
  * Verification scripts never send 03h or 13h. */
 static void (*int23_handler)(void);
+static void (*int23_observer)(void);
 static int  (*int09_handler)(uint8_t scan);
 static int    dos_break_pending;
 
 void pc_set_int23(void (*handler)(void))        { int23_handler = handler; }
+void pc_set_int23_observer(void (*observer)(void)) { int23_observer = observer; }
+
+/* DOS issues INT 23h */
+static void issue_int23(void)
+{
+    if (int23_observer)
+        int23_observer();
+    if (int23_handler)
+        int23_handler();
+}
 void pc_set_int09(int (*handler)(uint8_t scan)) { int09_handler = handler; }
 
 int pc_int09(uint8_t scan)
@@ -227,10 +238,9 @@ int pc_int09(uint8_t scan)
 static int dos_break_check(void)
 {
     uint8_t c;
-    if (dos_break_pending) {          /* the look-ahead ^C of Ctrl-Break */
+    if (dos_break_pending) {          /* the look-ahead ^C of INT 1Bh */
         dos_break_pending = 0;
-        if (int23_handler)
-            int23_handler();
+        issue_int23();
         return 0;
     }
     if (pending_scan >= 0 || khead == ktail)
@@ -238,8 +248,7 @@ static int dos_break_check(void)
     c = (uint8_t)kbuf[khead];
     if (c == 0x03) {
         khead = (khead + 1) & 15;
-        if (int23_handler)
-            int23_handler();
+        issue_int23();
         return 0;
     }
     if (c == 0x13) {
@@ -255,8 +264,8 @@ static int dos_break_check(void)
         if (c == 0 || c == 0xE0)      /* extended key: the 00h was read, the
                                          scan code is the console's next byte */
             pending_scan = k >> 8;
-        else if (c == 0x03 && int23_handler)
-            int23_handler();
+        else if (c == 0x03)
+            issue_int23();
         return 1;
     }
     return 0;
@@ -267,6 +276,11 @@ void pc_ctrl_break(void)
     khead = ktail = 0;
     pending_scan = -1;
     kbuf[ktail++] = 0x0000;
+    pc_int1b();
+}
+
+void pc_int1b(void)
+{
     dos_break_pending = 1;
 }
 

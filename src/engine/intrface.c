@@ -732,7 +732,9 @@ flush:
  *
  * Original: IST.EXE 05DC:178E (INTRFACE.L), far cdecl.  Nothing without
  * sound.
- * Verified: tests/py/test_intrface.py (test_voices).
+ * Verified: tests/py/test_intrface.py (test_voices_silent: sound off);
+ *   sound on: tests/py/test_iso_d.py (test_sound_play_sfx, test_sound_speak,
+ *   test_sound_battle).
  */
 void ui_init_voices(void)
 {
@@ -778,7 +780,9 @@ void ui_init_voices(void)
  * rate is set to freq (when it is a continuation).  A failed load is
  * always fatal (line 1BCh; the length check of the message is dead).
  * 73CC = the sample's length, 73D1 = clock + len, 73D5 = len.
- * Verified: tests/py/test_intrface.py (test_voices).
+ * Verified: tests/py/test_intrface.py (test_voices_silent: sound off);
+ *   sound on: tests/py/test_iso_d.py (test_sound_play_sfx, test_sound_speak,
+ *   test_sound_battle).
  */
 void ui_load_voice(int16_t slot, uint32_t freq, uint16_t len, uint16_t flags)
 {
@@ -838,7 +842,9 @@ static void drop_voice(int16_t slot, uint16_t flags, int16_t line, uint16_t file
  * piece's rate is copied from the current one first.  After an Esc
  * (r = 1) the remaining pieces are still started and freed, but no longer
  * waited for.
- * Verified: tests/py/test_intrface.py (test_voices).
+ * Verified: tests/py/test_intrface.py (test_voices_silent: sound off);
+ *   sound on: tests/py/test_iso_d.py (test_sound_play_sfx, test_sound_speak,
+ *   test_sound_battle).
  */
 uint8_t ui_play_voice(int16_t slot, uint16_t flags)
 {
@@ -871,7 +877,9 @@ uint8_t ui_play_voice(int16_t slot, uint16_t flags)
  * a difference of 0.  No pending time (FFFFFFFFh): return 0 at once.
  * Port: polls through the idle callback's pc calls and ui_kbhit; the
  * SAMPLEINFO at DF1E is converted like nses.c's snd_sampleinfo.
- * Verified: tests/py/test_intrface.py (test_voices).
+ * Verified: tests/py/test_intrface.py (test_voices_silent: sound off);
+ *   sound on: tests/py/test_iso_d.py (test_sound_play_sfx, test_sound_speak,
+ *   test_sound_battle).
  */
 int16_t ui_wait_voice(void)
 {

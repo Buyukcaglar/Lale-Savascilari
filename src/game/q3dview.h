@@ -101,7 +101,8 @@ _Static_assert(sizeof(Q3dDecor) == 0x0E, "Q3dDecor is 0Eh bytes");
 extern Q3dPiece *q3d_kor_pieces[Q3D_KOR_SLOTS];
 
 /* far pointer at 16E0:B9EC: the map cells (district file FRPOS PCn, an
-   AMOS bank: byte 20 = width, 21 = height, cells from byte 22).  Cell
+   AMOS bank: byte 14h = width, 15h = height, cells from byte 2Bh, where
+   s3d_load_district locks the EMS block for the cells).  Cell
    (x, y) is at (y * map_w + x) * 15; bytes
    [2*side] = wall type (1-based KOR slot), [2*side+1] = wall kind.  The
    original adds offsets with F_PADD (huge pointer, sign-extended int16). */

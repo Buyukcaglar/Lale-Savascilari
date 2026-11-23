@@ -89,7 +89,10 @@ uint16_t ctl_div0_isr(void)
  * else "Tamam abi breyk, breyk, sitop !!!".
  *
  * Original: IST.EXE 0DB7:0135 (NKONTROL.L), INT 23h handler.
- * Verified: no (interrupt handler; one fatal call).
+ * Verified: against DOSBox-X, docs/VERIFY.md "Ctrl-Break and Ctrl+Alt+Del"
+ *   (playbrk, playbrk3d: Ctrl-Break; playcad: Ctrl+Alt+Del, g_reset_attempt
+ *   1) - the state when INT 23h is issued (DGROUP, screen) identical on both
+ *   sides; the handler's fatal path: test_iso_d.py test_ctrl_break_battle_*.
  */
 void ctl_int23_isr(void)
 {
@@ -104,10 +107,12 @@ void ctl_int23_isr(void)
  *
  * Original: IST.EXE 0DB7:0174 (NKONTROL.L), INT 09h handler.
  * Port: the host calls this with each make code while ctl_installed();
- * 0 = let the BIOS (pc_key_push) have the key, 1 = swallowed.  DOS turns
- * INT 1Bh into INT 23h at its next break check (the game polls kbhit()
- * constantly), so the port goes to ctl_int23_isr directly.
- * Verified: no (interrupt handler).
+ * 0 = let the BIOS (pc_key_push) have the key, 1 = swallowed.  INT 1Bh is
+ * DOS's: the console's next character becomes a ^C, so INT 23h comes at the
+ * game's next kbhit() (pc_int1b) - not at once: a getch() in between does
+ * not check, and the game runs on until it polls.
+ * Verified: against DOSBox-X (docs/VERIFY.md "Ctrl-Break and Ctrl+Alt+Del",
+ * `playbrk`, `playcad`).
  */
 int ctl_int09_isr(uint8_t scan)
 {
@@ -115,7 +120,7 @@ int ctl_int09_isr(uint8_t scan)
         /* in al,61h; out 61h,al|80h; out 61h,al; out 20h,20h */
         /* int 1Bh -> DOS break flag -> INT 23h */
         g_reset_attempt = 1;
-        ctl_int23_isr();
+        pc_int1b();
         return 1;
     }
     return 0;

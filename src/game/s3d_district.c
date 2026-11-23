@@ -303,7 +303,7 @@ void s3d_enter_view(void)
  * being built) only the state 3EDC is updated.
  *
  * Original: IST.EXE 303F:276C (3DSYS.L), far cdecl.
- * Compared only inside s3d_enter_view (test_s3d_district.py test_enter_view).
+ * Verified: only inside s3d_enter_view (test_s3d_district.py test_enter_view).
  */
 void s3d_redraw_screen(void)
 {

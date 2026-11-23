@@ -258,8 +258,10 @@ done:
  *   loaded game.
  * Original: IST.EXE 3C2D:054D (DEMOLAR.L), far cdecl (int slot, char arg);
  *   main passes slot 0Bh, so slots 0Bh..0Eh are used.
- * Verified: not verified (long video/fade sequence; parts covered by the
- *   tests of demo_show_picture and demo_wait_key_or_delay).
+ * Verified: against DOSBox-X (docs/VERIFY.md): arg 0 - the start-up and the
+ *   intro to the menu, 200 samples; every menu entry: 1 (play3), 2 with a
+ *   load (play4..play10), 3 (playq), 4 (playx); Ctrl-Break at the menu
+ *   (playbrk).
  */
 int16_t demo_intro_menu(int16_t slot, uint8_t arg)
 {
@@ -487,8 +489,8 @@ static int story_slide(int16_t slot, int16_t *page, int16_t *t, char **texts, ui
  * other than "any key" (Esc), or a key during the voice, ends the scene.
  * Music DEMO.AMF and CD track 3.  Slots slot..slot+2.
  * Original: IST.EXE 3C2D:1108 (DEMOLAR.L), far cdecl.
- * Verified: not verified (needs the voice/sample playback in the
- *   differential harness).
+ * Verified: against DOSBox-X, docs/VERIFY.md play8 (all 8 picture groups
+ *   with sound on, run to its end).
  */
 void demo_story_scene(int16_t slot)
 {
@@ -570,7 +572,8 @@ end:
  * save is loaded; "hayır" fades out and leaves through the credits.
  * Original: IST.EXE 3C2D:19F1 (DEMOLAR.L), far cdecl.
  * Port: pc_poll() in the "while the module plays" loop (1A85).
- * Verified: not verified (3DSYS save/load menu not available yet).
+ * Verified: against DOSBox-X, docs/VERIFY.md play4 (game over, "evet" and a
+ *   load).  The "hayIr" path ends in demo_credits_exit (playx, play9).
  */
 void demo_game_over(void)
 {
@@ -604,7 +607,8 @@ void demo_game_over(void)
  * cross-fade, then "kayıt yapılacak dosyayı seçin" and the save menu
  * (mode 1) until something is saved, then the credits.
  * Original: IST.EXE 3C2D:1B76 (DEMOLAR.L), far cdecl.
- * Verified: not verified (needs FRPOS/3DSYS).
+ * Verified: against DOSBox-X, docs/VERIFY.md play9 (video, soon/devam,
+ *   save menu in mode 1, credits).
  */
 void demo_ending(void)
 {
@@ -751,7 +755,8 @@ static void credits_draw(uint8_t style, uint8_t lineh, uint8_t col)
  * game's normal exit.
  * Original: IST.EXE 3C2D:217C (DEMOLAR.L), far cdecl.
  * Port: pc_poll() at the head of the frame wait (276F).
- * Verified: tests/py/test_demolar.py (test_credits, sampled frames).
+ * Verified: against DOSBox-X, docs/VERIFY.md playx (from the menu) and play9
+ *   (after the ending).
  */
 void demo_credits_exit(void)
 {
@@ -770,7 +775,7 @@ void demo_credits_exit(void)
     fm_load_pal(DGSTR(0x58B0), 0, 0x100);
     fm_load_cmp(1, DGSTR(0x58B9), 0xB);
     gr_cursor_hide();
-    mm_copy_block(SURF(9), SURF(0));
+    mm_copy_block(SURF(0xB), SURF(0));                 /* grup.cmp to the screen */
     gr_cursor_set_shape(0x33);
     demo_play_music(0xB, 1, 0);
     gr_fade(0, 0, (int16_t)(g_music_level_max - 0x1E));
@@ -966,7 +971,8 @@ static void map_clear_status(void)
  * g_map_y is rewritten on exit; dir > 3 is impossible (switch default
  * would jump to the Enter handling).
  * Original: IST.EXE 3C2D:2DE2 (DEMOLAR.L), far cdecl.
- * Verified: not verified (needs 3DSYS: clock, daylight, status line).
+ * Verified: against DOSBox-X, docs/VERIFY.md play10 (Enter + "h", moves,
+ *   Enter + "e" into district 9).
  */
 int16_t demo_city_map_travel(void)
 {
@@ -1190,7 +1196,8 @@ uint8_t demo_free_music(void)
  * Original: IST.EXE 3C2D:3790 (DEMOLAR.L), far cdecl.
  * Port: the volume ramp loop is a busy loop on the clock: pc_poll() at its
  * head (38F3 / 3930).
- * Verified: not verified (video playback; see gfl tests).
+ * Verified: against DOSBox-X, docs/VERIFY.md play3 (new game) and playq
+ *   (quick start), the videos skipped by Esc.
  */
 void demo_load_sounds(void)
 {

@@ -67,6 +67,29 @@ Checkpoint events that neutralise clock-timed state (both sides):
                              byte/word events, hook.S type 8)
 ```
 
+Raw keyboard bytes, for what no BIOS key word can express (Ctrl-Break,
+Ctrl+Alt+Del):
+
+```
++0 kbd 1D E0 46 E0 C6 9D     scan-code bytes, in order (one hook.S type-9
+                             event per byte)
+```
+
+DOSBox-X side: each byte goes through the 8042 - command D2h ("write
+keyboard output buffer") on port 64h, the byte on 60h - and `hook.S` opens
+interrupts until the output buffer is empty again, so IRQ 1 delivers it to
+the INT 09h chain (the game's `ctl_int09_isr`, then the BIOS).  Port side:
+`sc_kbd` offers the byte to `pc_int09` (the game's hook) first, then models
+the BIOS: E0 prefix, Ctrl (1D/9D) and Alt (38/B8) in the shift flags, and
+Ctrl + 46 make as Ctrl-Break (`pc_ctrl_break`: key buffer emptied, word 0000h
+stored, INT 1Bh).  Other bytes are logged "not modelled".
+
+**`int23` dump:** both sides dump a checkpoint named `int23` when INT 23h is
+issued (DOSBox-X: `hook.S` keeps IVT 23h pointing at a wrapper that dumps,
+then jumps to the handler that was there; port: the observer of
+`pc_set_int23_observer`, called from `dos_break_check` before the handler).
+The game's handler exits to DOS, so the replay stops after that dump.
+
 ### What is clock-timed and how play3 neutralises it
 
 | State | Why it differs | play3 |
@@ -311,7 +334,7 @@ district 4 leaves behind once its shops are open.  The doors of the food
 stall (16,9), the weapon shop (8,16) and the goods shop (3,17) carry event
 12, whose trigger 1 says "kapalI" and cancels the move while **flag 99** is
 clear.  Flag 99 is set in one place only (all 18 PCS files and the code
-searched): event 10 of PCS4, trigger 2 of the cell (16,0) - the landing of
+searched): event 10 of PCS4, trigger 2 of the cell (14,0) - the landing of
 the stairs out of the cellar of Yeni Camii.  With flag 31 set it shows Seyh
 cehalet flying away ("Cok geC kalDIk..."), plays music 1 and sets 99.  The
 chain that leads there, each flag set by the event named: 29 (event 1,
@@ -402,6 +425,71 @@ Timing lessons (both first-run differences were script timing):
   entry i is clicked at y = 146 + 7i.  For the keys the pointer must be off
   the list (an entry under it takes the selection back), and the list opens
   on entry min(last choice, 3).
+
+### Gap wave 3 (2026-11-23): play7 .. play10, playq, playx, Ctrl-Break
+
+```
+python tools/verify/mksave.py playN out/verify/scripts/playN.sav      # play7, play8, play9
+python tools/verify/mkscript.py NAME out/verify/scripts/NAME.txt
+python -u tools/verify/pair.py out/verify/scripts/NAME.txt NAME [--install out/verify/scripts/playN.sav=SAKLA001.SAV]
+```
+(play10 installs `play6.sav`.)
+
+| Script | What | Checkpoints | Result |
+|---|---|---|---|
+| `play7` | district 4 one step before flag 99 (save: the story flags without 99): the three event-12 doors "kapalI" (move cancelled), the landing (14,0) - Seyh cehalet flies away, flag 99 set - then the weapon shop and the goods shop (buy, sell, by keys), the options list by mouse **hover + Enter** over five entries | 53 | all identical; GRP.DAT, SAKLA001.SAV identical |
+| `play8` | district 1, (18,19) -> (19,19): silikon baba and the story slideshow (FRPOS op 27, `demo_story_scene`), all 7 picture groups, flag 4 at the end | 14 | all identical |
+| `play9` | district 17 with flag 156: `demo_ending` - SON video (frames 300 / 900), soon / devam, the save menu in mode 1 (new slot "son"), the credits | 21 | all identical; SAKLA002.SAV: the description tail (26 bytes, uninitialised stack in the original, as play4/5/6) |
+| `playq` | menu entry 3 (çabuk başla): videos, the opening dialogue, district 0, a turn | 5 | 4 identical; `q03_turn`: RNG state only (below) |
+| `playx` | menu entry 4: the credits from the menu | 13 | all identical |
+| `play10` | play6's save: (10,7) -> (19,18), event 20 (flags 29 and 99: op 33 `leave`): "hayIr" (stays), then "evet": `demo_city_map_travel` - Enter + "h" in Eminönü, 14 up, 60 left into rectangle 10, Enter + "e": the arrival in district 9, a turn | 16 | 15 identical; `m13_turn`: RNG state only (below) |
+| `playbrk` | Ctrl-Break (`kbd 1D E0 46 E0 C6 9D`) at the main menu | 2 (+ `int23`) | identical |
+| `playbrk3d` | Ctrl-Break in district 0 (quick start) | 2 (+ `int23`) | identical |
+| `playcad` | Ctrl+Alt+Del in district 0: the game's INT 09h hook swallows Del, sets `g_reset_attempt` (DGROUP 750B) and issues INT 1Bh | 2 (+ `int23`) | identical (750B = 1 on both sides) |
+
+**Port bug found and fixed: the credits background.**  `demo_credits_exit`
+copies the band photo (grup.cmp, loaded into surface 0Bh) to the screen
+before the scroll; the port copied surface 9 - whatever the previous
+screen left there.  Only the 225x200 scroll window is redrawn after that,
+so the rest of the screen showed the menu title ("...ARI") or the ending's
+"...ek" in the credits palette, as speckle.  Fixed in `demolar.c`; playx
+and play9's credits identical since.  What stays on "Devam Edecek..." -
+the save menu's list (`son`, `[bosch]`) drawn straight onto the picture,
+no panel - is the original's own screen (play9 `f07_savemenu` identical).
+
+**Ctrl-Break and Ctrl+Alt+Del.**  Delivered as raw scan codes (`kbd`, see
+"Input scripts") through the 8042 in DOSBox-X: the BIOS empties the key
+buffer, stores 0000h and issues INT 1Bh; DOS turns that into INT 23h at
+the game's next `kbhit()` (INT 21h 0Bh).  For Ctrl+Alt+Del the game's
+`ctl_int09_isr` traps the Del make code itself.  The port used to call
+the INT 23h handler from the INT 09h hook directly; it now issues INT 1Bh
+like the original (`pc_int1b`), so the break arrives at the same input
+read.  The `int23` dumps are identical in all three scripts.
+
+**RNG-only differences (`q03_turn`, `m13_turn`).**  Screen, DAC and the
+rest of DGROUP equal; the RTL random state differs by one draw (port 2,
+original 3 draws after the re-seed).  The draw is the explore loop's
+portrait-blink roll (`random(20)`, `s3d_loop.c`), made whenever more than
+1000 ms of clock have passed since the loop's own t0.  That t0 is set when
+the loop starts after an arrival, which in DOSBox-X comes later on the
+game clock (loading costs emulated time: `m12_arrived` was reached 390 ms
+later), so within the 2.5 s window the original's rolls fall at
+different points.  Clock phase, not logic.
+
+Timing lessons:
+
+* The credits scroll by the clock from their own start, which comes later
+  in DOSBox-X: their dumps are anchored on the THANX.DOC line being read
+  in (DGROUP BACC, lower-cased: "pc", "el", "ya", "oy", "se") and 1.5 s
+  after it (`credits_dumps`).
+* play8's `h03_baba` was first dumped 4 s after the step: the icon load
+  costs emulated time, so the original was earlier in the say.  Now anchored
+  on the first read with the cursor hidden for the say (`sync E5F3 0000`).
+* The quick start's opening dialogue is clock-timed text boxes: dumped
+  after it (72 s after the first Esc), with quiet seeds every second from
+  the first Esc (the 3D view can be up before the last video ends).
+* vcompare's clock-field ranges for the two EMS page-map copies (86F8,
+  E7AC) were one word short: the map is 4 words.
 
 ### Start-up (DSMI) - port vs original, 2026-11-22
 

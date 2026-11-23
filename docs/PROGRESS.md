@@ -9,20 +9,69 @@ equivalent, no decompilation needed).
 | # | Milestone | State |
 |---|---|---|
 | 1 | Foundation: unpacker, segment model, Ghidra pipeline, FPU fix, listings | done (2026-11-20) |
-| 2 | Inventory: all functions named and modules mapped | first pass done: 880 names (`analysis/names.tsv`) |
-| 3 | Formats documented, with Python viewers | FLiB, PAL, PUR, RES, CMP verified; GRP/SAV/FRPOS/GFL/AMF described, not yet tool-verified |
-| 4 | Platform layer: VGA emulation, SDL3 host, timer, input, audio | VGA: modes 13h/X/12h scan-out, BIOS tables and DACs verified against DOSBox-X; virtual CD drive + CD-music option; next: SDL3 window/timer/input loop |
-| 5 | Engine (ALTDUZEY) decompiled | all engine layers below the UI done and integrated (2026-11-21): 103/103 differential tests in one DLL, exact Borland far-heap layout; GRTEXT (10/10) + INTRFACE (34/34) done, 17 tests, in base (120/123 green; the 3 are the 3DQUICK tests, merged by WP16). Game-module wave WP13–17 done and integrated (2026-11-21): every function of IST.EXE is decompiled; shared DLL 218/219 before the last battle test landed; whole-game verification (docs/VERIFY.md): the intro matches the original in DOSBox-X from start-up to the menu (200 samples, 0–50 s; EMS double-mapping fix); scripted play-through play3 (read-count sync + poke/srand anchors) matches the original exactly at every checkpoint – menu, chargen x4, district, save, door/treasure event, battle start + 12 battle keys (registers, DAC, screen, VRAM, DGROUP; GRP.DAT and SAKLA001.SAV byte-identical) – except one checkpoint inside the clock-timed fade into the story. Fixed on the way: save description buffer, DDS driver load via vfs (lowwater 6E06/DE30 now match), DOSBox-X SB16 IRQ 7 (voice wait). play3's chargen-fade checkpoint now anchored on the story video's frame (identical). play4 (2026-11-21, with sound on both sides): spell battle lost to the dog's AI, game over + load, second battle won, item exchange, goods/weapon shops (buy/sell by keys and mouse), food stall, camp, save – all 112 checkpoints identical (DGROUP minus host/clock fields, screen, DAC); SAKLA002.SAV differs only in the description tail, uninitialised stack in the original; no port bugs found, new clock-relative `@n` script timing. Doctor: play5 (2026-11-22, crafted save in district 4): doctor (refuse, not dead x3, revive, too poor), fortune-teller, hotel room + camp + keeper, save, step back/sidestep/view size/character screen/options/city map – 39 checkpoints identical. Lale64.exe (was lale.exe) runs the intro (start-up matches the DOSBox-X oracle in EMS/DAC/VGA/screen; start-up heap chain (107 blocks) and DGROUP identical since the driver load goes through the file layer; what still differs is AMP's private interrupt stack, native routine pointers and the DSMI clock phase – none read by game code; checked 2026-11-22). Earlier: infrastructure done (2026-11-20): DGROUP model `dg[]`, emulated PC `pc.h`, Unicorn differential harness, SDL3 host loop; wave 1 (EMS/MEMMAN/NKONTROL, DSMI DDS/timer, 386 blitters + 3D quads, file layer + Borland stdio, AMP player, MCP mixer) in progress |
+| 2 | Inventory: all functions named and modules mapped | done (2026-11-21): 880 names (`analysis/names.tsv`), module map in PLAN.md §2 |
+| 3 | Formats documented, with Python viewers | done (2026-11-23): every format in [`FORMATS.md`](FORMATS.md) checked against all game files - FLiB, PAL, PUR/SND, RES, CMP, GFL, FRPOS, GRP/SAV, TRDOS, KOR, RIX, AMF, DSD (`tools/fmtcheck.py`, the viewers, the tests); only the in-memory ISOSYS battle state is partly verified |
+| 4 | Platform layer: VGA emulation, SDL3 host, timer, input, audio | VGA: modes 13h/X/12h scan-out, BIOS tables and DACs verified against DOSBox-X; virtual CD drive + CD-music option; SDL3 host done (`src/platform/sdl3_main.c`: window + renderer, event pump with keyboard/mouse, PIT-clocked timer, game + CD audio through `audio_sdl.c`) |
+| 5 | Engine (ALTDUZEY) decompiled | all engine layers below the UI done and integrated (2026-11-21): 103/103 differential tests in one DLL, exact Borland far-heap layout; GRTEXT (10/10) + INTRFACE (34/34) done, 17 tests, in base (120/123 green; the 3 are the 3DQUICK tests, merged by WP16). Game-module wave WP13–17 done and integrated (2026-11-21): every function of IST.EXE is decompiled; shared DLL 218/219 before the last battle test landed; whole-game verification (docs/VERIFY.md): the intro matches the original in DOSBox-X from start-up to the menu (200 samples, 0–50 s; EMS double-mapping fix); scripted play-through play3 (read-count sync + poke/srand anchors) matches the original exactly at every checkpoint – menu, chargen x4, district, save, door/treasure event, battle start + 12 battle keys (registers, DAC, screen, VRAM, DGROUP; GRP.DAT and SAKLA001.SAV byte-identical) – except one checkpoint inside the clock-timed fade into the story. Fixed on the way: save description buffer, DDS driver load via vfs (lowwater 6E06/DE30 now match), DOSBox-X SB16 IRQ 7 (voice wait). play3's chargen-fade checkpoint now anchored on the story video's frame (identical). play4 (2026-11-21, with sound on both sides): spell battle lost to the dog's AI, game over + load, second battle won, item exchange, goods/weapon shops (buy/sell by keys and mouse), food stall, camp, save – all 112 checkpoints identical (DGROUP minus host/clock fields, screen, DAC); SAKLA002.SAV differs only in the description tail, uninitialised stack in the original; no port bugs found, new clock-relative `@n` script timing. Doctor: play5 (2026-11-22, crafted save in district 4): doctor (refuse, not dead x3, revive, too poor), fortune-teller, hotel room + camp + keeper, save, step back/sidestep/view size/character screen/options/city map – 39 checkpoints identical. Lale64.exe (was lale.exe) runs the intro (start-up matches the DOSBox-X oracle in EMS/DAC/VGA/screen; start-up heap chain (107 blocks) and DGROUP identical since the driver load goes through the file layer; what still differs is AMP's private interrupt stack, native routine pointers and the DSMI clock phase – none read by game code; checked 2026-11-22). Earlier: infrastructure done (2026-11-20): DGROUP model `dg[]`, emulated PC `pc.h`, Unicorn differential harness, SDL3 host loop; wave 1 (EMS/MEMMAN/NKONTROL, DSMI DDS/timer, 386 blitters + 3D quads, file layer + Borland stdio, AMP player, MCP mixer) done |
 | 6 | Game modules decompiled | done (2026-11-21): main, DEMOLAR, CHARGEN, FRPOS, 3DQUICK, 3DSYS, ISOSYS, GFL – see "Decompiled modules" |
-| 7 | DSMI audio decompiled | done: player, loader, CDI, MCP mixer (verified); audio-backend wiring pending (NSES/OSES wave) |
-| 8 | Full-game verification against DOSBox-X | play3, play4, play4load identical at every checkpoint (docs/VERIFY.md). Decision (user, 2026-11-22): the save description's tail after its NUL stays zeros in the port (uninitialised stack in the original, never read). Gap wave started 2026-11-22: doctor event (district 4), ISOSYS Ctrl-Break / sound-on / door wall without bar picture, 3DQUICK 100x100 + rotate speed 2, three untested 3DSYS functions, CD audio vs the original code |
+| 7 | DSMI audio decompiled | done: player, loader, CDI, MCP mixer (verified); audio backend wired into the host (NSES registers the native MCP as SDISB16.DSD; `audio.c` / `audio_sdl.c`) |
+| 8 | Full-game verification against DOSBox-X | play3, play4, play4load identical at every checkpoint (docs/VERIFY.md). Decision (user, 2026-11-22): the save description's tail after its NUL stays zeros in the port (uninitialised stack in the original, never read). Gap waves 2026-11-22/23 (below): doctor, ISOSYS Ctrl-Break / sound-on / door wall, 3DQUICK 100x100, CD audio, play5..play10, playq, playx, Ctrl-Break and Ctrl+Alt+Del in DOSBox-X itself. Every DEMOLAR routine now runs in a play-through against the original |
 | 9 | macOS build | done (2026-11-23): `Lale64` + `Lale64.app` on Apple Silicon, universal release package; differential suite and scripted play-throughs against DOSBox-X run on the Mac – see "macOS port" below and [`MACOS.md`](MACOS.md) |
 
 ## Function status
 
-| Module | Functions | draft | verified | replaced |
-|---|---|---|---|---|
-| (filled in once the inventory is merged into analysis/names.tsv) | | | | |
+Generated by `python tools/funcstatus.py` from the `Original:` / `Verified:` comments
+of `src/` (2026-11-23; `--list` names every routine).  Only routines with their own
+`Original:` line are counted, so a module's count can be below the "Decompiled modules"
+count (small helpers documented together).
+
+| Segment | Sources | Functions | verified | draft | replaced | unstated |
+|---|---|---|---|---|---|---|
+| 0000 | bc_farheap, bc_stdio, ngraphs, speaker | 65 | 61 | 4 | 0 | 0 |
+| 0546 | istanbul | 1 | 1 | 0 | 0 | 0 |
+| 05DC | intrface | 32 | 32 | 0 | 0 | 0 |
+| 08D0 | q3d | 8 | 8 | 0 | 0 | 0 |
+| 09D4 | memman | 21 | 21 | 0 | 0 | 0 |
+| 0AC6 | systems | 18 | 18 | 0 | 0 | 0 |
+| 0C7F | ngraphs | 15 | 15 | 0 | 0 | 0 |
+| 0D42 | nses | 11 | 9 | 2 | 0 | 0 |
+| 0DB7 | nkontrol | 11 | 8 | 3 | 0 | 0 |
+| 0DDF | dsmistr | 9 | 9 | 0 | 0 | 0 |
+| 0DF2 | dds | 11 | 11 | 0 | 0 | 0 |
+| 0E9E | memalloc | 4 | 3 | 1 | 0 | 0 |
+| 0EAE | cdi | 28 | 28 | 0 | 0 | 0 |
+| 0EF6 | amp | 32 | 32 | 0 | 0 | 0 |
+| 105B | amfload | 3 | 3 | 0 | 0 | 0 |
+| 10EF | timer | 9 | 9 | 0 | 0 | 0 |
+| 111B | amfload | 1 | 1 | 0 | 0 | 0 |
+| 1134 | ems | 9 | 9 | 0 | 0 | 0 |
+| 1145 | dsmitime | 6 | 6 | 0 | 0 | 0 |
+| 1154 | emsheap | 17 | 16 | 1 | 0 | 0 |
+| 122B | istanbul | 1 | 1 | 0 | 0 | 0 |
+| 2599 | blit386 | 11 | 11 | 0 | 0 | 0 |
+| 2700 | q3dview, q3dview_anim, q3dview_map | 28 | 28 | 0 | 0 | 0 |
+| 303F | s3d_camp, s3d_charscr, s3d_district, s3d_keys, s3d_loop, s3d_menu, s3d_move, s3d_panel, s3d_save | 30 | 30 | 0 | 0 | 0 |
+| 39E5 | chargen | 12 | 12 | 0 | 0 | 0 |
+| 3C2D | demolar | 13 | 13 | 0 | 0 | 0 |
+| 3FD1 | frpos, frpos_shop, frpos_util | 25 | 25 | 0 | 0 | 0 |
+| 4595 | iso_ai, iso_battle, iso_char, iso_combat, iso_draw, iso_field, iso_map, iso_spell, iso_turn, iso_util | 69 | 69 | 0 | 0 | 0 |
+| 5313 | gfl | 12 | 12 | 0 | 0 | 0 |
+| 5447 | fileman | 7 | 7 | 0 | 0 | 0 |
+| 5511 | ographs | 13 | 13 | 0 | 0 | 0 |
+| 559A | fatal | 4 | 3 | 1 | 0 | 0 |
+| 55CC | oses | 2 | 2 | 0 | 0 | 0 |
+| 5646 | vfile | 9 | 9 | 0 | 0 | 0 |
+| 569A | vfs | 13 | 13 | 0 | 0 | 0 |
+| 5737 | cd5737 | 15 | 15 | 0 | 0 | 0 |
+| 5784 | grtext | 10 | 10 | 0 | 0 | 0 |
+| **all** | | **585** | **573** | **12** | **0** | **0** |
+
+The 12 drafts: the PC-speaker routines of `speaker.c` (`bc_readtimer`, `bc_delay`,
+`bc_sound`, `bc_nosound`: their only user, `o559A_beep`, is unreferenced), the NSES
+getenv/setvect hooks (host environment, no IVT), `ctl_div0_isr`, `ctl_timer_install`,
+`ctl_dds_timer_init` (an interrupt handler and two thin calls into DSMI, by
+inspection), `MemRealloc` (never called), `emsGetPageMapRaw` and `o559A_beep`
+(unreferenced).
 
 ## Decompiled modules
 
@@ -38,8 +87,8 @@ equivalent, no decompilation needed).
 | DSMI raw EMS seg1134 (`src/dsmi/ems.c`) | 9/9 | verified (differential) |
 | DSMI EMS heap seg1154 (`src/dsmi/emsheap.c`) | 17/17 | verified except unreferenced emsGetPageMapRaw (block placement byte-exact) |
 | DSMI MemAlloc seg0E9E (`src/dsmi/memalloc.c`) | 4/4 | return codes verified |
-| MEMMAN seg09D4 (`src/engine/memman.c`) | 22/22 | verified (differential); farcoreleft model pending (WP8) |
-| NKONTROL seg0DB7 (`src/engine/nkontrol.c`) | 11/11 | tick/flags verified; ISRs by inspection |
+| MEMMAN seg09D4 (`src/engine/memman.c`) | 22/22 | verified (differential); on the transcribed Borland far heap (`far_malloc`/`far_free`, `mm_coreleft` → `bc_farcoreleft`); low-water mark 6E06 matches the original (milestone 5) |
+| NKONTROL seg0DB7 (`src/engine/nkontrol.c`) | 11/11 | tick/flags verified; INT 09h hook and INT 23h handler against DOSBox-X (playbrk, playbrk3d, playcad); div-0 ISR and the two DSMI timer calls by inspection |
 | Borland stdio/io (`src/rtl/bc_stdio.c`) | 40 routines | verified (differential incl. text mode) |
 | stdio handle layer ovl5646 (`src/engine/vfile.c`) | 9/9 | verified (differential) |
 | FLiB virtual files ovl569A (`src/engine/vfs.c`) | 13/13 | verified (differential, all 8 archives) |
@@ -50,10 +99,10 @@ equivalent, no decompilation needed).
 | Audio backend (`src/platform/audio.c, audio_sdl.c`) | – | emulated SB16 DMA clocked by the PIT; game + CD audio in one SDL stream; wired into the host |
 | FILEMAN rest ovl5447 (`src/engine/fileman.c`) | 7/7 | verified (real CKD members, >64 KB pictures, EMS remap points) |
 | Fatal/misc ovl559A (`src/engine/fatal.c`) | 4/4 | 3 verified; beep unreferenced |
-| Borland far heap (`src/rtl/bc_farheap.c`) | 10 routines | verified: seg:off, farcoreleft and arena bytes vs the original from the main() snapshot; MEMMAN switch-over pending |
+| Borland far heap (`src/rtl/bc_farheap.c`) | 10 routines | verified: seg:off, farcoreleft and arena bytes vs the original from the main() snapshot; MEMMAN, DSMI MemAlloc/EMS heap, FILEMAN, the file layer and the game modules all allocate through it |
 | GFL/GHD video player ovl5313 (`src/game/gfl.c`) | 12/12 | verified (decoder on all 35 videos vs tools/gflview.py; player runs vs original: DGROUP/EMS/screen/palette/CDI) |
 | SYSTEMS seg0AC6 + NGRAPHS seg0C7F + OGRAPHS ovl5511 (`src/engine/systems.c, ngraphs.c, ographs.c`) | 52/52 | verified (23 tests: DGROUP, A000, VGA regs/DAC/planes, EMS); fade interpolation only at ms=0 |
-| main seg0546 + DEMOLAR ovl3C2D (`src/game/istanbul.c`, `demolar.c`) | 14/14 | partly verified (6 tests: waits, picture show/fade, zone outline, music off); open: intro/story/ending/credits need video/voice/music + real modules; main() start-up vs DOSBox-X oracle (integration pass) |
+| main seg0546 + DEMOLAR ovl3C2D (`src/game/istanbul.c`, `demolar.c`) | 14/14 | verified (6 tests: waits, picture show/fade, zone outline, music off; against DOSBox-X: start-up and intro, every menu entry, story slideshow (play8), game over (play4), ending (play9), credits (playx, play9; background slot fixed 2026-11-23), city-map travel (play10), new-game intro (play3, playq)) |
 | CHARGEN ovl39E5 (`src/game/chargen.c`) | 12/12 | verified (8 tests: stat rolls, draw, load/save GRP.DAT, cancel, full 4-member flow by keys and mouse, animations) |
 | ISOSYS battles ovl4595 (`src/game/iso*.c`) | 77/77 | verified (32 tests: rules, AI 96 seeded turns, every vecize, battlefield of all 18 maps, divide-by-zero via the INT 0 handler semantics, 8 whole scripted battles with real SAVAS.CKD graphics); 2026-11-22 (`test_iso_d.py`, 12 tests): Ctrl-Break (the original ends through its INT 23h handler at the next kbhit(); the port continued the battle – fixed), sound-on paths (same CDI/AMP call order and state in single calls and three whole battles), door wall without bar picture (cannot occur in the 18 shipped maps; forced, the original ends with internal error 10h and so does the port – no garbage blit, no crash) |
 | FRPOS shop/event scripts ovl3FD1 (`src/game/frpos*.c`) | 33/33 | verified (5 tests: every event/trigger of all 18 PCSn files, 33/33 opcodes; tools/frposdis.py) – in its own DLL, joins base after the wave |
@@ -94,10 +143,35 @@ Second round (2026-11-23):
 * **Key release fix** confirmed in the live window: key messages posted to Lale64.exe, one
   intro screen per Esc, one menu entry per Down/Up.
 
-Still not covered: the closed shop doors of district 4 (flag 99 clear) and its weapon and
-goods shops, the options list by mouse hover + Enter, `o5737_cd_drive_info` without
-MSCDEX, the Ctrl-Break sequence inside DOSBox-X itself, MS-DOS versions after 4.0 for the
-^C check (not in the published source).
+## Gap wave 3 (2026-11-23)
+
+The list left open by the second round, closed (details: docs/VERIFY.md "Gap wave 3"):
+
+* **District 4's closed doors, weapon and goods shops, options by hover + Enter**: play7,
+  53 checkpoints identical.
+* **Story slideshow** (play8, 14), **ending** (play9, 21), **credits from the menu**
+  (playx, 13), **quick start** (playq), **city-map travel** (play10, 16): identical but for
+  the save description tail (as before) and the RNG state at two turn checkpoints (one
+  portrait-blink roll, clock phase after an arrival; screen and the rest of DGROUP equal).
+* **Ctrl-Break and Ctrl+Alt+Del inside DOSBox-X**: new script event `kbd` (raw scan codes
+  through the 8042 command D2h) and an `int23` dump on both sides; at the main menu
+  (playbrk) and in a district (playbrk3d, playcad) identical.
+* **`o5737_cd_drive_info` without MSCDEX**: not comparable by construction - the original
+  reads an uninitialised stack far pointer when INT 2Fh 1501h writes nothing; no caller in
+  IST.EXE.  Documented in `cd5737.c`.
+* **MS-DOS after 4.0**: Ralf Brown's Interrupt List (the reference for every DOS version,
+  delorie.com mirror) gives INT 21h AH=0Bh as "DOS 1+ - ^C/^Break are checked, and INT 23
+  is called if either pressed" and AH=07h as "does not check ^C/^Break", with no
+  version-specific exceptions - what the port models.
+
+Fixed on the way:
+
+| Where | Problem | Fix |
+|---|---|---|
+| `src/game/demolar.c` | `demo_credits_exit` copied surface 9 to the screen instead of 0Bh (grup.cmp): the credits showed the previous screen around the scroll window | slot 0Bh, as the original (3C2D:222C) |
+| `src/engine/nkontrol.c`, `src/platform/pc.c` | the INT 09h hook called the INT 23h handler directly on Ctrl+Alt+Del; the original issues INT 1Bh, so DOS breaks at the next `kbhit()` | `pc_int1b()`; INT 23h observer for the `int23` dump |
+| `tools/verify/vcompare.py` | the EMS page-map clock fields (86F8, E7AC) were one word short | 4 words |
+| `tools/ghidra_run.sh`, `FixSwitch.java` | the RTL's inline switch table 0000:0B08 unresolved; fpupatch.py ran on the previous switch list | form C (inline tables), the pipeline runs a second time when the switch list changed: 46 tables, 0 unresolved |
 
 ## macOS port (2026-11-23)
 
@@ -129,8 +203,13 @@ box on a screen (the session that did the port could not capture the display).
 | FixFPU patched `CD 3x` bytes inside operands reached by wrong flows and missed real sites (ovl2700, ~650 bytes) | `tools/fpupatch.py` linear sweep (skipping switch tables) before import; FixFPU kept only for KUR.EXE (2026-11-21) | image now identical to the independent sweep; 10,746 branches still 0 wrong |
 | Bogus functions from wrong flows | `PruneFunctions` | 10 removed (2 had been named as "fragments") |
 | Total | | resolved call sites 5,034 → 5,573; string refs 951 → 1,019; decompile failures 25 → 4 |
+| RTL `__xcvt` (0000:0ADD, printf's float conversion) jumps through a 3-entry inline table with no `CMP` bound (0000:0B08: float / double / long double), so FixSwitch skipped it and `fpupatch.py` swept the table words as code, missing the emulator call `CD 3C` at 0B13 | FixSwitch form C "inline": the table right after the `JMP`, read up to the lowest case target, every entry past the table and mapped, else still reported (2026-11-23) | 46 tables / 307 case targets, 0 unresolved; `__xcvt` decoded in full (48 → 514 bytes); 10,787 branches, 0 wrong; fpupatch 2,022 → 2,023 sites |
 
-Remaining: one RTL table (`0000:0B08`, FP formatting, replaced in the port anyway).
+No unresolved tables remain (2026-11-23).  Numbers of the run of that day, before → after the
+`__xcvt` fix: call sites 5,593 → 5,596, string refs 1,021 → 1,022 (the new one is a false
+positive: `MOV CX,4` at 0000:0C5B taken for DS:0004), decompile failures 3.  `fpupatch.py`
+skips the table ranges of the *previous* run's `build/ist_switches.tsv`, so on a fresh `build/`
+`tools/ghidra_run.sh` then runs the pipeline a second time by itself.
 Caller lists written before this date (`analysis/names/*.md`) may miss callers that go
 through switches or wrongly-resolved near calls; re-check against the current listings.
 
