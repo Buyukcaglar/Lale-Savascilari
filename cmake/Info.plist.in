@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Lale64.app (CMakeLists.txt, target lale_app).  The version is the port's:
+     keep in step with LALE_VERSION in src/platform/about.c. -->
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleExecutable</key>
+    <string>${MACOSX_BUNDLE_EXECUTABLE_NAME}</string>
+    <key>CFBundleIconFile</key>
+    <string>lale</string>
+    <key>CFBundleIdentifier</key>
+    <string>io.github.buyukcaglar.Lale64</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>Lale64</string>
+    <key>CFBundleDisplayName</key>
+    <string>Lale64</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>${LALE_VERSION}</string>
+    <key>CFBundleVersion</key>
+    <string>${LALE_VERSION}</string>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.role-playing-games</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>${LALE_MACOS_MIN}</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright (c) 2026 Onur BUYUKCAGLAR (port code, MIT)</string>
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+</dict>
+</plist>

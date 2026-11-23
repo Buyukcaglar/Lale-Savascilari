@@ -10,15 +10,37 @@
       "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
     },
     {
+      "name": "windows-cross",
+      "displayName": "Windows x64 cross-compiled from macOS/Linux (llvm-mingw for the host + SDL3)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/windows-cross",
+      "toolchainFile": "${sourceDir}/cmake/llvm-mingw.cmake",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+    },
+    {
       "name": "macos",
       "displayName": "macOS arm64 (Apple clang + Homebrew SDL3)",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/macos",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo", "CMAKE_OSX_ARCHITECTURES": "arm64" }
+    },
+    {
+      "name": "macos-release",
+      "displayName": "macOS universal app to give away (static SDL3 built from source)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/macos-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_OSX_ARCHITECTURES": "arm64;x86_64",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "11.0",
+        "LALE_VENDOR_SDL": "ON"
+      }
     }
   ],
   "buildPresets": [
     { "name": "windows", "configurePreset": "windows" },
-    { "name": "macos", "configurePreset": "macos" }
+    { "name": "windows-cross", "configurePreset": "windows-cross" },
+    { "name": "macos", "configurePreset": "macos" },
+    { "name": "macos-release", "configurePreset": "macos-release", "targets": ["lale_app"] }
   ]
 }

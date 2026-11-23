@@ -18,19 +18,20 @@ set -e
 EXE=${1:-ist}
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 GH=$(ls -d "$ROOT"/.tools/ghidra/ghidra_*_PUBLIC | head -1)
-export JAVA_HOME=$(ls -d "/c/Program Files/Eclipse Adoptium/jdk-21"* | head -1)
+. "$ROOT/tools/hostenv.sh"
+find_java
 OUT="$ROOT/analysis/ghidra_$EXE"
 rm -rf "$OUT"
 mkdir -p "$ROOT/build/ghidra" "$OUT"
 IMG="$ROOT/build/${EXE}_flat.bin"
 FPU="-postScript FixFPU.java"
 if [ "$EXE" = ist ]; then
-  python "$ROOT/tools/fpupatch.py" "$ROOT/build/ist_fpu_lin.bin"
+  "$PY" "$ROOT/tools/fpupatch.py" "$ROOT/build/ist_fpu_lin.bin"
   IMG="$ROOT/build/ist_fpu_lin.bin"
   FPU=""
 fi
-w() { cygpath -w "$1"; }
-"$GH/support/analyzeHeadless.bat" "$(w "$ROOT/build/ghidra")" "Lale_$EXE" \
+w() { native "$1"; }
+"$GH/support/analyzeHeadless$BAT" "$(w "$ROOT/build/ghidra")" "Lale_$EXE" \
   -import "$(w "$IMG")" -overwrite \
   -loader BinaryLoader -loader-baseAddr 0000:0000 \
   -processor "x86:LE:16:Real Mode" -cspec default \
@@ -46,4 +47,4 @@ w() { cygpath -w "$1"; }
   -postScript ExportListing.java "$(w "$OUT")" "$EXE" \
   -max-cpu 8 2>&1 | grep -E "SetupIST|FixNear: re|PruneFunctions: rem|FixSwitch|FixFPU: patched|ApplyNames|ExportDecomp:|ExportListing|ERROR|Exception|error:|skipping" | head -40
 # every relative branch must resolve like the CPU would (catches language/context regressions)
-python "$ROOT/tools/branchcheck.py" "$OUT"
+"$PY" "$ROOT/tools/branchcheck.py" "$OUT"

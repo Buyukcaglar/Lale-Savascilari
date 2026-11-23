@@ -41,6 +41,15 @@ def test_reset_matches_main_snapshot():
         o = (seg - fh.ARENA_SEG) * 16
         check(a[o:o + 4] == snap[o:o + 4], f'header {seg:04X}')
     o = (0x4BD7 - fh.ARENA_SEG) * 16                         # everything above the break
+    # Paragraph 9FFE (just below the MCB that links to upper memory) holds what
+    # DOSBox-X itself left there while booting: 4C E7 1A E7 .. 00 F0 in the
+    # Windows build's capture - what bc_farheap_reset() reproduces - and zeros
+    # in a capture made with the macOS build of the same DOSBox-X version
+    # (2026-11-23).  It is the emulator's stale data, not the game's; a
+    # snapshot with zeros there is accepted, every other byte must match.
+    p = (0x9FFE - fh.ARENA_SEG) * 16
+    if snap[p:p + 16] == bytes(16):
+        snap = snap[:p] + a[p:p + 16] + snap[p + 16:]
     check(a[o:] == snap[o:], 'arena above the break differs from the snapshot')
     check(c_coreleft() == e.call('0000:2987', ret='long'), 'farcoreleft at main()')
 

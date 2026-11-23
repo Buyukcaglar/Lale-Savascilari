@@ -17,9 +17,27 @@
  *                           th_tick_left-th call (<= 0 never stops).
  * Patch the callee to th_tick (or th_stop) directly, so that the jump
  * starts in C.
+ *
+ * A call that is expected to run into an invalid address (the test build's
+ * o559A_fatal returns where the game exits, and the caller goes on with a
+ * NULL mapping):
+ *   th_guard(fn, a, b, c, d)  calls fn(a, b, c, d); returns 0 when fn
+ *                             returns, the signal number (SIGSEGV, SIGBUS)
+ *                             when it faulted.
+ * On Windows ctypes itself turns the access violation into an OSError and
+ * th_guard only calls; elsewhere the fault is a signal that would end the
+ * test run, so it is caught here (tests/py/lale.py: guarded()).
  */
+#ifndef _WIN32
+#define _POSIX_C_SOURCE 200809L
+#define _DARWIN_C_SOURCE 1
+#endif
 #include <setjmp.h>
+#include <stddef.h>
 #include <stdint.h>
+#ifndef _WIN32
+#include <signal.h>
+#endif
 
 typedef intptr_t (*ThFn)(intptr_t, intptr_t, intptr_t, intptr_t);
 typedef void (*ThHook)(uint32_t arg);
@@ -58,3 +76,35 @@ void th_tick(uint32_t arg)
     if (th_tick_left > 0 && --th_tick_left == 0)
         th_stop();
 }
+
+#ifndef _WIN32
+static sigjmp_buf th_fault_jb;
+
+static void th_fault(int sig)
+{
+    siglongjmp(th_fault_jb, sig);
+}
+
+int th_guard(void *fn, intptr_t a, intptr_t b, intptr_t c, intptr_t d)
+{
+    struct sigaction sa, old_segv, old_bus;
+    volatile int sig;
+    sa.sa_handler = th_fault;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGSEGV, &sa, &old_segv);
+    sigaction(SIGBUS, &sa, &old_bus);
+    sig = sigsetjmp(th_fault_jb, 1);            /* 1: the signal mask comes back too */
+    if (sig == 0)
+        ((ThFn)fn)(a, b, c, d);
+    sigaction(SIGSEGV, &old_segv, NULL);
+    sigaction(SIGBUS, &old_bus, NULL);
+    return sig;
+}
+#else
+int th_guard(void *fn, intptr_t a, intptr_t b, intptr_t c, intptr_t d)
+{
+    ((ThFn)fn)(a, b, c, d);
+    return 0;
+}
+#endif

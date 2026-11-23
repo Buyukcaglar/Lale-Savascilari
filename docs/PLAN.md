@@ -2,7 +2,8 @@
 
 The goal is a fully annotated, human-readable, portable C reconstruction of the DOS game
 *İstanbul Efsaneleri – Bölüm I: Lale Savaşçıları* (v0.12.96, 1995–2005). It builds
-for **Windows** (developed here) and **macOS** (later, on an Apple Silicon Mac mini).
+for **Windows** (developed there) and **macOS** (Apple Silicon; the port of 2026-11-23,
+[`MACOS.md`](MACOS.md)).
 
 **1:1 fidelity is the top priority.** Every game-visible behaviour must match the
 original DOS executable: logic, RNG sequences, timing, rendering down to the pixel,
@@ -190,7 +191,8 @@ tests/       differential tests
 | Analysis | Python 3.14 + capstone/unicorn, Ghidra 12.2 (JDK 21), `tools/*` |
 | Reference runtime | DOSBox-X (`C:\DOSBox-X\dosbox-x.exe`) |
 | Windows build | CMake + Ninja + llvm-mingw (clang 23, UCRT) in `.tools/`, SDL3 3.4.18 |
-| macOS build (later) | CMake + Ninja + Apple clang, SDL3 from Homebrew – same sources |
+| macOS build | CMake + Ninja + Apple clang, SDL3 from Homebrew – same sources; the app to give away: preset `macos-release` (universal, static SDL3), `tools/package_macos.sh` |
+| macOS analysis / oracle | `.tools/venv` (Python), Ghidra in `.tools/`, Homebrew `openjdk@21` and `dosbox-x` – `tools/hostenv.sh` |
 
 ## 7. Roadmap
 
@@ -203,4 +205,4 @@ tests/       differential tests
    INTRFACE, NSES. First milestone: intro screens render identically.
 5. **Game modules** – ISTANBUL → DEMOLAR → 3DQUICK/3DSYS → CHARGEN → FRPOS → ISOSYS → GFL.
 6. **Audio** – DSMI MCP mixer + AMP player decompiled, compared against DOSBox-X captures.
-7. **Full-game verification**, then the macOS build on the Mac mini.
+7. **Full-game verification**, then the macOS build ✔ (2026-11-23, [`MACOS.md`](MACOS.md)).

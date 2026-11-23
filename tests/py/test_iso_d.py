@@ -18,6 +18,7 @@ import subprocess
 import sys
 
 import helpers
+import lale
 import uiworld
 from lale import ROOT, check, fn, lib, DG, NAMES, patch, unpatch
 
@@ -161,7 +162,10 @@ def test_door14_fatal():
             s.e.int_hooks[(0x21, 0x40)] = dos_write
         helpers_keys_before = uiworld.pc_kbhit()
         try:
-            B.call(s, 'iso_redraw')
+            if s.side == 'o':
+                B.call(s, 'iso_redraw')
+            else:
+                lale.guarded('iso_redraw')       # may fault: OSError on every host
         except Stop:
             pass
         except OSError:

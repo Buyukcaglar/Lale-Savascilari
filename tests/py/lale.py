@@ -18,7 +18,10 @@ sys.path.insert(0, os.path.join(ROOT, 'tools'))
 
 from emu86 import Emu, EmuError, DGROUP, LOAD  # noqa: E402,F401
 
-_lib_path = os.environ.get('LALE_TESTLIB') or os.path.join(ROOT, 'out', 'windows', 'lale_testlib.dll')
+_default_lib = (('windows', 'lale_testlib.dll') if os.name == 'nt' else
+                ('macos', 'lale_testlib.dylib') if sys.platform == 'darwin' else
+                ('linux', 'lale_testlib.so'))
+_lib_path = os.environ.get('LALE_TESTLIB') or os.path.join(ROOT, 'out', *_default_lib)
 lib = ctypes.CDLL(_lib_path)
 
 NAMES = {}
@@ -99,13 +102,36 @@ def dg_diff(e, ranges=None, ignore=()):
 # patch('s3d_load_district', pyfunc, None, c_int16, c_uint8) makes every call
 # of the C function go to pyfunc (a ctypes callback); patch(name, 'th_tick')
 # to another C function of the DLL.  Returns a handle for unpatch(); the
-# context manager patched(...) restores on exit.  Works by writing
-# "mov rax, target; jmp rax" over the function's first 12 bytes (functions
-# are 16-byte aligned, so even a 1-byte body has room).
+# context manager patched(...) restores on exit.  Works by writing a jump
+# over the function's first bytes (functions are 16-byte aligned, so even a
+# one-instruction body has room):
+#   x86-64   mov rax, target; jmp rax                 (12 bytes)
+#   arm64    ldr x16, .+8; br x16; .quad target       (16 bytes)
 import ctypes as _C
+import platform as _platform
 
+_ARM64 = _platform.machine().lower() in ('arm64', 'aarch64')
+_PATCH_LEN = 16 if _ARM64 else 12
 _k32 = _C.WinDLL('kernel32', use_last_error=True) if os.name == 'nt' else None
+_libc = _C.CDLL(None, use_errno=True) if os.name != 'nt' else None
 _patches = {}
+
+if sys.platform == 'darwin':
+    # Mach: code pages of a mapped image are made writable as a private copy
+    # (VM_PROT_COPY), never writable and executable at once (Apple Silicon).
+    _libc.mach_vm_protect.argtypes = (_C.c_uint32, _C.c_uint64, _C.c_uint64, _C.c_int, _C.c_int)
+    _libc.mach_vm_protect.restype = _C.c_int
+    _libc.sys_icache_invalidate.argtypes = (_C.c_void_p, _C.c_size_t)
+    _libc.sys_icache_invalidate.restype = None
+    _mach_task = _C.c_uint32.in_dll(_libc, 'mach_task_self_').value
+elif _libc is not None:
+    _libc.mprotect.argtypes = (_C.c_void_p, _C.c_size_t, _C.c_int)
+
+
+def _jump(dest):
+    if _ARM64:
+        return b'\x50\x00\x00\x58' + b'\x00\x02\x1F\xD6' + dest.to_bytes(8, 'little')
+    return b'\x48\xB8' + dest.to_bytes(8, 'little') + b'\xFF\xE0'
 
 
 def _fn_addr(name):
@@ -113,13 +139,30 @@ def _fn_addr(name):
 
 
 def _write_code(addr, data):
-    old = _C.c_uint32()
     if _k32 is not None:
+        old = _C.c_uint32()
         _k32.VirtualProtect(_C.c_void_p(addr), _C.c_size_t(len(data)), 0x40, _C.byref(old))
-    _C.memmove(addr, data, len(data))
-    if _k32 is not None:
+        _C.memmove(addr, data, len(data))
         _k32.VirtualProtect(_C.c_void_p(addr), _C.c_size_t(len(data)), old.value, _C.byref(old))
         _k32.FlushInstructionCache(_C.c_void_p(-1), _C.c_void_p(addr), _C.c_size_t(len(data)))
+        return
+    page = os.sysconf('SC_PAGESIZE')
+    start = addr & ~(page - 1)
+    size = ((addr + len(data) + page - 1) & ~(page - 1)) - start
+    if sys.platform == 'darwin':
+        kr = _libc.mach_vm_protect(_mach_task, start, size, 0, 0x01 | 0x02 | 0x10)   # R|W|COPY
+        if kr:
+            raise OSError(f'mach_vm_protect(rw) failed: {kr}')
+        _C.memmove(addr, data, len(data))
+        kr = _libc.mach_vm_protect(_mach_task, start, size, 0, 0x01 | 0x04)          # R|X
+        if kr:
+            raise OSError(f'mach_vm_protect(rx) failed: {kr}')
+        _libc.sys_icache_invalidate(addr, len(data))
+    else:
+        if _libc.mprotect(start, size, 7):
+            raise OSError(_C.get_errno(), 'mprotect')
+        _C.memmove(addr, data, len(data))
+        _libc.mprotect(start, size, 5)
 
 
 def patch(name, target, restype=None, *argtypes):
@@ -132,8 +175,8 @@ def patch(name, target, restype=None, *argtypes):
     else:
         keep = _C.CFUNCTYPE(restype, *argtypes)(target)
         dest = _C.cast(keep, _C.c_void_p).value
-    orig = _patches[name][1] if name in _patches else _C.string_at(addr, 12)
-    _write_code(addr, b'\x48\xB8' + dest.to_bytes(8, 'little') + b'\xFF\xE0')
+    orig = _patches[name][1] if name in _patches else _C.string_at(addr, _PATCH_LEN)
+    _write_code(addr, _jump(dest))
     _patches[name] = (addr, orig, keep)
     return name
 
@@ -144,6 +187,25 @@ def unpatch(name=None):
         if n in _patches:
             addr, orig, _ = _patches.pop(n)
             _write_code(addr, orig)
+
+
+def guarded(name, *args):
+    """Call C function `name` (up to 4 integer arguments, result ignored)
+    where it may run into an invalid address, and raise OSError if it does -
+    what ctypes does by itself on Windows.  Elsewhere the fault is a signal
+    that would end the whole run: tests/stubs/testhook.c th_guard catches it."""
+    if os.name == 'nt':
+        f = getattr(lib, name)
+        f.restype = None
+        f.argtypes = [_C.c_ssize_t] * len(args)
+        f(*args)
+        return
+    g = lib.th_guard
+    g.restype = _C.c_int
+    g.argtypes = [_C.c_void_p] + [_C.c_ssize_t] * 4
+    sig = g(_fn_addr(name), *(list(args) + [0] * (4 - len(args))))
+    if sig:
+        raise OSError(f'exception: access violation (signal {sig}) in {name}')
 
 
 class patched:

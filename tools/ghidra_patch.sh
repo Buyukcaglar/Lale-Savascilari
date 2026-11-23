@@ -8,7 +8,8 @@ set -e
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 GH=$(ls -d "$ROOT"/.tools/ghidra/ghidra_*_PUBLIC | head -1)
 L="$GH/Ghidra/Processors/x86/data/languages"
-export JAVA_HOME=$(ls -d "/c/Program Files/Eclipse Adoptium/jdk-21"* 2>/dev/null | head -1)
+. "$ROOT/tools/hostenv.sh"
+find_java
 if grep -q "Lale: real-mode near branches" "$L/ia.sinc"; then
   echo "ghidra_patch: ia.sinc already patched"
 else
@@ -18,7 +19,7 @@ fi
 # file system's (C:\projects vs C:\Projects); </dev/null answers the .bat's pause
 cd "$ROOT"
 REL=${L#"$ROOT"/}
-if "$GH/support/sleigh.bat" "$(cygpath -w "$REL/x86.slaspec")" </dev/null 2>&1 | grep -E "ERROR|error" ; then
+if "$GH/support/sleigh$BAT" "$(native "$REL/x86.slaspec")" </dev/null 2>&1 | grep -E "ERROR|error" ; then
   echo "ghidra_patch: sleigh compile FAILED"; exit 1
 fi
 echo "ghidra_patch: x86.sla rebuilt"

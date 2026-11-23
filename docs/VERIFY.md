@@ -493,3 +493,23 @@ dumps A000 (chain-4) or the 4 planes and DGROUP.
 
 Game folders: work on copies (`out/verify/game_port`, `out/verify/game_dbx`),
 the game writes its saves there.
+
+## On macOS
+
+The same commands, with `.tools/venv/bin/python`, `out/macos/Lale64` (pair.py's
+default there) and Homebrew's `dosbox-x` (`$DOSBOX_X` overrides).  Differences
+of the host, none of the method:
+
+* DOSBox-X's debugger takes no absolute path in `MEMDUMPBIN` outside Windows;
+  `oracle.py` passes paths relative to the repository root, the emulator's
+  working directory.
+* `build_hook.py` assembles `hook.S` with the system clang and links the flat
+  image itself (no `ld.lld`: `link_flat` applies the object's `R_386_16`
+  relocations).  Not compared byte by byte with the llvm-mingw build of the
+  image; that it works is shown by the play-throughs it delivered.
+* The emulator prints "Debugger in Mac OS X is not available unless you start
+  DOSBox-X from a terminal" - about its interactive debugger window; the
+  `mcp_server` link used here works.
+* First set-up: `cp -R orig out/verify/game_port; cp -R orig out/verify/game_dbx`.
+
+Results: [`PROGRESS.md`](PROGRESS.md), "macOS port".

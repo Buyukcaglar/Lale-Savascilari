@@ -457,9 +457,8 @@ class Hook:
     def __init__(self, name, pyfunc, restype, *argtypes):
         self.addr = lale._fn_addr(name)
         self.cb = C.CFUNCTYPE(restype, *argtypes)(pyfunc)       # kept alive here
-        self.orig = C.string_at(self.addr, 12)
-        dest = C.cast(self.cb, C.c_void_p).value
-        self.jmp = b'\x48\xB8' + dest.to_bytes(8, 'little') + b'\xFF\xE0'
+        self.orig = C.string_at(self.addr, lale._PATCH_LEN)
+        self.jmp = lale._jump(C.cast(self.cb, C.c_void_p).value)     # x86-64 or arm64
         self.f = fn(name, restype, *argtypes)
         self.active = False
 
@@ -743,7 +742,7 @@ def mount(cue, present=True):
     cdrom_close()
     mscdex_set_present(1 if present else 0)
     if cue is not None:
-        check(cdrom_open(cue.encode('mbcs')) == 0, f'cdrom_open {cue}: {cdrom_error()}')
+        check(cdrom_open(os.fsencode(cue)) == 0, f'cdrom_open {cue}: {cdrom_error()}')
 
 
 def model_a(spec, present=True):
@@ -931,7 +930,7 @@ def test_read_cfg():
         e.stub_heap()
         fn('dg_reset', None)()
         fn('bc_stdio_reset', None)()
-        fn('pc_set_game_dir', None, C.c_char_p)(root.encode('mbcs'))
+        fn('pc_set_game_dir', None, C.c_char_p)(os.fsencode(root))
         run_setupio(e)
         fn('bc_setupio', None)()
         o, p = Orig(e), _port or sides()[1]

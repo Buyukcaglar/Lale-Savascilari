@@ -11,6 +11,8 @@
  */
 #include "game/iso.h"
 
+#include <stddef.h>
+
 #include "dsmi/emsheap.h"
 #include "engine/intrface.h"
 #include "engine/memman.h"

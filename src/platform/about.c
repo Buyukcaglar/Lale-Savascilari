@@ -6,6 +6,15 @@
 
 #define LALE_VERSION "1.0"     /* the port's version, shown in the box's title */
 
+/* how SDL comes with the program on this host */
+#if defined(_WIN32)
+#define SDL_SHIPPED_AS "shipped unchanged as SDL3.dll"
+#elif defined(__APPLE__)
+#define SDL_SHIPPED_AS "unchanged, inside the application"
+#else
+#define SDL_SHIPPED_AS "unchanged"
+#endif
+
 const char about_title[] = "About \xC4\xB0stanbul Efsaneleri: Lale Sava\xC5\x9F\xC3\xA7\xC4\xB1lar\xC4\xB1 64bit v" LALE_VERSION;
 const char about_line1[] = "64bit version by Onur BUYUKCAGLAR";
 const char about_line2[] = "with Anthropic Claude AI assistance";
@@ -31,8 +40,8 @@ const char about_licenses[] =
     "its program and its data belong to their owners; they are not part of this software, "
     "which needs a copy of the original game to run.\n\n"
     "Third-party software\n\n"
-    "This program uses SDL 3 (Simple DirectMedia Layer, https://libsdl.org), shipped "
-    "unchanged as SDL3.dll, under the zlib license:\n\n"
+    "This program uses SDL 3 (Simple DirectMedia Layer, https://libsdl.org), "
+    SDL_SHIPPED_AS ", under the zlib license:\n\n"
     "Copyright (C) 1997-2026 Sam Lantinga <slouken@libsdl.org>\n\n"
     "This software is provided 'as-is', without any express or implied warranty. In no event "
     "will the authors be held liable for any damages arising from the use of this software.\n\n"
@@ -46,8 +55,8 @@ const char about_licenses[] =
     "misrepresented as being the original software.\n"
     "3. This notice may not be removed or altered from any source distribution.\n";
 
-#ifndef _WIN32
-/* hosts without an About box yet (macOS: app menu item, with the macOS host) */
+#if !defined(_WIN32) && !defined(__APPLE__)
+/* hosts without an About box (Windows: about_win32.c, macOS: about_macos.m) */
 void about_install(SDL_Window *window) { (void)window; }
 void about_show(void) {}
 #endif

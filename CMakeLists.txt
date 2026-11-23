@@ -1,15 +1,50 @@
 cmake_minimum_required(VERSION 3.24)
 project(lale_savascilari C)
+if(APPLE)
+    enable_language(OBJC)          # src/platform/about_macos.m (the About box)
+endif()
+set(LALE_VERSION 1.0)              # keep in step with LALE_VERSION in src/platform/about.c
 
 # Portable C11; the same tree builds on Windows (llvm-mingw) and macOS (Apple clang).
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-find_package(SDL3 REQUIRED CONFIG)
+# SDL3: an installed one (Windows: .tools/sdl3, macOS: Homebrew), or - for a
+# program that runs on other machines (preset macos-release) - the same
+# release built from source as a static library, so that nothing outside the
+# application is needed and the deployment target is ours, not Homebrew's.
+option(LALE_VENDOR_SDL "Build SDL3 from source as a static library" OFF)
+if(LALE_VENDOR_SDL)
+    include(FetchContent)
+    set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+    set(SDL_STATIC ON CACHE BOOL "" FORCE)
+    set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+    set(SDL_TESTS OFF CACHE BOOL "" FORCE)
+    set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(SDL3
+        URL https://github.com/libsdl-org/SDL/releases/download/release-3.4.18/SDL3-3.4.18.tar.gz
+        DOWNLOAD_EXTRACT_TIMESTAMP ON
+        EXCLUDE_FROM_ALL)
+    FetchContent_MakeAvailable(SDL3)
+else()
+    find_package(SDL3 REQUIRED CONFIG)
+endif()
 
 # portable flags for every target below
-set(LALE_WARN -Wall -Wextra -Wno-unused-parameter -fno-strict-aliasing -fwrapv)
+# -ffp-contract=off: no fused multiply-add (clang's default on arm64), so
+# host floating point rounds the same on every target.
+set(LALE_WARN -Wall -Wextra -Wno-unused-parameter -fno-strict-aliasing -fwrapv -ffp-contract=off)
+if(APPLE)
+    # Apple clang still makes zero-initialised globals "common" symbols and
+    # gives the big ones (dg, pc_a000, the far-heap arena) an alignment the
+    # linker then complains about; -fno-common is every other clang's default
+    list(APPEND LALE_WARN -fno-common)
+    # lale_game and lale_platform depend on each other (see below): CMake
+    # repeats them on the link line, which Apple's linker remarks on
+    add_link_options(LINKER:-no_warn_duplicate_libraries)
+endif()
 
 # ---- emulated PC: every platform source except the SDL3 host side ----------
 add_library(lale_platform STATIC
@@ -35,12 +70,17 @@ target_link_libraries(lale_game PUBLIC lale_platform)
 target_link_libraries(lale_platform PUBLIC lale_game)
 
 # ---- the game: SDL3 host + everything else ------------------------------------
-add_executable(lale
+set(LALE_HOST_SRC
     src/platform/sdl3_main.c
     src/platform/audio_sdl.c
     src/platform/about.c
     src/platform/about_win32.c
 )
+if(APPLE)
+    list(APPEND LALE_HOST_SRC src/platform/about_macos.m)
+    set_source_files_properties(src/platform/about_macos.m PROPERTIES COMPILE_OPTIONS -fobjc-arc)
+endif()
+add_executable(lale ${LALE_HOST_SRC})
 # the built program is Lale64(.exe) (the user's decision of 2026-11-21); the
 # CMake target keeps the name lale
 set_target_properties(lale PROPERTIES OUTPUT_NAME Lale64)
@@ -60,8 +100,38 @@ if(WIN32)
                 $<TARGET_FILE:SDL3::SDL3> $<TARGET_FILE_DIR:lale>)
 endif()
 
+if(APPLE)
+    target_link_libraries(lale PRIVATE "-framework Cocoa")
+
+    # ---- Lale64.app: the same program as a double-clickable application ------
+    # (the bare out/macos/Lale64 stays, for the terminal, tests and scripts).
+    # Icon: src/gen/lale.icns (tools/genicon.py).  With the Homebrew SDL3 the
+    # app runs on this machine only; tools/package_macos.sh builds the one to
+    # give away (preset macos-release: static SDL3, arm64 + x86_64).
+    set(LALE_ICNS ${CMAKE_CURRENT_SOURCE_DIR}/src/gen/lale.icns)
+    add_executable(lale_app MACOSX_BUNDLE ${LALE_HOST_SRC} ${LALE_ICNS})
+    set_source_files_properties(${LALE_ICNS} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+    if(CMAKE_OSX_DEPLOYMENT_TARGET)
+        set(LALE_MACOS_MIN ${CMAKE_OSX_DEPLOYMENT_TARGET})
+    else()
+        set(LALE_MACOS_MIN 11.0)
+    endif()
+    set_target_properties(lale_app PROPERTIES
+        OUTPUT_NAME Lale64
+        MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Info.plist.in)
+    target_include_directories(lale_app PRIVATE src)
+    target_link_libraries(lale_app PRIVATE lale_game lale_platform SDL3::SDL3 "-framework Cocoa")
+    # ad-hoc signature over the finished bundle (Apple Silicon runs nothing unsigned)
+    add_custom_command(TARGET lale_app POST_BUILD
+        COMMAND codesign --force --sign - $<TARGET_BUNDLE_DIR:lale_app>
+        VERBATIM)
+endif()
+
 if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
     target_compile_options(lale PRIVATE ${LALE_WARN})
+    if(APPLE)
+        target_compile_options(lale_app PRIVATE ${LALE_WARN})
+    endif()
     target_compile_options(lale_platform PRIVATE ${LALE_WARN})
     target_compile_options(lale_game PRIVATE ${LALE_WARN})
 endif()
@@ -93,7 +163,15 @@ add_library(lale_testlib SHARED ${LALE_TESTLIB_SRC})
 target_include_directories(lale_testlib PRIVATE src)
 set_target_properties(lale_testlib PROPERTIES PREFIX "")
 if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
-    target_compile_options(lale_testlib PRIVATE ${LALE_WARN})
+    # 16-byte function alignment: tests/py/lale.py patches a jump (up to 16
+    # bytes) over the entry of functions it redirects
+    target_compile_options(lale_testlib PRIVATE ${LALE_WARN} -falign-functions=16)
+endif()
+# the tests' Python needs unicorn/capstone/numpy: the project's virtual
+# environment when there is one (macOS, where the system Python takes no
+# packages - see tools/bootstrap.sh), else the Python on the PATH
+if(NOT Python3_EXECUTABLE AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.tools/venv/bin/python)
+    set(Python3_EXECUTABLE ${CMAKE_CURRENT_SOURCE_DIR}/.tools/venv/bin/python)
 endif()
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_FOUND)

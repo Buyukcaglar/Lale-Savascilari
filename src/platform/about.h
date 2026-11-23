@@ -15,7 +15,10 @@
  * icon / Alt+Space), just above Close; a native modal dialog that follows the
  * system's light/dark app theme.  The game is paused while it is open (its
  * emulated clock does not run and does not catch up afterwards).
- * macOS: the app menu's "About" item - to be written with the macOS host.
+ * macOS (about_macos.m): the application menu's "About Lale64" item (where
+ * SDL's menu bar has the standard, empty About panel); a native alert with
+ * the same content, light or dark with the system.  The game is paused the
+ * same way.
  */
 #ifndef LALE_PLATFORM_ABOUT_H
 #define LALE_PLATFORM_ABOUT_H
@@ -29,8 +32,8 @@ extern const char about_line2[];
 extern const char about_url[];        /* the repository link */
 extern const char about_licenses[];   /* the scrolling licence text, '\n' line ends */
 
-/* Adds the About entry to the window's menu (Windows: system menu).  No-op
-   on hosts without an implementation yet. */
+/* Adds the About entry to the program's menu (Windows: the window's system
+   menu, macOS: the application menu).  No-op on other hosts. */
 void about_install(SDL_Window *window);
 
 /* Shows the box modally (also callable directly, e.g. from a key). */

@@ -58,7 +58,9 @@ def main():
     ap.add_argument('--install', action='append', metavar='FILE=NAME',
                     help='copy FILE into both game folders as NAME (after the reset)')
     ap.add_argument('--port', type=int, default=7777)
-    ap.add_argument('--exe', default=os.path.join(ROOT, 'out', 'windows', 'Lale64.exe'))
+    ap.add_argument('--exe', default=os.path.join(ROOT, 'out', *(('windows', 'Lale64.exe') if os.name == 'nt' else
+                                                       ('macos', 'Lale64') if sys.platform == 'darwin' else
+                                                       ('linux', 'Lale64'))))
     a = ap.parse_args()
     gp, gd = os.path.join(V, 'game_port'), os.path.join(V, 'game_dbx')
     po, do = os.path.join(V, 'p_' + a.tag), os.path.join(V, 'd_' + a.tag)

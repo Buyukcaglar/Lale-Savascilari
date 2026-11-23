@@ -8,13 +8,23 @@
  *   host_pump()     SDL events -> BIOS keyboard buffer / mouse driver state,
  *                   game + CD audio top-up (src/platform/audio_sdl.c); window close -> exit.
  *   host_present()  at every emulated vertical retrace: VGA scan-out
- *                   (vga_render) -> 8-bit RGB texture, aspect-correct 4:3.
+ *                   (vga_render) -> 8-bit RGB texture, aspect-correct 4:3
+ *                   (letterboxed when the window is not 4:3: full screen).
  *
  * Default action: the game, ist_main() (src/game/istanbul.c), after the
  * set-up istanbul.h asks of the host (pc_reset, game folder, dg_reset +
  * bc_farheap_reset, CD music / audio, pump/present hooks).  The game folder
  * holds the original files (3D.CKD, SES.CFG ...): --game-dir / game_dir, else
- * the working directory if it has them, else ./orig.
+ * the working directory if it has them, else ./orig.  macOS, where an app
+ * started from the Finder has no useful working directory, goes on looking
+ * (find_game_dir below): beside the app, ~/Library/Application Support/Lale64,
+ * and at last asks for the folder and remembers the answer.
+ *
+ * macOS keyboard (key_down): Command combinations belong to the host
+ * (Cmd+Q quit and the rest of SDL's menu bar; Cmd+Return / Cmd+F full screen;
+ * Cmd+. = Ctrl-Break, as Mac keyboards have neither Pause nor ScrollLock -
+ * Ctrl+F15 / Ctrl+F14, their keys on an extended Apple keyboard, work too);
+ * the LEFT Option key is the PC's Alt, the right one keeps typing characters.
  *
  * Options: lale.ini + command line (src/platform/options.c).
  *     Lale64 [--game-dir <dir>] [--ist-args n]          the game
@@ -54,6 +64,20 @@ static int              frame_w = 320;                  /* mouse x mapping */
 static int              frames_left;                    /* --frames: 0 = no limit */
 static const char      *screenshot_path;                /* --screenshot */
 static int              script_mode;                    /* --script: host input ignored */
+
+#ifdef __APPLE__
+#define HOST_APPLE 1
+#else
+#define HOST_APPLE 0
+#endif
+/* the PC's Alt key: both Alt keys, on macOS the left Option key only */
+#define HOST_KMOD_ALT (HOST_APPLE ? SDL_KMOD_LALT : SDL_KMOD_ALT)
+
+static void toggle_fullscreen(void)
+{
+    if (window)
+        SDL_SetWindowFullscreen(window, !(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN));
+}
 
 /* ======================================================================== */
 /* keyboard: SDL -> PC scan code set 1 + BIOS ASCII                          */
@@ -123,15 +147,26 @@ static void key_down(const SDL_KeyboardEvent *k)
     uint8_t sc = pc_scancode(k->scancode);
     SDL_Keymod m = k->mod;
     uint8_t shift = (uint8_t)(((m & SDL_KMOD_RSHIFT) ? 1 : 0) | ((m & SDL_KMOD_LSHIFT) ? 2 : 0) |
-                              ((m & SDL_KMOD_CTRL) ? 4 : 0) | ((m & SDL_KMOD_ALT) ? 8 : 0));
+                              ((m & SDL_KMOD_CTRL) ? 4 : 0) | ((m & HOST_KMOD_ALT) ? 8 : 0));
     pc_set_shift_flags(shift);
     if (!k->down)
         return;                                         /* release: shift flags only */
+    if (HOST_APPLE && (m & SDL_KMOD_GUI)) {             /* Command: the host's, never the game's */
+        if (k->repeat)
+            return;
+        if (k->scancode == SDL_SCANCODE_PERIOD)
+            pc_ctrl_break();                            /* Cmd+. : the Mac's break key */
+        else if (k->scancode == SDL_SCANCODE_RETURN || k->scancode == SDL_SCANCODE_KP_ENTER ||
+                 k->scancode == SDL_SCANCODE_F)
+            toggle_fullscreen();
+        return;
+    }
     /* BIOS INT 09h: Ctrl-Break is Ctrl+Pause on the enhanced keyboard and
        Ctrl+ScrollLock (scan 46h) on every keyboard */
     if ((m & SDL_KMOD_CTRL) && !k->repeat &&
         (k->scancode == SDL_SCANCODE_PAUSE || k->scancode == SDL_SCANCODE_SCROLLLOCK ||
-         k->scancode == SDL_SCANCODE_CANCEL)) {
+         k->scancode == SDL_SCANCODE_CANCEL ||
+         (HOST_APPLE && (k->scancode == SDL_SCANCODE_F15 || k->scancode == SDL_SCANCODE_F14)))) {
         pc_ctrl_break();
         return;
     }
@@ -142,7 +177,7 @@ static void key_down(const SDL_KeyboardEvent *k)
     last_scan = sc;
     if (sc >= 0x3B && sc <= 0x44) {                     /* F1..F10 with modifiers */
         uint8_t s = sc;
-        if (m & SDL_KMOD_ALT)        s = (uint8_t)(sc + 0x2D);
+        if (m & HOST_KMOD_ALT)       s = (uint8_t)(sc + 0x2D);
         else if (m & SDL_KMOD_CTRL)  s = (uint8_t)(sc + 0x23);
         else if (m & SDL_KMOD_SHIFT) s = (uint8_t)(sc + 0x19);
         pc_key_push((uint16_t)(s << 8));
@@ -160,7 +195,7 @@ static void key_down(const SDL_KeyboardEvent *k)
         pc_key_push((uint16_t)(sc << 8));               /* cursor block: ASCII 0 */
         return;
     }
-    if (m & SDL_KMOD_ALT) {                             /* Alt+key: ASCII 0 */
+    if (m & HOST_KMOD_ALT) {                            /* Alt+key: ASCII 0 */
         pc_key_push((uint16_t)(sc << 8));
         return;
     }
@@ -173,6 +208,10 @@ static void key_down(const SDL_KeyboardEvent *k)
 
 static void text_input(const char *utf8)
 {
+    /* macOS: Option+key also types a character (Option+C = c-cedilla); with
+       the left Option key the game already has its Alt+key word */
+    if (HOST_APPLE && (SDL_GetModState() & (SDL_KMOD_LALT | SDL_KMOD_GUI)))
+        return;
     while (*utf8) {
         uint32_t cp = SDL_StepUTF8(&utf8, NULL);
         int c = cp857(cp);
@@ -184,6 +223,27 @@ static void text_input(const char *utf8)
 /* ======================================================================== */
 /* pump / present                                                           */
 /* ======================================================================== */
+
+/* The picture's place in the output (pixels): the largest 4:3 rectangle,
+   centred - the whole window while SDL_SetWindowAspectRatio holds, with black
+   bars beside it in full screen on a display that is not 4:3. */
+static SDL_FRect present_rect(void)
+{
+    int ow = 0, oh = 0;
+    SDL_FRect r = { 0, 0, 4, 3 };
+    if (!renderer || !SDL_GetCurrentRenderOutputSize(renderer, &ow, &oh) || ow <= 0 || oh <= 0)
+        return r;
+    if ((int64_t)ow * 3 > (int64_t)oh * 4) {            /* too wide: bars left and right */
+        r.h = (float)oh;
+        r.w = (float)oh * 4.0f / 3.0f;
+    } else {                                            /* too tall: bars above and below */
+        r.w = (float)ow;
+        r.h = (float)ow * 3.0f / 4.0f;
+    }
+    r.x = ((float)ow - r.w) / 2.0f;
+    r.y = ((float)oh - r.h) / 2.0f;
+    return r;
+}
 
 static void host_pump(void)
 {
@@ -218,10 +278,18 @@ static void host_pump(void)
             if (script_mode) break;
             float x, y;
             SDL_MouseButtonFlags b = SDL_GetMouseState(&x, &y);
-            float lx, ly;
-            SDL_RenderCoordinatesFromWindow(renderer, x, y, &lx, &ly);
-            /* logical presentation is frame_w x frame_h; the driver's virtual
-               screen is 640 wide in 320-pixel modes (x is doubled) */
+            /* window coordinates -> output pixels -> the picture's 4:3 area
+               -> frame pixels (frame_w x tex_h); the driver's virtual screen
+               is 640 wide in 320-pixel modes (x is doubled) */
+            SDL_FRect a = present_rect();
+            float d = SDL_GetWindowPixelDensity(window);
+            if (d <= 0.0f)
+                d = 1.0f;
+            float lx = (x * d - a.x) * (float)frame_w / a.w;
+            float ly = (y * d - a.y) * (float)(tex_h > 0 ? tex_h : 200) / a.h;
+            float mx = (float)frame_w - 1.0f, my = (float)(tex_h > 0 ? tex_h : 200) - 1.0f;
+            lx = lx < 0.0f ? 0.0f : lx > mx ? mx : lx;  /* pointer over the bars */
+            ly = ly < 0.0f ? 0.0f : ly > my ? my : ly;
             int16_t vx = (int16_t)(lx * 640.0f / (float)frame_w);
             int16_t vy = (int16_t)(ly);
             pc_mouse_host(vx, vy, (uint16_t)(((b & SDL_BUTTON_LMASK) ? 1 : 0) |
@@ -249,8 +317,8 @@ static void host_present(void)
         tex_w = w;
         tex_h = h;
         frame_w = w;
-        /* 4:3 output whatever the pixel grid (320x200 has non-square pixels) */
-        SDL_SetRenderLogicalPresentation(renderer, w, h, SDL_LOGICAL_PRESENTATION_STRETCH);
+        /* 4:3 output whatever the pixel grid (320x200 has non-square
+           pixels): the texture is stretched over present_rect() below */
     }
     uint32_t pal[256];
     for (int i = 0; i < 256; i++) {
@@ -266,7 +334,8 @@ static void host_present(void)
     SDL_UpdateTexture(texture, NULL, rgba, w * 4);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
-    SDL_RenderTexture(renderer, texture, NULL, NULL);
+    SDL_FRect area = present_rect();
+    SDL_RenderTexture(renderer, texture, NULL, &area);
     SDL_RenderPresent(renderer);
     if (frames_left > 0 && --frames_left == 0) {
         if (screenshot_path && *screenshot_path) {
@@ -308,15 +377,17 @@ static int host_open_window(void)
      * with escapes so the source's own encoding cannot change it. */
     static const char window_title[] =
         "\xC4\xB0stanbul Efsaneleri - Lale Sava\xC5\x9F\xC3\xA7\xC4\xB1lar\xC4\xB1";
+    /* macOS: a Retina window gets its full pixel grid (sharp pixel edges) */
     if (!SDL_CreateWindowAndRenderer(window_title, 960, 720,
-                                     SDL_WINDOW_RESIZABLE, &window, &renderer)) {
+                                     SDL_WINDOW_RESIZABLE | (HOST_APPLE ? SDL_WINDOW_HIGH_PIXEL_DENSITY : 0),
+                                     &window, &renderer)) {
         SDL_Log("window: %s", SDL_GetError());
         return -1;
     }
-    /* 640x480 window area with 4:3 aspect; letterboxed when resized */
+    /* 4:3 window area; a window that cannot be 4:3 (full screen) is letterboxed */
     SDL_SetWindowAspectRatio(window, 4.0f / 3.0f, 4.0f / 3.0f);
     set_window_icon(window);
-    about_install(window);               /* system menu: About... */
+    about_install(window);               /* Windows: system menu, macOS: app menu - About... */
     SDL_SetRenderVSync(renderer, 0);      /* pacing comes from the emulated retrace */
     SDL_StartTextInput(window);
     pc_set_host_pump(host_pump);
@@ -718,11 +789,160 @@ static int has_game_files(const char *dir)
     return SDL_GetPathInfo(path, &info) && info.type == SDL_PATHTYPE_FILE;
 }
 
+#ifdef __APPLE__
+/* ---- macOS: the game folder of an app started from the Finder -------------- */
+
+/* ~/Library/Application Support/Lale64/lale.ini: the options file of the app
+   (read before ./lale.ini); the folder picked below is remembered there. */
+static const char *mac_ini_path(void)
+{
+    static char path[1100];
+    if (!path[0]) {
+        char *pref = SDL_GetPrefPath(NULL, "Lale64");
+        if (pref) {
+            snprintf(path, sizeof path, "%slale.ini", pref);
+            SDL_free(pref);
+        }
+    }
+    return path;
+}
+
+/* game_dir = <dir> into the app's lale.ini, its other lines kept */
+static void mac_remember_game_dir(const char *dir)
+{
+    const char *ini = mac_ini_path();
+    char *old = NULL;
+    size_t n = 0;
+    if (!*ini)
+        return;
+    FILE *f = fopen(ini, "r");
+    if (f) {
+        old = malloc(65536);
+        n = old ? fread(old, 1, 65535, f) : 0;
+        fclose(f);
+        if (old)
+            old[n] = 0;
+    }
+    f = fopen(ini, "w");
+    if (f) {
+        for (char *line = old; line && *line;) {
+            char *nl = strchr(line, '\n');
+            size_t len = nl ? (size_t)(nl - line) + 1 : strlen(line);
+            const char *p = line + strspn(line, " \t");
+            if (strncmp(p, "game_dir", 8) != 0 || (p[8] != ' ' && p[8] != '=' && p[8] != '\t'))
+                fwrite(line, 1, len, f);
+            line += len;
+        }
+        if (n && old[n - 1] != '\n')
+            fputc('\n', f);
+        fprintf(f, "game_dir = %s\n", dir);
+        fclose(f);
+    }
+    free(old);
+}
+
+static int  mac_pick_done;
+static char mac_pick_path[1024];
+
+static void SDLCALL mac_pick_cb(void *userdata, const char * const *list, int filter)
+{
+    (void)userdata; (void)filter;
+    mac_pick_path[0] = 0;
+    if (list && list[0])
+        snprintf(mac_pick_path, sizeof mac_pick_path, "%s", list[0]);
+    mac_pick_done = 1;
+}
+
+/* Asks for the folder of the original game until one with the game files is
+   picked (1, in buf) or the request is cancelled (0). */
+static int mac_ask_game_dir(char *buf, size_t size)
+{
+    /* "İstanbul Efsaneleri - Lale Savaşçıları" */
+    static const char title[] = "\xC4\xB0stanbul Efsaneleri - Lale Sava\xC5\x9F\xC3\xA7\xC4\xB1lar\xC4\xB1";
+    static const SDL_MessageBoxButtonData buttons[] = {
+        { SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 1, "Choose Folder\xE2\x80\xA6" },
+        { SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 0, "Quit" },
+    };
+    const char *text =
+        "This program needs the files of the original game (3D.CKD, IST.EXE and the others).\n\n"
+        "Choose the folder that holds them. It is remembered; saved games are written there too.";
+    for (;;) {
+        SDL_MessageBoxData box = { SDL_MESSAGEBOX_INFORMATION, NULL, title, text, 2, buttons, NULL };
+        int hit = 0;
+        if (!SDL_ShowMessageBox(&box, &hit) || hit != 1)
+            return 0;
+        mac_pick_done = 0;
+        SDL_ShowOpenFolderDialog(mac_pick_cb, NULL, NULL, NULL, false);
+        while (!mac_pick_done) {
+            SDL_PumpEvents();
+            SDL_Delay(10);
+        }
+        if (!mac_pick_path[0])
+            return 0;                                   /* cancelled */
+        if (has_game_files(mac_pick_path)) {
+            snprintf(buf, size, "%s", mac_pick_path);
+            return 1;
+        }
+        text = "That folder does not hold the game: there is no 3D.CKD in it.\n\n"
+               "Choose the folder with the files of the original game.";
+    }
+}
+
+/* Beside the app (or the bare program), the app's support folder, the user. */
+static const char *mac_find_game_dir(int interactive)
+{
+    static char found[1100];
+    char dir[1024];
+    const char *base = SDL_GetBasePath();   /* .../Lale64.app/Contents/Resources/ or the program's folder */
+    if (base) {
+        snprintf(dir, sizeof dir, "%s", base);
+        char *app = strstr(dir, ".app/");
+        if (app) {                                      /* the folder that holds the .app */
+            *app = 0;
+            char *slash = strrchr(dir, '/');
+            if (slash)
+                *slash = 0;
+        } else if (dir[0] && dir[strlen(dir) - 1] == '/') {
+            dir[strlen(dir) - 1] = 0;
+        }
+        if (has_game_files(dir))
+            return snprintf(found, sizeof found, "%s", dir), found;
+        snprintf(found, sizeof found, "%s/orig", dir);
+        if (has_game_files(found))
+            return found;
+    }
+    char *pref = SDL_GetPrefPath(NULL, "Lale64");
+    if (pref) {
+        snprintf(found, sizeof found, "%s", pref);
+        SDL_free(pref);
+        if (found[0])
+            found[strlen(found) - 1] = 0;               /* the trailing '/' */
+        if (has_game_files(found))
+            return found;
+    }
+    if (interactive && mac_ask_game_dir(dir, sizeof dir)) {
+        mac_remember_game_dir(dir);
+        return snprintf(found, sizeof found, "%s", dir), found;
+    }
+    return NULL;
+}
+#endif /* __APPLE__ */
+
 static int run_game(const LaleOptions *o)
 {
     const char *dir = o->game_dir;
     if (!*dir)
         dir = has_game_files(".") ? "." : "orig";
+#ifdef __APPLE__
+    if (!has_game_files(dir)) {
+        /* scripted and counted runs (tests) never put up a dialog */
+        const char *d = mac_find_game_dir(!script_mode && !frames_left);
+        if (d)
+            dir = d;
+        else if (!script_mode && !frames_left)
+            return 1;                                   /* the request was cancelled */
+    }
+#endif
     if (!has_game_files(dir)) {
         SDL_Log("no game files (3D.CKD) in '%s': use --game-dir <folder of the original game>", dir);
         return 1;
@@ -746,6 +966,9 @@ int main(int argc, char **argv)
 {
     LaleOptions opt;
     options_defaults(&opt);
+#ifdef __APPLE__
+    options_load_ini(&opt, mac_ini_path());             /* the app's own, then ./lale.ini */
+#endif
     options_load_ini(&opt, "lale.ini");
     int vgat = 0;
     for (int i = 1; i < argc; i++)

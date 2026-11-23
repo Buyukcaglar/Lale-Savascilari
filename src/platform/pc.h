@@ -162,8 +162,20 @@ extern VgaState pc_vga;
    writes plain bytes to A000 (memcpy into "slot 0"); the port keeps those
    writes in this buffer and pc_vga_sync() pushes them through the VGA write
    path before scan-out.  Planar code (mode 12h) calls vga_mem_write8 directly
-   and must not use this buffer. */
-extern uint8_t pc_a000[0x10000];
+   and must not use this buffer.
+
+   PC_A000_SLACK: the original's blits address the screen with a huge
+   pointer and sometimes run past the 64 KB window - a text drawn at x = -1
+   (ui_format_text, right-aligned and outlined, wider than its place) goes
+   to offset 65535 + y*320, i.e. into B000, where nothing shows it.  In the
+   port that write would leave the array and hit whatever the host's linker
+   put behind it (macOS: the EMS page frame - a corrupted font, found by
+   test_intrface.test_format_text; Windows: by luck nothing visible).  The
+   64 KB behind the window take those writes, like B000 does; they are
+   never shown. */
+#define PC_A000_SIZE  0x10000u
+#define PC_A000_SLACK 0x10000u
+extern uint8_t pc_a000[PC_A000_SIZE + PC_A000_SLACK];
 void     pc_vga_sync(void);
 
 /* ---- files ----------------------------------------------------------------- */

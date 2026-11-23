@@ -2,7 +2,11 @@
 
 | Script | Purpose |
 |---|---|
-| `bootstrap.sh` | Recreate `orig/`, `extracted/` and `build/` from the reference zip; `--tools` downloads Ghidra, llvm-mingw and SDL3; `--ghidra` runs the analysis pipeline |
+| `bootstrap.sh` | Recreate `orig/`, `extracted/` and `build/` from the reference zip; `--tools` downloads Ghidra (and on Windows llvm-mingw and SDL3); `--ghidra` runs the analysis pipeline |
+| `hostenv.sh` | Sourced by the shell scripts: the host's Python (`.tools/venv` if present), JDK 21, launcher suffix and native paths - Windows (Git Bash), macOS, Linux |
+| `testlib.sh` | Private differential-test library without CMake (`.dll` / `.dylib` / `.so`) |
+| `package_macos.sh` | The macOS application to give away: preset `macos-release` (universal, static SDL3) -> `dist/Lale64-<version>-macOS.zip` |
+| `genicon.py` | Program icon from `assets/icon`: `src/gen/lale.ico` (Windows), `app_icon.c` (window), `lale.icns` (macOS app) |
 | `flib.py` | List/extract FLiB `.CKD` archives (format in `docs/FORMATS.md`) |
 | `exeload.py` | Unpack an MZ + Borland FBOV executable into a flat, linked image (`build/<exe>_flat.bin`) and a map (`build/<exe>_map.json`). Overlays are mapped at segment 0x2700 and up; stub thunks become `JMP FAR` |
 | `segmodel.py` | Segment classification + exact far entry points from relocations → `build/<exe>_segments.json` |
@@ -23,7 +27,8 @@
 | `names_merge.py` | Merge `analysis/names/*.tsv` into `analysis/names.tsv` with validation |
 | `cmpview.py` | Decode CMP images, verify all, render PNG |
 | `cdsim.py` | Build/verify the CD image (redump 91232 layout; simulated or real) — see `docs/DISC.md` |
-| `dosbox/oracle.py` | Scripted DOSBox-X debugger oracle (breakpoints, DGROUP/VGA/DAC dumps) |
+| `dosbox/oracle.py` | Scripted DOSBox-X debugger oracle (breakpoints, DGROUP/VGA/DAC dumps); the emulator is `$DOSBOX_X`, else `C:\DOSBox-X\dosbox-x.exe` / Homebrew's `dosbox-x` |
+| `verify/build_hook.py` | Assembles `verify/hook.S` (the input hook inside the emulated PC); llvm-mingw on Windows, the system clang + a built-in flat link elsewhere |
 
 Addresses are always written `SSSS:OOOO` in the flat image's segment space. That space
 equals the original load-relative segments; overlays sit at 2700 and above.

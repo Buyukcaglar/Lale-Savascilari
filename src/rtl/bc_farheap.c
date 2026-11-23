@@ -21,7 +21,10 @@
 
 #include "rtl/bc_stdio.h"
 
-uint8_t  bc_fh_arena[BC_FH_ARENA_SIZE];
+/* 16-byte aligned: a paragraph boundary of the original is one natively too
+   (DDSLoadDriver's image, tests/py/test_dsmi_infra.py).  Without it the
+   alignment is the linker's choice - 1 with -fno-common on macOS. */
+_Alignas(16) uint8_t bc_fh_arena[BC_FH_ARENA_SIZE + BC_FH_ARENA_SLACK];
 uint16_t bc_fh_first, bc_fh_last, bc_fh_rover;
 uint16_t bc_fh_dos_block;
 
@@ -675,7 +678,7 @@ void bc_farheap_reset(void)
     /* port: forget the native objects (their host memory is leaked: modules
        still holding them are reset separately and never free them) */
     native_n = 0;
-    memset(bc_fh_arena, 0, BC_FH_ARENA_SIZE);
+    memset(bc_fh_arena, 0, BC_FH_ARENA_SIZE + BC_FH_ARENA_SLACK);
     bc_psp = 0x0814;
     bc_heapbase_off = 0;  bc_heapbase_seg = 0x2EAD;
     bc_brklvl_off = 0;    bc_brklvl_seg = 0x4BD7;

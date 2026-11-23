@@ -9,6 +9,10 @@ Writes
   src/gen/app_icon.c   128x128 RGBA pixels for SDL_SetWindowIcon
                        (src/platform/app_icon.h) - title bar / taskbar /
                        macOS dock at run time
+  src/gen/lale.icns    16..1024 px, the icon of the macOS application
+                       (Lale64.app/Contents/Resources, CMakeLists.txt); the
+                       artwork takes 90 % of the square, as the icons beside
+                       it in the Dock and the Finder leave a margin too
 Run by tools/bootstrap.sh; src/gen/ is not under version control.
 """
 import os
@@ -19,6 +23,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'assets', 'icon', 'lale_icon_source.png')
 GEN = os.path.join(ROOT, 'src', 'gen')
 RUNTIME = 128
+ICNS_SIZE, ICNS_ART = 1024, 922
 
 
 def main():
@@ -35,7 +40,12 @@ def main():
         for i in range(0, len(px), 24):
             f.write('    ' + ','.join(str(b) for b in px[i:i + 24]) + ',\n')
         f.write('};\n')
-    print('genicon: src/gen/lale.ico, src/gen/app_icon.c')
+    art = im.resize((ICNS_ART, ICNS_ART), Image.LANCZOS)
+    mac = Image.new('RGBA', (ICNS_SIZE, ICNS_SIZE), (0, 0, 0, 0))
+    mac.paste(art, ((ICNS_SIZE - ICNS_ART) // 2, (ICNS_SIZE - ICNS_ART) // 2))
+    mac.save(os.path.join(GEN, 'lale.icns'),
+             sizes=[(s, s) for s in (16, 32, 64, 128, 256, 512, 1024)])
+    print('genicon: src/gen/lale.ico, src/gen/app_icon.c, src/gen/lale.icns')
 
 
 if __name__ == '__main__':

@@ -22,3 +22,6 @@ Thumbs.db
 /export/
 __pycache__/
 *.pyc
+
+# macOS package (tools/package_macos.sh)
+/dist/

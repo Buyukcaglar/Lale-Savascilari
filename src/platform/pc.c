@@ -8,6 +8,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#ifndef _WIN32
+#include <sys/stat.h>
+#endif
 
 /* ======================================================================== */
 /* time                                                                     */
@@ -418,7 +421,7 @@ void pc_int33(PcMouseRegs *r)
 
 #define EMS_HANDLES 255
 
-uint8_t pc_ems_frame[0x10000];
+_Alignas(16) uint8_t pc_ems_frame[0x10000];
 
 static uint16_t ems_total = 2048;
 static uint16_t ems_used;
@@ -674,7 +677,7 @@ uint8_t pc_ems_move(const PcEmsMove *m)
 /* ======================================================================== */
 
 VgaState pc_vga;
-uint8_t  pc_a000[0x10000];
+_Alignas(16) uint8_t pc_a000[PC_A000_SIZE + PC_A000_SLACK];
 static uint8_t a000_synced[0x10000];
 
 void pc_vga_sync(void)
@@ -734,7 +737,19 @@ char *pc_resolve(const char *dos_name, char *buf, size_t size)
 FILE *pc_fopen(const char *dos_name, const char *mode)
 {
     char path[1024];
-    return fopen(pc_resolve(dos_name, path, sizeof path), mode);
+    FILE *f = fopen(pc_resolve(dos_name, path, sizeof path), mode);
+#ifndef _WIN32
+    /* DOS does not open a directory as a file (an empty name resolves to the
+       game folder itself).  Windows' fopen refuses one too; POSIX hosts open
+       it for reading, so it is refused here (found by test_cd5737's
+       read_cfg with an empty name on macOS). */
+    struct stat st;
+    if (f && fstat(fileno(f), &st) == 0 && S_ISDIR(st.st_mode)) {
+        fclose(f);
+        return NULL;
+    }
+#endif
+    return f;
 }
 
 /* ======================================================================== */

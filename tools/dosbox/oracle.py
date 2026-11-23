@@ -27,7 +27,12 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dbxdebug import Debugger  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DOSBOX = r'C:\DOSBox-X\dosbox-x.exe'
+import shutil  # noqa: E402
+
+# the reference emulator: $DOSBOX_X, else the usual place per host (Windows:
+# the winget/installer folder; macOS: Homebrew's dosbox-x on the PATH)
+DOSBOX = (os.environ.get('DOSBOX_X') or
+          (r'C:\DOSBox-X\dosbox-x.exe' if os.name == 'nt' else shutil.which('dosbox-x') or 'dosbox-x'))
 DGROUP_FLAT = 0x16E0
 
 
@@ -85,7 +90,7 @@ class Oracle:
             self.pause()
             ds = self.regs('DS')['DS']
             path = os.path.join(ROOT, 'build', 'capture', '_probe.bin')
-            self.x(f'MEMDUMPBIN {ds:04X}:0004 10 {path}')
+            self.x(f'MEMDUMPBIN {ds:04X}:0004 10 {_dbx_path(path)}')
             if open(_case(path), 'rb').read().startswith(b'Borland C++'):
                 self.load_seg = ds - DGROUP_FLAT
                 return self.load_seg
@@ -123,7 +128,7 @@ class Oracle:
 
     # ---- dumps ------------------------------------------------------------
     def dump(self, seg, off, length, path):
-        self.x(f'MEMDUMPBIN {seg:04X}:{off:04X} {length:X} {path}')
+        self.x(f'MEMDUMPBIN {seg:04X}:{off:04X} {length:X} {_dbx_path(path)}')
         return open(_case(path), 'rb').read()
 
     def dump_dgroup(self, path):
@@ -190,13 +195,31 @@ class Oracle:
         return planes, dac, state
 
 
+def _dbx_path(path):
+    """A file name as the debugger's MEMDUMPBIN takes it.  Outside Windows
+    the command does not accept an absolute path (the leading '/' ends the
+    name: the dump lands in a file called after its last component), so the
+    name is given relative to the emulator's working directory, ROOT."""
+    if os.name == 'nt':
+        return path
+    return os.path.relpath(os.path.abspath(path), ROOT)
+
+
 def _case(path):
-    """DOSBox-X upper-cases the file name of MEMDUMPBIN targets."""
+    """DOSBox-X upper-cases the name of MEMDUMPBIN targets - the file name
+    on Windows, the whole relative path elsewhere (a case-sensitive volume
+    then has the dump under upper-case folders)."""
     if os.path.exists(path):
         return path
     d, b = os.path.split(path)
     up = os.path.join(d, b.upper())
-    return up if os.path.exists(up) else path
+    if os.path.exists(up):
+        return up
+    if os.name != 'nt':
+        up = os.path.join(ROOT, os.path.relpath(os.path.abspath(path), ROOT).upper())
+        if os.path.exists(up):
+            return up
+    return path
 
 
 if __name__ == '__main__':

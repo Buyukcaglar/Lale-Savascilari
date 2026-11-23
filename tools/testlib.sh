@@ -1,5 +1,5 @@
 #!/bin/sh
-# testlib.sh - build a private differential-test DLL without CMake.
+# testlib.sh - build a private differential-test DLL (macOS: .dylib) without CMake.
 #
 #   tools/testlib.sh OUTDIR [extra.c ...]
 #
@@ -11,12 +11,19 @@ set -e
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 OUT=$1; shift
 mkdir -p "$OUT"
-CC=$(ls -d "$ROOT"/.tools/llvm-mingw/llvm-mingw-*-ucrt-x86_64 | head -1)/bin/x86_64-w64-mingw32-clang.exe
+. "$ROOT/tools/hostenv.sh"
+case "$HOST_OS" in
+  windows) CC=$(ls -d "$ROOT"/.tools/llvm-mingw/llvm-mingw-*-ucrt-x86_64 | head -1)/bin/x86_64-w64-mingw32-clang.exe
+           LIB=lale_testlib.dll ;;
+  macos)   CC="${CC:-cc} -fno-common"; LIB=lale_testlib.dylib ;;
+  *)       CC=${CC:-cc}; LIB=lale_testlib.so ;;
+esac
 BASE=$(grep -v '^#' "$ROOT/tests/base_sources.txt" | grep . | sed "s#^#$ROOT/#")
 EXTRA=""
 for f in "$@"; do
   case " $BASE " in *"$ROOT/$f"*) ;; *) EXTRA="$EXTRA $f";; esac
 done
-"$CC" -std=c11 -O1 -g -shared -Wall -Wextra -Wno-unused-parameter -fno-strict-aliasing -fwrapv \
-  -I"$ROOT/src" -o "$OUT/lale_testlib.dll" $BASE $EXTRA
-echo "testlib: $OUT/lale_testlib.dll"
+$CC -std=c11 -O1 -g -shared -fPIC -Wall -Wextra -Wno-unused-parameter -fno-strict-aliasing -fwrapv \
+  -ffp-contract=off -falign-functions=16 \
+  -I"$ROOT/src" -o "$OUT/$LIB" $BASE $EXTRA
+echo "testlib: $OUT/$LIB"

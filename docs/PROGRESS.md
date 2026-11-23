@@ -16,7 +16,7 @@ equivalent, no decompilation needed).
 | 6 | Game modules decompiled | done (2026-11-21): main, DEMOLAR, CHARGEN, FRPOS, 3DQUICK, 3DSYS, ISOSYS, GFL – see "Decompiled modules" |
 | 7 | DSMI audio decompiled | done: player, loader, CDI, MCP mixer (verified); audio-backend wiring pending (NSES/OSES wave) |
 | 8 | Full-game verification against DOSBox-X | play3, play4, play4load identical at every checkpoint (docs/VERIFY.md). Decision (user, 2026-11-22): the save description's tail after its NUL stays zeros in the port (uninitialised stack in the original, never read). Gap wave started 2026-11-22: doctor event (district 4), ISOSYS Ctrl-Break / sound-on / door wall without bar picture, 3DQUICK 100x100 + rotate speed 2, three untested 3DSYS functions, CD audio vs the original code |
-| 9 | macOS build | – (on the Mac mini, same sources) |
+| 9 | macOS build | done (2026-11-23): `Lale64` + `Lale64.app` on Apple Silicon, universal release package; differential suite and scripted play-throughs against DOSBox-X run on the Mac – see "macOS port" below and [`MACOS.md`](MACOS.md) |
 
 ## Function status
 
@@ -98,6 +98,27 @@ Still not covered: the closed shop doors of district 4 (flag 99 clear) and its w
 goods shops, the options list by mouse hover + Enter, `o5737_cd_drive_info` without
 MSCDEX, the Ctrl-Break sequence inside DOSBox-X itself, MS-DOS versions after 4.0 for the
 ^C check (not in the published source).
+
+## macOS port (2026-11-23)
+
+Built and verified on an Apple Silicon Mac (macOS 27.2, Apple clang, Homebrew SDL3
+3.4.18, DOSBox-X 2026.10.01, Ghidra 12.2 + openjdk@21).  What was written, and what
+the port found in shared code: [`MACOS.md`](MACOS.md).
+
+| Check | Result |
+|---|---|
+| Build | `cmake --preset macos`: `Lale64`, `Lale64.app`, `lale_testlib.dylib`, no compiler warnings.  `macos-release`: universal app, static SDL3, minimum macOS 11.  `windows-cross` (llvm-mingw 20261104 for macOS): the Windows program still compiles from the same tree, no warnings – not run |
+| Analysis pipeline on the Mac | `tools/bootstrap.sh --tools --ghidra`: `ist_fpu.bin` the same on repeated runs and identical to `fpupatch.py`'s sweep; 10,750 relative branches, 0 wrong.  Ghidra's decompiler has no arm64 Mac binary in the release: no draft C (not needed by the port or the tests) |
+| `ctest`: `vga`, `cdaudio` | pass |
+| Differential suite (original code in Unicorn vs the arm64 library) | 256/256 pass (`ctest`, final build, 2026-11-23; 29 min).  Three failures on the way were real findings (alignment of the emulated memory, a test that relied on Windows turning an access violation into `OSError`, and the `sys_blit` wrap that `cfcacce` fixed upstream at the same time): see MACOS.md "Found while porting" |
+| Whole game vs the original in DOSBox-X (`tools/verify/pair.py`) | `play3` (27 checkpoints), `play4` (112), `play4load`, `play5`: every checkpoint identical, `GRP.DAT` and `SAKLA001.SAV` identical.  The only differences are the documented ones, the same as on Windows: the tail of the save description after its NUL (`SAKLA002.SAV` 48 bytes in play4/play4load, 30 in play5; the load menu's list entry A6AB-A6DB in play4load).  `play3` and `play4` repeated on the port side with the final build: all checkpoints identical again |
+| arm64 vs x86_64 slice of the release app (`play3`, Rosetta) | all 108 dump files and the written `GRP.DAT` / `SAKLA001.SAV` byte-identical, and identical to the dumps of the `macos` preset's build |
+| Start-up (`startup` script) | `s_01000`, `s_05000` as on Windows: DGROUP identical, the picture differs by the intro video's frame only (the clock-timed difference described in VERIFY.md) |
+| Audio | SDL's disk driver: 25 s of the intro captured, non-silent throughout (not listened to) |
+| App | started through LaunchServices with the game files beside it (found, 1500 frames presented); About box rendered off screen, light and dark |
+
+Not checked by a person: sound by ear, full screen, the folder dialog and the About
+box on a screen (the session that did the port could not capture the display).
 
 ## Analysis pipeline fixes (2026-11-20)
 

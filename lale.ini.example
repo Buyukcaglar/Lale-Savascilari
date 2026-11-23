@@ -1,4 +1,5 @@
-; lale.ini - port options (copy to lale.ini next to where you run lale)
+; lale.ini - port options (copy to lale.ini next to where you run lale;
+; the macOS app also reads ~/Library/Application Support/Lale64/lale.ini)
 ; Defaults reproduce the original IST.EXE exactly.
 
 ; Play the game CD's audio tracks (track 2: intro/menu, track 3: story).
@@ -7,3 +8,7 @@ cd_music = 0
 
 ; The game CD as a cue/bin image (real dump, or build/cd/... from tools/cdsim.py)
 cd_image =
+
+; Folder with the files of the original game (default: the working directory
+; if it has them, else ./orig; the macOS app then looks beside itself and asks)
+game_dir =

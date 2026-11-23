@@ -49,6 +49,13 @@
 #define BC_FH_ARENA_SEG  0x2EADu        /* runtime segment of bc_fh_arena[0] (_heapbase) */
 #define BC_FH_DOS_TOP    0x9FFFu        /* end of the DOS memory chain (MCB 9FFF = UMB link) */
 #define BC_FH_ARENA_SIZE ((uint32_t)(0xA000u - BC_FH_ARENA_SEG) * 16u)
+/* Memory behind the arena (A000:0000 and up) for writes that run past a
+   block near the top of conventional memory - the same huge-pointer blits
+   as PC_A000_SLACK in platform/pc.h, with the screen surface in a far-heap
+   block: offset up to 65535 + 199*320 + a row.  The original puts them into
+   video memory; the port keeps them off the host's other variables (the
+   heap's own bc_fh_first/last/rover follow the arena). */
+#define BC_FH_ARENA_SLACK 0x20000u
 extern uint8_t bc_fh_arena[];
 
 /* Heap state in the RTL code segment (CS:2382-238C). */
