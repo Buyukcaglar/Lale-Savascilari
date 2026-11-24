@@ -55,6 +55,8 @@ yanındaki klasörlere yerleştirir. Oyunun her iki sürümü de desteklenir.
 2. Aktarma bir kez yapılır; bundan sonra oyun `DATA/` klasöründen çalışır.
 3. Oyunun yazdığı her şey (kayıtlı oyunlar `*.SAV`, `GRP.DAT`, `SES.CFG`), her iki sürümde de
    çalıştırılabilir dosyanın yanındaki `SAVE/` klasörüne gider.
+4. **Alt+Enter** tam ekran ile pencere arasında geçiş yapar (macOS'ta ⌘Return da); görüntü 4:3
+   kalır.
 
 CD sürümünde müzik CD'nin ses izlerinden, 2005 sürümünde `DEMO.AMF` modülünden çalınır; veri
 dosyaları iki sürümde bayt bayt aynıdır. `--edition cd|2005` ile sürümü kendiniz seçebilirsiniz.
@@ -74,6 +76,8 @@ folders beside the executable. Both editions of the game are supported.
 2. The import happens once; from then on the game runs from `DATA/`.
 3. Everything the game writes (saved games `*.SAV`, `GRP.DAT`, `SES.CFG`) goes to `SAVE/` beside
    the executable, in both editions.
+4. **Alt+Enter** switches between full screen and the window (on macOS also ⌘Return); the
+   picture stays 4:3.
 
 The CD edition plays its music from the CD's audio tracks, the 2005 edition from the module
 `DEMO.AMF`; the data files of the two are the same byte for byte. `--edition cd|2005` lets you

@@ -57,7 +57,7 @@ Windows'ta, belgelenmiş arayüzlere göre yazıldı.
 | Mac'te | Anlamı |
 |---|---|
 | sol Option | PC'nin Alt tuşu (Alt+tuş sözcükleri, BIOS shift bayrağı).  Sağ Option tuşu karakter yazmayı sürdürür |
-| Cmd+Return, Cmd+F, yeşil düğme | tam ekran; görüntü 4:3 kalır, daha geniş bir ekranda siyah şeritlerle |
+| Cmd+Return, Cmd+F, Option+Return (Alt+Enter), yeşil düğme | tam ekran; görüntü 4:3 kalır, daha geniş bir ekranda siyah şeritlerle |
 | Cmd+. | PC'nin Ctrl-Break'i (ayrıca Ctrl+F15 / Ctrl+F14, genişletilmiş Apple klavyesinin Pause / ScrollLock tuşları) |
 | Cmd+Q, Cmd+H, Cmd+M ... | SDL'nin menü çubuğu; Command bileşimleri oyuna hiçbir zaman ulaşmaz |
 | Lale64 > About Lale64 | Hakkında kutusu; kutu açıkken oyun duraklatılır |
@@ -166,7 +166,7 @@ documented interfaces.
 | On the Mac | Meaning |
 |---|---|
 | left Option | the PC's Alt (Alt+key words, the BIOS shift flag).  The right Option key keeps typing characters |
-| Cmd+Return, Cmd+F, the green button | full screen; the picture stays 4:3, with black bars on a wider display |
+| Cmd+Return, Cmd+F, Option+Return (Alt+Enter), the green button | full screen; the picture stays 4:3, with black bars on a wider display |
 | Cmd+. | the PC's Ctrl-Break (also Ctrl+F15 / Ctrl+F14, the Pause / ScrollLock keys of an extended Apple keyboard) |
 | Cmd+Q, Cmd+H, Cmd+M ... | SDL's menu bar; Command combinations never reach the game |
 | Lale64 > About Lale64 | the About box; the game is paused while it is open |

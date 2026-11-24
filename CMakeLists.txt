@@ -99,6 +99,9 @@ add_executable(lale ${LALE_HOST_SRC})
 # CMake target keeps the name lale
 set_target_properties(lale PROPERTIES OUTPUT_NAME Lale64)
 if(WIN32)
+    # a windowed program: no console window (SDL_main.h supplies WinMain);
+    # its log still reaches a pipe, a file or the console it was started from
+    set_target_properties(lale PROPERTIES WIN32_EXECUTABLE TRUE)
     # program icon of the .exe (src/gen/lale.ico, tools/genicon.py)
     enable_language(RC)
     target_sources(lale PRIVATE src/platform/lale.rc)
