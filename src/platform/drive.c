@@ -11,13 +11,13 @@
 #include <string.h>
 
 #include "platform/cdsector.h"
+#include "platform/uitext.h"
 
 #ifdef _WIN32
 
 #include <windows.h>
 #include <winioctl.h>
 #include <ntddcdrm.h>
-#include "platform/uitext.h"
 
 #define CHUNK 16                        /* sectors per read */
 

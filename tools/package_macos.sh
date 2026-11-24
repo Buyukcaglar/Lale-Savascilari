@@ -6,10 +6,12 @@
 # Builds preset macos-release (universal arm64 + x86_64, macOS 11 or later,
 # SDL3 built from source and linked statically: the app needs nothing that is
 # not part of macOS), checks the result and writes
-#   dist/Lale64-<version>-macOS.zip      Lale64.app + READ ME + lale.ini.example
+#   dist/Lale64-<version>-macOS.zip      Lale64.app, the READ ME (Turkish, then
+#                                        English), LICENSES.txt, lale.ini.example
 # The app is signed ad hoc, not notarised: on another Mac the first start is
 # by right-click > Open (or: xattr -dr com.apple.quarantine Lale64.app).
-# The game's own files are not part of it (see the READ ME it writes).
+# The game's own files are not part of it (see the READ ME:
+# tools/package/OKUBENI-README-macOS.txt).
 set -e
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
@@ -35,25 +37,9 @@ rm -rf out/macos-release/stage
 mkdir -p "$STAGE" dist
 ditto "$APP" "$STAGE/Lale64.app"
 cp lale.ini.example "$STAGE/"
-cat > "$STAGE/READ ME.txt" <<EOF
-Istanbul Efsaneleri: Lale Savascilari 64bit $VER - macOS
-(macOS 11 or later, Apple Silicon and Intel)
-
-This is a port of the game's program only.  It needs the original game:
-a disc image of the game CD (.cue + .bin, .iso or .chd), or the 2005
-release as a .zip / .7z / .rar or a folder.  Put it beside Lale64.app, or
-start the app and choose it when it asks.  The game is imported once into
-a folder DATA beside the app; saved games are written to SAVE there.
-Upscaled videos in a folder VIDEO beside the app are shown in place of the
-originals (Ctrl+V switches).
-
-First start: the app is not notarised by Apple.  Right-click Lale64.app and
-choose Open (once), or run:  xattr -dr com.apple.quarantine Lale64.app
-
-Keys: the PC's Alt is the LEFT Option key.  Cmd+Return or Cmd+F: full screen.
-Cmd+Q: quit.  Cmd+. is the PC's Ctrl-Break.  The Lale64 menu has About.
-Options (CD music from a cue/bin image of the game CD ...): lale.ini.example.
-EOF
+cp docs/LICENSES.txt "$STAGE/LICENSES.txt"
+# the READ ME (Turkish, then English): tools/package/OKUBENI-README-macOS.txt
+sed "s/@VER@/$VER/g" tools/package/OKUBENI-README-macOS.txt > "$STAGE/OKU BENI - READ ME.txt"
 ZIP=dist/Lale64-$VER-macOS.zip
 rm -f "$ZIP"
 ditto -c -k --norsrc --noextattr --keepParent "$STAGE" "$ZIP"
