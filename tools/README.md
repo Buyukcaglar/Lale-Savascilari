@@ -1,4 +1,50 @@
-# Tools
+# Araçlar / Tools
+
+**Dil / Language:** [Türkçe](#türkçe) · [English](#english)
+
+## Türkçe
+
+| Betik | Amaç |
+|---|---|
+| `bootstrap.sh` | `orig/`, `extracted/` ve `build/` dizinlerini başvuru zip'inden yeniden oluşturur; `--tools` Ghidra'yı (Windows'ta ayrıca llvm-mingw ve SDL3'ü) indirir; `--ghidra` çözümleme hattını (pipeline) çalıştırır |
+| `hostenv.sh` | Kabuk betiklerince içe alınır (source): ana sistemin (host) Python'u (varsa `.tools/venv`), JDK 21, başlatıcı soneki ve yerel yollar - Windows (Git Bash), macOS, Linux |
+| `testlib.sh` | CMake olmadan özel karşılaştırmalı test (differential test) kitaplığı (`.dll` / `.dylib` / `.so`) |
+| `package_macos.sh` | Dağıtılacak macOS uygulaması: preset `macos-release` (evrensel, statik SDL3) -> `dist/Lale64-<version>-macOS.zip` |
+| `genicon.py` | `assets/icon`'dan program simgesi: `src/gen/lale.ico` (Windows), `app_icon.c` (pencere), `lale.icns` (macOS uygulaması) |
+| `flib.py` | FLiB `.CKD` arşivlerini listeler/açar (biçimi `docs/FORMATS.md` içinde) |
+| `exeload.py` | Bir MZ + Borland FBOV çalıştırılabilir dosyasını düz, bağlanmış bir imaja (`build/<exe>_flat.bin`) ve bir haritaya (`build/<exe>_map.json`) açar. Bindirmeler (overlay) 0x2700 segmentinden başlayarak eşlenir; saplama thunk'ları `JMP FAR` olur |
+| `segmodel.py` | Segment sınıflandırması + yer değiştirme kayıtlarından (relocation) kesin uzak giriş noktaları → `build/<exe>_segments.json` |
+| `ghidra_patch.sh` | `ghidra/ia_rel16.patch`'i indirilen Ghidra'ya uygular ve x86 dilini yeniden derler. `ghidra_run.sh`'den önce **gereklidir**: değiştirilmemiş Ghidra gerçek kipteki yakın dallanmaları doğrusal 64 KB sınırlarında sarar |
+| `ghidra_run.sh` | Başsız (headless) Ghidra: içe aktarma → `SetupIST` → çözümleme → `FixNear` → `FixFPU` → `FixSwitch` → `FixFPU` → `PruneFunctions` → `ApplyNames` → `ExportDecomp` → `ExportListing` → `branchcheck.py`; switch tabloları değiştiyse kendini ikinci kez çalıştırır (fpupatch.py onları okur) |
+| `ghidra/ia_rel16.patch` | `rmseg` bağlam alanını (kod segmenti) ekler ve `rel8`/`rel16`'nın CPU'daki gibi segment ofsetinde sarmasını sağlar |
+| `ghidra/SetupIST.java` | Segment başına bellek blokları, CS/DS/`rmseg` bağlamı, giriş işlevleri, bindirme thunk'ları |
+| `ghidra/FixNear.java` | Komutları yabancı bir `rmseg` ile çözülmüş blokları yeniden ayrıştırır (re-disassemble) (Ghidra bağlamı uzak çağrılar boyunca taşır) |
+| `ghidra/FixSwitch.java` | Borland switch tablolarını (yoğun indis, değer arama ve sınırsız satır içi indis biçimleri) çözer → case hedefleri, geri derleyicinin atlama tablosu geçersiz kılmaları, `build/<exe>_switches.tsv` |
+| `ghidra/PruneFunctions.java` | DGROUP'taki işlevleri ve girişi gövdenin ortasında olan (fall-through), başvurulmayan otomatik işlevleri kaldırır; işaretçiyle ulaşılan yordamları korur |
+| `ghidra/FixFPU.java` | Borland 8087 öykünücüsü `INT 34h–3Dh` → gerçek x87 işlem kodları |
+| `ghidra/ApplyNames.java` | `analysis/names.tsv`'yi uygular (adlar, yorumlar) |
+| `ghidra/ExportDecomp.java` | Blok başına taslak C + `functions.tsv` |
+| `ghidra/ExportListing.java` | Blok başına açıklamalı `.asm` + FPU komutları geri yüklenmiş imaj `ist_fpu.bin` |
+| `strrefs.py` | Anlık değerleri (immediate) DGROUP dizgileriyle eşleştirir → `analysis/strrefs_<exe>.tsv` |
+| `strings.py` | Düz imajın bir aralığından cp857 dizgileri döker |
+| `branchcheck.py` | Listelerdeki her göreli dallanmayı CPU anlamına göre doğrular (hattın geçiş kapısı) |
+| `names_merge.py` | `analysis/names/*.tsv`'yi doğrulamayla `analysis/names.tsv` içinde birleştirir |
+| `cmpview.py` | CMP imajlarını çözer, hepsini doğrular, PNG olarak çizer |
+| `fmtcheck.py` | `docs/FORMATS.md`'deki KOR, RIX ve AMF biçimlerini her oyun dosyasına karşı denetler (`kor`, `rix`, `amf`, `all`) |
+| `funcstatus.py` | `src/` içindeki `Original:` / `Verified:` yorumlarından portun işlev durumu (`docs/PROGRESS.md`'deki tablo; `--list` her yordam için bir satır) |
+| `cddump.py` | Oyun CD'sinin bir redumper dökümünü çözümler (izler, ofsetler, karıştırılmış sektörler, ISO birimi) - bkz. `docs/DISC.md` |
+| `chd.py` | Bağımsız CHD okuyucu: `info`, `verify` (zlib + ffmpeg'in FLAC çözücüsü; izleri redump.org ile karşılaştırır) - bkz. `docs/INSTALL.md` |
+| `chdtool.c` | Portla birlikte derlenir (`chdtool`): `create`, `info`, `verify`, `ls`, `cat`, `extract`, `import` - oyunun kendi disk ve içe aktarma kodu komut satırında |
+| `exediff.py` | `IST.EXE`'nin iki derlemesini yordam yordam karşılaştırır (`docs/EDITIONS.md`) |
+| `export_videos.py` | Her GFL videosunu `<NAME>.mp4` olarak çıkarır (`VIDEO/` içindeki büyütülmüş kopyaların girdisi) |
+| `cdsim.py` | CD imajını oluşturur/doğrular (redump 91232 düzeni; benzetilmiş veya gerçek) — bkz. `docs/DISC.md` |
+| `dosbox/oracle.py` | Betikli DOSBox-X hata ayıklayıcı kâhini (oracle) (kesme noktaları, DGROUP/VGA/DAC dökümleri); öykünücü `$DOSBOX_X`, yoksa `C:\DOSBox-X\dosbox-x.exe` / Homebrew'un `dosbox-x`'i |
+| `verify/build_hook.py` | `verify/hook.S`'yi (öykünülen PC içindeki girdi kancası) derler; Windows'ta llvm-mingw, başka yerlerde sistem clang'ı + yerleşik bir düz bağlama |
+
+Adresler her zaman düz imajın segment uzayında `SSSS:OOOO` biçiminde yazılır. Bu uzay özgün
+programın yüklemeye göreli segmentleriyle aynıdır; bindirmeler 2700 ve üzerinde yer alır.
+
+## English
 
 | Script | Purpose |
 |---|---|

@@ -1,8 +1,336 @@
-# Group "lib": DSMI / DDS / Timer / EMS, asm2599, FP emulator, small segments
+# "lib" grubu: DSMI / DDS / Zamanlayıcı / EMS, asm2599, FP öykünücüsü, küçük segmentler / Group "lib": DSMI / DDS / Timer / EMS, asm2599, FP emulator, small segments
+
+**Dil / Language:** [Türkçe](#türkçe) · [English](#english)
+
+## Türkçe
+
+`lib.tsv` içinde listelenen her fonksiyon. Tüm DGROUP ofsetleri 16E0 segmentindedir.
+
+### 1. Her segment nedir
+
+| Seg | Boyut | Nedir | Köken |
+|---|---|---|---|
+| 0DF2 | 0xAC0 | **DDS**, dinamik sürücü sistemi: ad→fonksiyon ve ad→kaynak kayıt defterleri ile `.DSD` sürücülerinin yükleyicisi | DSMI (Otto Chrons) |
+| 0DDF | 0x130 | DDS'in kullandığı küçük pascal dizge ve bellek yardımcıları (strcpy, strcmp, strlen, memcpy, memcmp, memset, abs) | DSMI |
+| 0E9E | 0x105 | `MemAlloc/MemCalloc/MemRealloc/MemFree`. Bunlar Borland farmalloc, farcalloc, farrealloc ve farfree'yi sarmalar; DDS bunları adlarıyla dışa aktarır | DSMI |
+| 0EAE | 0x48A | **CDI**, kanal dağıtıcısı: `cdiInit`, `cdiRegister` ve 26 ince yönlendirme sarmalayıcısı | DSMI |
+| 0EF6 | 0x1659 | **AMP 2.00** modül çalıcısı. Veri tabloları 0x000A–0x039A arasındadır ("AMP 2.00 - (C) 1992,1994 Otto Chrons" ve "MCPSampleRealAddress"). **MCP karıştırıcısı (mixer) bu segmentte değildir** | DSMI |
+| 105B | 0x945 | AMP'nin AMF yükleyicisi: `ampLoadModule`, `ampLoadAMF`, `ampLinkTracks` | DSMI |
+| 10EF | 0x2C3 | **Timer Service v2.0**, "(C) 1993-1995 Otto Chrons": INT 08'e kanca atar ve PIT'i yeniden programlar | DSMI |
+| 111B | 0x19D | `ampFreeModule` | DSMI |
+| 1134 | 0x114 | Alt düzey EMS 4.0 çağrıları (INT 67h) | DSMI |
+| 1145 | 0xF1 | DSMI zaman tabanı: `GetDSMITime`, `LockDSMITime`, `UnlockDSMITime` ve 100 Hz artırıcı | DSMI |
+| 1154 | 0xD7A | EMS öbeği (heap): `EMSAlloc/EMSFree/EMSCopyTo/EMSCopyFrom/EMSCopy/EMSLock/EMSSaveState/EMSRestoreState`, DDS üzerinden dışa aktarılır. **MEMMAN (seg09D4) da bunu kullanır**, yani oyunun EMS belleği DSMI'nin EMS öbeğinden geçer | DSMI |
+| 2599 | 0x675 | Elle yazılmış 386 grafik çekirdekleri: ölçekli, saydam ve aynalanmış blit'ler, 32 bitlik memset ve memcpy, harmanlama tablosuyla harmanlama ve 2× görünüm büyütücü. Bkz. §6 | yazar (ALTDUZEY asm) |
+| 08D0 | 0x1046 | 3B çokgen kodu: duvar dörtgenlerini kurar, döndürür, kırpar ve piksellere döker (rasterise). Tüm çağrılar ovl2700 `F_2700_8197/8896`'dan gelir. Muhtemelen 3DQUICK.L'nin bellekte kalıcı (resident) kısmı (q3d_) | oyun / motor |
+| 1351 | 0x2776 | Borland **8087 yazılım öykünücüsü (emulator)** (EMU). Durumu SS:0000'da tutulur (durum, denetim, SS:[0Ch]'de öykünülen yığın işaretçisi, 12 baytlık geçici reel sayılar). INT 34h–3Dh giriş noktalarına çağrılarla değil, vektörler üzerinden ulaşılır | Borland RTL |
+| 15C9 | 0x5C8 | Borland **gerçek x87 desteği** (FP87). 0x0000–0x0033 80 bitlik sabitleri tutar (π/4, π/2 …). 0x0034–0x02EF x87 aşkın fonksiyon (transcendental) çekirdekleridir (fptan, fpatan, f2xm1, fyl2x; her biri 9B önekli). Ayrıca INT 34h–3Dh **düzeltme (fixup) işleyicisi** ve x87 istisna işleyicisi. "bosch.cmp" eşleşmesi yanlış bir dizge başvurusudur: `MOV DX,0x269B`, `fp87_reexec_on_stack` içindeki kod baytlarıdır | Borland RTL |
+
+Kim neyi çağırır: `ovl55CC` kaplaması (overlay) (`T:ALTDUZEY\OSES.L`, başka bir grubun sorumluluğunda) ses ilklendirmesidir. Sırasıyla DDSRegisterFunction(MCPDisableVirtualSamples, GetEnvString, SetVector), cdiInit, DDSLoadDriver(e85c'deki SES.CFG adı), ardından DDSAccessFunction(SDIInitDevice, SDIStartOutput, SDIStopOutput), ampInit, tsAddRoutine ve cdiSetupChannels çalıştırır. `ovl559A` DSMI zaman tabanını kurar.
+
+### 2. DDS (seg0DF2)
+
+Genel değişkenler:
+- `e776` (sözcük): sonraki sürücü tanıtıcısı (handle), 1'den başlar.
+- `e778`: ilklendirildikten sonra sihirli değer 0xBEEF.
+- `e77a`: kaynak listesinin gözcü düğümü (far ptr).
+- `e77e`: fonksiyon listesinin gözcüsü.
+- `e782`: sürücü listesinin gözcüsü.
+
+Üç liste de gözcü (sentinel) düğümüyle kapanan dairesel, tek bağlı listelerdir.
+
+DDS fonksiyonları pascal kurallı uzak (far) çağrılardır. Başarıda 0, aksi hâlde bir hata kodu döndürürler: 1 = NULL argüman, 2 = DDS ilklendirilmemiş ya da bellek yok, 3 = dosya açılamıyor, 4 = hatalı başlık, 5 = sürücü ilklendirmesi başarısız, 6 = bilinmeyen tanıtıcı, 7 = yinelenen ad, 8 = sürücü kimliği zaten yüklü, 9 = fonksiyon bulunamadı, 10 = kaynak bulunamadı, 11 = sürücü bellekten kaldırılmayı reddetti, 12 = bellek yetersiz.
+
+Düğüm düzenleri:
+- fonksiyon düğümü (12 bayt): `{char far *name; void far *fn; node far *next}`.
+- kaynak düğümü (16 bayt): `{name; void far *ptr; long size; next @0C}`.
+- sürücü düğümü (24 bayt): `{word loaded(1=file,0=static); word deviceId; long handle; void far *entry; void far *imageAligned; void far *imageRaw; next @14}`.
+
+**.DSD dosya biçimi.** Sihirli değer olarak "DS" (0x5344) taşıyan bir MZ yürütülebilir dosyasıdır. Yükleyici şu başlık alanlarını kullanır:
+
+| Ofset | Alan | Kullanım |
+|---|---|---|
+| 0x02 | son sayfadaki bayt sayısı | görüntü boyutu |
+| 0x04 | sayfa sayısı | görüntü boyutu |
+| 0x06 | yer değiştirme kaydı (relocation) sayısı | yer değiştirme kayıtları |
+| 0x08 | başlık paragrafları | görüntü başlangıcı |
+| 0x0A | asgari ek paragraflar | bellek ayırma |
+| 0x14 | CS:IP | giriş noktası |
+| 0x18 | yer değiştirme tablosu ofseti | yer değiştirme kayıtları |
+| 0x0C | aygıt kimliği | GUS16=0xC8, SB16=0x64, WSS16=0x65, PAS16=0x66 |
+| 0x12 | sürüm | 0x0100 |
+| 0x1A | bayraklar | bit0 1 olmalı |
+
+Yükleme adımları:
+1. Görüntü boyutu = (pages−1)·512 + lastbytes − hdr·16 + 0x20.
+2. size + minalloc·16 + 0x20 bayt ayır ve paragraf sınırına hizala.
+3. Yer değiştirme kayıtlarını oku, görüntüyü oku ve her yer değiştirme noktasına yükleme segmentini ekle.
+4. `entry(long cmd=1, DDSAccessFunction, long 0)` çağır. DX:AX, AX = hata ve DX = sürücü/aygıt kimliği olarak döner.
+
+Bellekten kaldırma `entry(2,0,0)` çağırır.
+
+### 3. CDI (seg0EAE)
+
+Genel değişkenler:
+- `7694`: sihirli değer 0xDA.
+- `7696[256]`: kanal → aygıt indisi.
+- `7796 + n·0x68`: kaydedilen CDIDEVICE tablolarının kopyaları. 8 tanesine yer var.
+- `7AD6`: aygıt sayısı.
+
+`cdiRegister` her aygıta 32 kanal verir: n aygıtı n·32 … n·32+31 kanallarına sahiptir.
+
+CDIDEVICE 26 uzak fonksiyon işaretçisi içerir. Sıraları SDIGUS16.DSD içindeki `gus*` sembol adlarıyla doğrulanmıştır:
+
+`00 setSample, 04 playSample, 08 setVolume, 0C setFrequency(rate), 10 setLinearRate, 14 setPosition, 18 setPanning, 1C setMasterVolume, 20 mute, 24 unmute, 28 stopChannel, 2C muteAll, 30 unmuteAll, 34 download, 38 unload, 3C unloadAll, 40 getVolume, 44 getFrequency, 48 getPosition, 4C getPanning, 50 getSample, 54 setupChannels, 58 getChannelStatus, 5C poll, 60 setEffect, 64 getStatus`.
+
+Her sarmalayıcı aygıtı kanal argümanından seçer ve kalan argümanları iletir. Çağrılar 32 bitlik argümanlarla pascal kuralındadır.
+
+### 4. AMP çalıcısı (seg0EF6) – veri yapıları
+
+**Kod segmenti tabloları (CS:)**
+
+| Ofset | İçerik |
+|---|---|
+| 0x45 | track·45 (iz (track) dizisine ofset) |
+| 0x85 | track·26 (SAMPLEINFO dizisine ofset) |
+| 0xC5 | 128 sözcük, 2^(n/12)·1024 (n=60'ta 0x3FF, n=84'te 0x1000, 0x8000'de doyuma ulaşır) |
+| 0x1CD | periyot tablosu ×8: nota 60'ta 0x1AC0 = 6848, alt uçta 0xFFD5'e, üst uçta 0x0097'ye kırpılmış |
+| 0x2CB | 64 girdilik yarım sinüs tablosu, 0..4095..0 |
+| 0x34B | 13 sözcük, 2^(k/12)·1024 (arpej) |
+| 0x36B | 0x80..0x97 için 24 girdilik satır efekti atlama tablosu |
+| 0xDD0 | tık efektlerinin 12 {cmd, handler} çifti |
+
+**MODULE** (0x5C bayt, `ampLoadModule` tarafından ayrılır; çalarken DGROUP 7BE8'de bir kopyası oluşturulur)
+
+| Ofset | Alan |
+|---|---|
+| +00 | tür (3 = AMF) |
+| +01 | dword kullanılan bellek |
+| +05 | dword dosya boyutu |
+| +09 | name[32] |
+| +29 | kanal sayısı |
+| +2A | işaretli pan[32] (−63..63, 100 = surround) |
+| +4A | enstrüman sayısı |
+| +4B | far INSTRUMENT* |
+| +4F | sıra (order) sayısı |
+| +50 | far ORDER* |
+| +54 | word iz sayısı |
+| +56 | uzak işaretçi tablosu track[count+1]; indis 0 = NULL |
+| +5A | BPM (varsayılan 125) |
+| +5B | hız (varsayılan 6) |
+
+**ORDER** (0x82 bayt): `{word rows; void far *track[32]}`. Yükleyici önce iz numaralarını saklar, ardından `ampLinkTracks` bunları uzak işaretçilere dönüştürür.
+
+**INSTRUMENT** (0x41 bayt, v≥10 için diskteki düzenle aynı)
+
+| Ofset | Alan |
+|---|---|
+| +00 | tür |
+| +01 | name[32] |
+| +21 | filename[13] |
+| +2E | örnek (sample) indisi, uzak örnek işaretçisiyle değiştirilir; 0xFFFF segmenti bir EMS tanıtıcısı demektir |
+| +32 | dword uzunluk |
+| +36 | word c2spd (hız) |
+| +38 | ses düzeyi 0..64 |
+| +39 | dword loopStart |
+| +3D | dword loopEnd |
+
+**İz verisi** (saklanan her iz için bir tane): 3 baytlık başlık `{word count; byte 0}`, ardından `{row, cmd, arg}` biçiminde `count` girdi. İz konumu 3'ten başlar. Girdilerin anlamları:
+- cmd < 0x7F: nota, arg = ses düzeyi (0xFF = yok).
+- nota 0: dur.
+- nota 0x7F: geçerli notayı koru.
+- cmd 0x80: enstrüman (arg).
+- cmd 0x81–0x97: efektler.
+- row 0xFF: iz sonu.
+- dağıtılan dosyalarda row değeri FFh olan 496 girdi komut değil, iz sonu işaretleridir (`FF FF FF`, docs/FORMATS.md "AMF").
+
+**İz durumu:** DGROUP `7C91`'de 32 × 45 bayt.
+
+| Ofset | Alan |
+|---|---|
+| +00 | uzak iz işaretçisi |
+| +04 | konum |
+| +06 | bayraklar (bit1 = duraklatılmış) |
+| +08 | nota |
+| +09 | enstrüman |
+| +0A | ses düzeyi |
+| +0B | word tık sayacı |
+| +0D | word periyot |
+| +0F | geçerli komut |
+| +10 | parametre |
+| +11 | word ton-portamento hedefi |
+| +13 | ton-portamento hızı |
+| +14 | ton-portamento belleği |
+| +15 | portamento belleği |
+| +16 | dword arpej frekansı[3] |
+| +22 | ? |
+| +23 | vibrato konumu |
+| +24 | vibrato parametresi |
+| +25 | tremolo parametresi |
+| +26/+27 | tremolo hızı/derinliği |
+| +28 | tremolo konumu |
+| +29 | ofset belleği |
+| +2C | pan |
+
+**Kanal başına SAMPLEINFO** (DGROUP `8231 + ch·26`'da 26 bayt), `cdiSetSample`'a geçirilir:
+- +00 uzak örnek
+- +04 uzunluk
+- +08 loopStart
+- +0C loopEnd
+- +10 kip = 1
+- +11 word sampleID (segment 0xFFFF olduğunda EMS tanıtıcısı)
+- +13 c2spd
+- +15 dword geçerli frekans
+- +19 ses düzeyi
+
+**AMP genel değişkenleri:**
+
+| Ofset | Anlamı |
+|---|---|
+| 7C4E | ampInit seçenekleri |
+| 7C50 | durum (bit0 çalıyor, bit1 duraklatılmış) |
+| 7C51 | çalma seçenekleri (bit0 = döngü) |
+| 7C53 / 7C54 / 7C55 | başlangıç / bitiş / geçerli sıra |
+| 7C56 | geçerli iz |
+| 7C57 | satır |
+| 7C59 | son satır |
+| 7C5B | tık |
+| 7C5C | sıraların uzak işaretçisi |
+| 7C60 | enstrümanların uzak işaretçisi |
+| 7C64 | hız |
+| 7C65 | BPM |
+| 7C66 | 0x40 |
+| 7C67 | eşzamanlama |
+| 7C68 | kırma bayrağı |
+| 7C6D | kanal sayısı |
+| 7C6F[32] | pan |
+| 7C8F | geçerli desendeki satır sayısı |
+| 7C44 | ampGetTrackData'nın döndürdüğü 10 baytlık TRACKDATA |
+| 7BE4 | AMP'nin özel ISR yığınının tepesi (eski SS:SP 7BE6/7BE4'te saklanır) |
+| 8571[32] | iz başına ses düzeyi (varsayılan 0x40) |
+| 8591 | AMP ilklendirildi bayrağı |
+| 859E / 859F | yoklama / kesme yeniden giriş kilitleri |
+| 85A0 | tık Hz |
+| 85A2 | son tıkın dword zamanı |
+| 85A6 | MCPSampleRealAddress'e uzak işaretçi (sürücüden) |
+| 85AA | eski dosyalar için varsayılan panlar: −63, 63, 63, −63 ×4 |
+
+### 5. Diskteki AMF düzeni (`ampLoadAMF`'nin okuduğu biçimiyle)
+
+Sihirli değer `"AMF"` ve ardından gelen bir sürüm baytıdır. Yükleyici 1, 8, 9 ve 10–14 sürümlerini kabul eder, diğerleri için −3 döndürür. `extracted/MUZIK` içindeki 15 dosyanın hepsi sürüm 14'tür.
+
+1. **Başlık** (v14'te 75 bayt): `"AMF" ver`, `name[32]`, `insCount u8`, `orderCount u8`, `trackCount u16`.
+   - v≥9: `channels u8`, ardından `pan[16]` (v≥12 için pan[32]). v<11 için dosyadan okunan panların **üzerine** DGROUP 85AA'daki varsayılan tablo yazılır.
+   - v≥13: `BPM u8`, `speed u8`.
+   - `ampLoadModule` içinde v1 ve v8 dosyaları varsayılan panlarla 4 kanala zorlanır.
+2. **Sıralar** (orderCount adet): `rows u16` (yalnızca v≥14; aksi hâlde rows = 64), ardından `channels × u16 trackRef`.
+3. **Enstrümanlar**, yukarıdaki düzende insCount × 65 bayt. 10'dan önceki sürümler 59 bayt kullanır: length, loopStart ve loopEnd dword alanları u16'dır ve loopEnd 0xFFFF döngü yok demektir.
+4. **İz eşlemi:** trackCount × u16; her mantıksal iz için saklanan izin numarasını verir.
+5. **Saklanan izler:** `count u16`, `type u8`, ardından count×3 bayt. Sürüm 1'de 3 ek bayt vardır. Her iz için count·3+6 bayt ayrılır.
+6. **Örnek verisi:** ham 8 bit, örnek indisi sırasıyla, dönüşüm yapılmadan. Her örnek uzunluk + 16 baytlık bir tampon alır. DDS fonksiyonları "EMSAlloc" ve "EMSCopyTo" varsa 0x400 bayttan büyük örnekler EMS'e gider; örnek işaretçisi bu durumda 0xFFFF:handle olur.
+
+Dağıtılan müzik 80, 81, 82, 83, 84, 86, 88, 89, 8C, 8D, 94 ve 95 efektlerini kullanır (tempo 120 ve 144). 0x85 ya da 0x87'yi hiç kullanmaz.
+
+### 6. asm2599 (veri sınıfı bir segmentte elle yazılmış 386 kodu)
+
+Bu **bir karıştırıcı ya da açıcı (decompressor) değildir**. 386 komutları kullanan bir grafik çekirdekleri kümesidir: 32 bitlik yazmaçlar, REP STOSD/MOVSD, ENTER/LEAVE ve FS/GS segment yazmaçları için LFS/LGS.
+
+**Kod segmentine yazılan veri.** CS:0000–0017 ayrılmış sıfır baytlardır. Ölçekli blit yordamları (0018 ve 0144) 16.16 x/y adım değerlerini, y biriktiricisini, satır sayacını ve satır başına DI düzeltmesini `CS:` önekleriyle buraya saklar.
+- Bu, kod segmentine yazılan veridir. **Hiçbir komut baytı yamalanmaz**, yani katı anlamda kendini değiştiren kod değildir. C'de bunlar yerel değişkenlere dönüşür.
+
+**Giriş noktaları.** Altısı doğrudan çağrılır (0018, 028F, 02AF, 0440, 04AD, 0500; 0440'ın çağıranı bulunamadı). Üçü daha, uzak fonksiyon işaretçisi olarak (`PUSH 0x2599 / PUSH off`, 102 nokta) SYSTEMS.L blit dağıtıcısı `0AC6:0430`'a geçirilir:
+- `02D0`: opak dikdörtgen kopyalama (60 nokta).
+- `0341`: saydam anahtar renkli dikdörtgen kopyalama (36 nokta).
+- `03C4`: aynısı, yatay aynalanmış (6 nokta).
+
+Bu üçünün argüman çerçevesi `(src far, sx, sy, w, h, srcPitch, dst far, dx, dy, dstPitch[, key])` biçimindedir. Başarıda 0xFFFF, `y·pitch+x` 16 biti taşarsa 0 döndürürler.
+
+`0144`, `0234` ve `0440`'a başvuru yoktur.
+
+**Harmanlama tablosu** (uzak işaretçi olarak geçirilir; 0440, 04AD ve 0500 kullanır). Sırasız a<b renk çiftleri için 32640 baytlık üçgen bir tablodur:
+`idx = a·(509−a)/2 − 1 + b`. İki renk eşit olduğunda sonuç o renktir.
+
+**`0500`** 3B görünümü 2× büyütür:
+- Kaynak: 0xCB ofsetinden başlayan, satır aralığı (pitch) 100 bayt olan bir tampon.
+- 1. geçiş çift ekran satırlarını yazar: 4,6,…,194, x = 6..190. Kaynak pikseller çift x'e gider; tek x ise blend(left, right) olur.
+- 2. geçiş tek satırları dikey ve çapraz harmanlamayla (dört komşu) yazar.
+- 0xFE kaynak değeri "ekranda zaten olan pikseli koru" demektir.
+- Doğrudan A000h'ye yazar.
+
+**Hatalar:**
+- 0018 ve 0144'ün hata çıkışları `LEAVE` olmadan `RETF` yapar ve yığından dengesiz bir yazmaç kümesi çeker; bu yüzden çökerler. Bu yollara yalnızca 16 bitlik ofset taşmasında girilir.
+- 03C4'ün hata yolu SI ve DS'i yanlış sırayla çeker; bu da DS'i bozar.
+- Başarıda 0018, girişte AX'te ne varsa onu döndürür.
+
+### 7. Zamanlama: müziği ne sürüyor (aslına uygunluk (fidelity) açısından kritik)
+
+**Timer Service (seg10EF).** INT 08'e kanca atar ve PIT kanal 0'ı kip 3'te yeniden programlar (`out 43h,36h`).
+- **Ana bölen, herhangi bir yuvanın kaydettiği en küçük hız değeridir.**
+- DGROUP `85CE`'de 14 baytlık 16 yuva vardır: `{far isr; word rate; word step; word acc; byte active; byte ?}`.
+- Yuva 0, hızı 0xFFFF olan özgün BIOS işleyicisidir.
+- step = ((master<<16)|0xFFFF)/rate; ana hızı belirleyen yuva içinse 0xFFFF.
+- Her IRQ0'da işleyici EOI gönderir, STI yürütür ve her etkin yuva için `acc += step` yapar; elde (carry) oluşursa yuvanın yordamını bir kesme gibi (PUSHF+CALLF) çağırır.
+- En hızlı yuvanın adımı 0x10000 değil 0xFFFF olduğundan, bu yuva her 65536 IRQ'da bir çağrıyı atlar. Bu, 100 Hz'de yaklaşık 11 dakikada bir demektir.
+- BIOS saati yaklaşık 1193182/65535 Hz'de zincirlenir.
+
+**Oyunun kaydettiği hızlar:**
+- 0x2E9B = 11931 → 100.007 Hz, iki kez kullanılır:
+  - `1145:0096` (DSMI zamanı += 100, ovl559A tarafından kaydedilir).
+  - NSES `0D42:0120`; `ampInterrupt`'ı çağırır ve 73DB'de kendi yeniden giriş bayrağı vardır.
+- İsteğe bağlı olarak 0x7485 = 29829 → 40.0 Hz, yapılandırma sözcüğü e7f0'ın 0x80 biti ayarlıysa: NSES `0D42:0093` EMSSaveState, `cdiPoll`, EMSRestoreState çalıştırır. Bu, IRQ kullanmayan sürücüler için yoklama yoludur.
+- Dolayısıyla PIT yaklaşık 100 Hz'de çalışır.
+
+**DSMI zamanı** 0.1 ms birimindedir ve her 100 Hz çağrısında 100 artırılır.
+
+**AMP temposu** (çıkış örnekleme saatine bağlı değildir):
+- tickHz = ⌊BPM·50/125⌋ (tam sayı bölmesi).
+- tickLen = ⌊10000/tickHz⌋, 0.1 ms biriminde.
+- `ampPoll` zamanın anlık görüntüsünü alır (LockDSMITime), ardından `(now − last) − k·tickLen > 0` olduğu sürece `ampTick` çalıştırır; karşılaştırma **katı** büyüktürdür ve her seferinde `last += tickLen` ilerletilir.
+- Bu nedenle tıklar yalnızca 10 ms'lik IRQ sınırlarında, titremeyle (jitter) gerçekleşir. 125 BPM'de: 50 Hz, her ikinci IRQ'da bir tık.
+- Kırpma tempoda duyulur:
+
+| BPM | tickHz | tickLen (0.1 ms) | Gerçek tık hızı | Kesin hız |
+|---|---|---|---|---|
+| 120 | 48 | 208 | 48.08 Hz | 48 Hz |
+| 144 | 57 | 175 | 57.14 Hz | 57.6 Hz |
+
+- Taşıma (port) bu tam sayı aritmetiğini ve 100 Hz nicemlemesini yeniden üretmelidir (ya da aynı IRQ çizelgesini benzetmelidir).
+
+**Karıştırıcı.** **MCP yazılım karıştırıcısı IST.EXE içinde değildir.** Yüklenen sürücünün içindedir: SDISB16, SDIPAS16 ve SDIWSS16, `mcpOpenDDS` ve DMA koduyla birlikte "MCP v3.5 - (C) 1992,1995 Otto Chrons" içerir. SDIGUS16, GUS donanımında karıştırır. EXE onunla yalnızca CDI ve DDS üzerinden konuşur (`MCPSampleRealAddress`, `SDIInitDevice/StartOutput/StopOutput`, `MCPDisableVirtualSamples`). Karıştırma hızı, ara değerleme (interpolation), ses düzeyi tabloları ve 8 bitlik işaret işleme tamamen .DSD içindedir. **Seste aslına uygunluk, `SDISB16.DSD`'nin tersine mühendisliğini gerektirir** (ya da referans hangi sürücüyse onun). SES.CFG, SDISB16.DSD'yi seçer.
+
+**AMP sayısal ayrıntıları:**
+- Nota başlangıcı frekansı = c2spd·semitone[note] >> 10; 2^(n/12) tablosu kullanılır.
+- Kaydırmalar (slide) ve vibrato frekansı c2spd·6848/period olarak yeniden hesaplar; period 100..0xD5FF aralığına kırpılır.
+- İki yol farklı yuvarlar.
+- CDI'ye gönderilen ses düzeyi = vol·trackVol >> 6 (0..64).
+- Vibrato: period ± (depth·sin)>>7. Tablo indisi (pos>>2)&31, pos += (param>>2)&0x3C.
+- Tremolo (efekt 0x87; OpenMPT bunu tremor olarak ele alır) ses düzeyini ± (depth·sin)>>10 kadar değiştirir.
+- Arpej, önceden hesaplanmış 3 frekans arasında tick%3 ile döner.
+- Desen kırma (pattern break) parametresini yok sayar ve her zaman 0. satıra gider.
+- Geriye doğru konum atlaması, döngü seçeneği ayarlı değilse yok sayılır.
+
+### 8. Diğer aslına uygunluk notları
+
+- **Kendini değiştiren kod (RTL):** `15C9:0306`, bir x87 varsa çağıranın `CD 34..3D` baytlarını `9B D8..DF` olarak yeniden yazar (FixFPU bunları zaten geri getirir). `15C9:0598` yığında kurduğu bir komutu yürütür.
+- AMP satır efekti tablosu: indis 5 (efekt 0x85) tek başına duran bir `RETF`'e (0EF6:03BD) işaret eder; bu çökmeye yol açar. `ampDoCommand` indis 0x18'i (efekt 0x98) kabul eder; bu da tablonun ötesindeki koda (0x00C8) okur. İkisi de dağıtılan AMF dosyalarında geçmez.
+- `dsmiMemCmp`, tek fark son bayttaysa "eşit" bildirir (JECXZ tuhaflığı).
+- `dsmiStrCmp` düz bir uyuşmazlık için hiçbir zaman negatif değer döndürmez.
+- AMP, bir IRQ0 işleyicisi içinde özel bir yığında (DGROUP:7BE4) çalışır. Genel durumuna hem kesme anında hem de ana akıştan (ampPlayModule, ampStopModule, ampSetTempo ve diğerleri) CLI olmadan dokunulur. Yeniden giriş yalnızca bayraklarla korunur.
+- `ampPlayRange`, modül türü 2 için yapılan bir sınamanın iki dalında da 7C66=0x40 ayarlar (ölü kod).
+
+### 9. Açık sorular
+
+- Aynı IRQ içinde DSMI zamanı yuvası AMP yuvasından önce mi çalışır? Bu, ovl559A ile ovl55CC arasındaki kayıt sırasına bağlıdır ve tık evresini bir IRQ kadar değiştirir.
+- Örneklerin işaretli olup olmadığı ve karıştırıcının nasıl ara değerleme yaptığı: yanıt .DSD'den çıkarılmalı.
+- Yazılım öykünücüsünün seg1351'deki INT 34h–3Dh giriş ofsetleri (RTL başlangıç kodu tarafından kurulur) henüz adlandırılmadı.
+- seg08D0: hangi modüle ait olduğunu doğrulayın (kalıcı 3DQUICK.L mi, ayrı bir çokgen modülü mü). Geri derledikten (decompile) sonra 000C'ye kesin bir ad verin.
+- `EMSLockRegion` (1154:07F4) ve `EMSHeapAvail` (1154:0C4D): kesin anlamları.
+
+## English
 
 Every function listed in `lib.tsv`. All DGROUP offsets are in segment 16E0.
 
-## 1. What each segment is
+### 1. What each segment is
 
 | Seg | Size | What it is | Origin |
 |---|---|---|---|
@@ -24,7 +352,7 @@ Every function listed in `lib.tsv`. All DGROUP offsets are in segment 16E0.
 
 Who calls what: overlay `ovl55CC` (`T:ALTDUZEY\OSES.L`, which another group owns) is the sound initialisation. It runs DDSRegisterFunction(MCPDisableVirtualSamples, GetEnvString, SetVector), cdiInit, DDSLoadDriver(SES.CFG name at e85c), then DDSAccessFunction(SDIInitDevice, SDIStartOutput, SDIStopOutput), ampInit, tsAddRoutine and cdiSetupChannels. `ovl559A` sets up the DSMI time base.
 
-## 2. DDS (seg0DF2)
+### 2. DDS (seg0DF2)
 
 Globals:
 - `e776` (word): next driver handle, starts at 1.
@@ -65,7 +393,7 @@ Load steps:
 
 Unload calls `entry(2,0,0)`.
 
-## 3. CDI (seg0EAE)
+### 3. CDI (seg0EAE)
 
 Globals:
 - `7694`: magic 0xDA.
@@ -81,7 +409,7 @@ CDIDEVICE has 26 far function pointers. Their order is confirmed by the `gus*` s
 
 Each wrapper selects the device from the channel argument and forwards the remaining arguments. The calls are pascal with 32-bit arguments.
 
-## 4. AMP player (seg0EF6) – data structures
+### 4. AMP player (seg0EF6) – data structures
 
 **Code-segment tables (CS:)**
 
@@ -211,7 +539,7 @@ Each wrapper selects the device from the channel argument and forwards the remai
 | 85A6 | far ptr to MCPSampleRealAddress (from the driver) |
 | 85AA | default pans for old files: −63, 63, 63, −63 ×4 |
 
-## 5. AMF on-disk layout (as `ampLoadAMF` reads it)
+### 5. AMF on-disk layout (as `ampLoadAMF` reads it)
 
 The magic is `"AMF"` followed by a version byte. The loader accepts versions 1, 8, 9 and 10–14 and returns −3 for anything else. All 15 files in `extracted/MUZIK` are version 14.
 
@@ -227,7 +555,7 @@ The magic is `"AMF"` followed by a version byte. The loader accepts versions 1, 
 
 The shipped music uses effects 80, 81, 82, 83, 84, 86, 88, 89, 8C, 8D, 94 and 95 (tempo 120 and 144). It never uses 0x85 or 0x87.
 
-## 6. asm2599 (hand-written 386 code in a data-class segment)
+### 6. asm2599 (hand-written 386 code in a data-class segment)
 
 This is **not a mixer or a decompressor**. It is a set of graphics kernels that use 386 instructions: 32-bit registers, REP STOSD/MOVSD, ENTER/LEAVE, and LFS/LGS for the FS/GS segment registers.
 
@@ -258,7 +586,7 @@ The argument frame for these three is `(src far, sx, sy, w, h, srcPitch, dst far
 - The error path of 03C4 pops SI and DS in the wrong order, which corrupts DS.
 - On success, 0018 returns whatever AX held on entry.
 
-## 7. Timing: what drives the music (fidelity-critical)
+### 7. Timing: what drives the music (fidelity-critical)
 
 **Timer Service (seg10EF).** It hooks INT 08 and reprograms PIT channel 0 in mode 3 (`out 43h,36h`).
 - **The master divisor is the smallest rate any slot has registered.**
@@ -305,7 +633,7 @@ The argument frame for these three is `(src far, sx, sy, w, h, srcPitch, dst far
 - Pattern break ignores its parameter and always goes to row 0.
 - Position jump backwards is ignored unless the loop option is set.
 
-## 8. Other fidelity notes
+### 8. Other fidelity notes
 
 - **Self-modifying code (RTL):** `15C9:0306` rewrites the caller's `CD 34..3D` into `9B D8..DF` when an x87 is present (FixFPU already restores these). `15C9:0598` executes an instruction it builds on the stack.
 - AMP row-effect table: index 5 (effect 0x85) points at a lone `RETF` (0EF6:03BD), which would crash. `ampDoCommand` accepts index 0x18 (effect 0x98), which reads past the table into code (0x00C8). Neither appears in the shipped AMF files.
@@ -314,7 +642,7 @@ The argument frame for these three is `(src far, sx, sy, w, h, srcPitch, dst far
 - AMP runs on a private stack (DGROUP:7BE4) inside an IRQ0 handler. Its global state is touched both at interrupt time and from the main line (ampPlayModule, ampStopModule, ampSetTempo and others) with no CLI. Re-entry is guarded only by flags.
 - `ampPlayRange` sets 7C66=0x40 on both branches of a test for module type 2 (dead code).
 
-## 9. Open questions
+### 9. Open questions
 
 - Within the same IRQ, does the DSMI-time slot run before the AMP slot? It depends on registration order between ovl559A and ovl55CC, and it changes the tick phase by one IRQ.
 - Sample signedness and how the mixer interpolates: answer from the .DSD.

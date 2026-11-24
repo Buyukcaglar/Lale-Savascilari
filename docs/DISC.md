@@ -1,4 +1,111 @@
-# The CD (redump.org 91232), its dump and the simulated image
+# CD (redump.org 91232), dökümü ve benzetilmiş imaj / The CD (redump.org 91232), its dump and the simulated image
+
+**Dil / Language:** [Türkçe](#türkçe) · [English](#english)
+
+## Türkçe
+
+Kaynak: <http://redump.org/disc/91232/> (cue, MD5, SHA-1 ve SFV dosyaları 2026-11-20'de
+alındı).
+
+| Alan | Değer |
+|---|---|
+| Başlık | İstanbul Efsaneleri: Lale Savaşçıları: Birinci Bölüm (Turkey) |
+| Baskı | Aktüel Haftalık Kent Rehberi Time Out (dergi eki disk) |
+| Halka kodu (ring) / mastering | `9701056 RAKS` (1997), yazma ofseti 0, 0 hata |
+| PVD tarihleri | hiçbiri ayarlanmamış (`'0'` × 16, GMT 0) |
+
+| # | Tür | Ön boşluk (pregap) | Uzunluk | Sektör | Bayt | CRC-32 | MD5 |
+|---|---|---|---|---|---|---|---|
+| 1 | Veri, MODE1/2352 | 00:00:00 | 25:48:70 | 116170 | 273231840 | 514b4fe9 | 77363cfffa75e795b1877dcfa6d63129 |
+| 2 | Ses | 00:00:00 | 02:02:18 | 9168 | 21563136 | 92e65f9b | 42a49f4e7d507533a61d7fcb22f19dbf |
+| 3 | Ses | 00:00:00 | 03:26:16 | 15466 | 36376032 | 51036dff | a3c9d7ac93443cff1b7e6bbddc297644 |
+| | Toplam | | 31:17:29 | 140804 | 331171008 | c9767886 | |
+
+SHA-1: iz (track) 1 `ee8c6070624f36b6ff40f3bf109fe08f72202a70`, iz 2
+`e2923e2c9c2a08185e7f4fdabedaa020cd0a18dc`, iz 3 `f70cdd125e3f52231a83ec2e401057550ed193f9`.
+
+### Döküm (`_references/cd`)
+
+Kullanıcının diskinden redumper ile alındı; `tools/cddump.py` onu çözümler, port onu içe
+aktarır ([INSTALL.md](INSTALL.md)).
+
+* **İz 1**, 116,020 sektörlük `ISTANBUL` adlı bir ISO 9660 birimi ile onu izleyen 150 sektörlük
+  bir son boşluktan (post-gap) oluşur (toplam 116,170). 1995-05-02 ile 1996-11-10 arası tarihli
+  23 dosya: sekiz `.CKD` arşivi, `TRDOS.DAT`, `GRPHAZIR.DAT`, dört ses sürücüsü `SDI*.DSD`,
+  `BOSCH.KOR`, `SONPAL.PAL`, `IST.EXE` (384,560 bayt), kurulum programı `KUR.EXE`, `NASIL.EXE`,
+  üç `.PIF` dosyası ve `ISTANBUL.TXT`. `SES.CFG`, `GRP.DAT` veya kayıtlı oyun yoktur: bunları
+  kurulum programı ve oyun yazar. Tüm veri dosyaları 2005 sürümündekilerle aynıdır.
+* **Mastering tuhaflığı**: 116,020 veri sektörü diskte 48 örnek (sample) (192 bayt) erken
+  durur; son boşluk ve ses ofset 0'dadır. Bu yüzden redumper'ın iz bölmesi son boşluğu
+  karıştırılmış (scrambled) bırakır ve ses izlerini 192 bayt erken alır. Düzeltilmiş
+  konumlardan okunduğunda **iz 1 ve 2 yukarıdaki redump.org sağlama toplamlarıyla eşleşir**.
+* **İz 3** 192 bayt (48 örnek) eksik biter - sürücü çıkış alanının (lead-out) içine okumadı -
+  bu yüzden sağlama toplamları redump.org'unkilerden farklıdır. Çıkış alanının içine de
+  okuyabilen (overread) bir sürücü onu tamamlardı.
+
+### Oyun CD'yi nasıl kullanır
+
+* **ovl5737** bir MSCDEX istemcisidir:
+  * INT 2Fh AX=1500h MSCDEX'i algılar, IOCTL 0Ah ses diski bilgisini okur.
+  * IOCTL 0Bh izlerin başlangıç konumlarını okur.
+  * Aygıt isteği 84h çalar (başlangıç Red Book karesi (frame) cinsinden), 85h durdurur.
+* **İzlerin kullanımı** (`o5737_cd_play_track(track, len_lo, len_hi)`; uzunluk −1 "izin sonuna
+  kadar" demektir):
+  * **iz 2** girişte ve ana menüde çalar (`demo_intro_menu` 3C2D:09DB / 0A48);
+  * **iz 3** hikâye slayt gösterisinde çalar (`demo_story_scene` 3C2D:130F);
+  * **iz 0**, `ui_cd_music` 05DC:08F6'dan sürdürür ya da yeniden çalar.
+* **Çaldığı son iz için uzunluk `status − start − 150`'dir**: diskin sonu eksi 2 sn'lik giriş
+  alanı (lead-in).
+* **2005 `IST.EXE` CD sesini hiç etkinleştirmez.** `o5737_cd_init`'i (5737:0198, etkin
+  bayrağı 16E0:8F4E'yi kurar) orada hiçbir yer çağırmaz. Bu yüzden her çalma isteği, disk bağlı
+  olsa bile hemen döner (DOSBox-X'te denetlendi). Diskteki 1996 `IST.EXE` onu `main`'den
+  çağırır ve izleri çalar.
+* **Videolar yereldir.** GFL videoları arşiv katmanı (ovl569A) üzerinden `0GFL.CKD`'den
+  (218 MB) yüklenir. Birini çalmadan önce FRPOS video işlem kodu (opcode) (3FD1:1540)
+  16E0:3D5C bayrağını denetler:
+  * bayrak 1 ise işlem kodu `o5737_cd_vtoc_ok`'u (INT 2Fh 1505h) en çok 3 kez çağırır;
+  * disk yoksa "Biz size CD'yi sürücüden çıkarmayın…" iletisini, ret durumunda ise
+    "CD'yi takmayacaksanız size animasyon falan yok!" iletisini gösterir.
+* **Disk denetimi.** DGROUP 3D5C'yi **1** olarak ilkler. 2005 derlemesinde `main` onu
+  0546:02DD'de, `ctl_timer_install`'ın hemen ardından gelen 12 baytlık `mov es:[3D5C],0` ile
+  0 yapar. 1996 derlemesinde bu yerde CD açılışı bulunur: `o5737_cd_init()`, ardından diskin
+  beklenmesi. Bu, disk elde olmadan önce 2005 derlemesinin düşündürdüğünü doğrular;
+  [EDITIONS.md](EDITIONS.md) ikisi arasındaki tüm farkları listeler.
+
+### Porttaki disk
+
+Port iki baskıdan (edition) birini çalıştırır ([EDITIONS.md](EDITIONS.md)). CD baskısı diskini
+`DATA/LALE.CHD` olarak alır; bu, sanal MSCDEX'in D: sürücüsü olarak bağlanır
+(`src/platform/cdrom.c`, `chd.c`); geri derlenmiş CD modülü (`src/game/cd5737.c`,
+`tests/test_cdaudio.c` içinde test edilir) özgün programla aynı istek bloklarını kurar ve aynı
+uzunluk hesabını kullanır.
+
+Geliştirme seçenekleri: `--game-dir <folder> --cd-image <cue|chd> --edition cd`, CD baskısını
+bir dosya klasörü ile bir imajdan çalıştırır (`--cd-music`, `--edition cd`'nin eski adıdır;
+gerçek disk elde olmadan önce 2005 programının içinde CD modülünü açıyordu);
+`--cd-music --cd-image <cue> --cd-play 2 [--seconds 15]` modül üzerinden tek bir iz çalar.
+
+### Benzetilmiş imaj (`tools/cdsim.py`)
+
+`python tools/cdsim.py build`, yukarıdaki tam sektör sayıları ve iz türleriyle
+`build/cd/… (Simulated).cue` ile 3 `.bin` dosyası yazar. `tools/dosbox/ist_cd.conf` onu D:
+olarak bağlar.
+
+* **İz 1**, `orig/` içindeki dosyalarla (kullanıcı dosyaları GRP.DAT ve SAKLA001.SAV hariç)
+  bir ISO 9660 birimidir. 115,833 sektör kullanır, geri kalanı 116,170'e kadar sıfırla
+  doldurulur. Sektörler ham Mode 1'dir: eşzamanlama (sync), BCD MSF başlığı, EDC ve ECC P/Q;
+  bunları `cdsim.py selftest` skaler bir başvuru gerçekleştirimine karşı denetler. PVD
+  tarihleri gerçek diskteki gibi ayarlanmamıştır. Birim etiketi (`ISTANBUL`) doğru çıktı;
+  gerçek diskteki dosya sırası farklıdır (`0GFL.CKD` önce gelir, sektör 21'de).
+* **İz 2 ve 3**, betiğin sentezlediği özgün müziği içerir: bir dem sesi (drone), Hicaz
+  makamında ud benzeri bir tel çekişi ve def ile çalınan usul kalıpları. Örnek (sample) veya
+  kayıt yoktur, çıktı deterministiktir ve **CC0 1.0** ile kamu malına (public domain) adanmıştır.
+
+`python tools/cdsim.py verify <cue>` redump.org düzenindeki bir imajı yukarıdaki özet
+değerleriyle (hash) karşılaştırır; `python tools/chd.py verify <chd>` aynısını bir CHD
+içindeki izler için yapar.
+
+## English
 
 Reference: <http://redump.org/disc/91232/> (cue, MD5, SHA-1 and SFV files fetched 2026-11-20).
 
@@ -19,7 +126,7 @@ Reference: <http://redump.org/disc/91232/> (cue, MD5, SHA-1 and SFV files fetche
 SHA-1: track 1 `ee8c6070624f36b6ff40f3bf109fe08f72202a70`, track 2
 `e2923e2c9c2a08185e7f4fdabedaa020cd0a18dc`, track 3 `f70cdd125e3f52231a83ec2e401057550ed193f9`.
 
-## The dump (`_references/cd`)
+### The dump (`_references/cd`)
 
 Made with redumper from the user's disc; `tools/cddump.py` analyses it, the port imports it
 ([INSTALL.md](INSTALL.md)).
@@ -37,7 +144,7 @@ Made with redumper from the user's disc; `tools/cddump.py` analyses it, the port
 * **Track 3** ends 192 bytes (48 samples) short - the drive did not read into the lead-out - so
   its sums differ from redump.org's. A drive that can overread the lead-out would complete it.
 
-## How the game uses the CD
+### How the game uses the CD
 
 * **ovl5737** is an MSCDEX client:
   * INT 2Fh AX=1500h detects MSCDEX, and IOCTL 0Ah reads the audio disc info.
@@ -66,7 +173,7 @@ Made with redumper from the user's disc; `tools/cddump.py` analyses it, the port
   confirms what the 2005 build suggested before the disc was at hand; [EDITIONS.md](EDITIONS.md)
   lists every difference between the two.
 
-## The disc in the port
+### The disc in the port
 
 The port runs either edition ([EDITIONS.md](EDITIONS.md)). The CD edition gets its disc as
 `DATA/LALE.CHD`, mounted as drive D: of the virtual MSCDEX (`src/platform/cdrom.c`, `chd.c`);
@@ -78,7 +185,7 @@ edition from a folder of files plus an image (`--cd-music` is the old name of `-
 before the real disc was at hand it switched the CD module on inside the 2005 program);
 `--cd-music --cd-image <cue> --cd-play 2 [--seconds 15]` plays one track through the module.
 
-## Simulated image (`tools/cdsim.py`)
+### Simulated image (`tools/cdsim.py`)
 
 `python tools/cdsim.py build` writes `build/cd/… (Simulated).cue` plus 3 `.bin` files with the
 exact sector counts and track types above. `tools/dosbox/ist_cd.conf` mounts it as D:.

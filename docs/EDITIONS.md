@@ -1,4 +1,57 @@
-# The two editions
+# İki baskı / The two editions
+
+**Dil / Language:** [Türkçe](#türkçe) · [English](#english)
+
+## Türkçe
+
+`IST.EXE`'nin iki derlemesi (build) vardır ve port bunlardan herhangi biri gibi davranır
+(`g_edition`, `src/engine/edition.h`):
+
+| | CD baskısı | 2005 baskısı |
+|---|---|---|
+| `IST.EXE` | 1996-11-10, 384,560 bayt, oyun CD'sinde (redump.org 91232) | 2005-02-08, 385,328 bayt, bir klasörden çalışan yeniden yayım |
+| Gereksinim | MSCDEX ve sürücüde disk | kendi klasöründen başka hiçbir şey |
+| Videolar | her birinden önce diski denetler | denetim yok |
+| Giriş, menü ve hikâyedeki müzik | CD ses izleri (audio track) 2 ve 3 | `DEMO.AMF` modülü |
+| Veri dosyaları | bayt bayt aynı (`*.CKD`, `TRDOS.DAT`, `GRPHAZIR.DAT`, `*.DSD`, …) | |
+
+Portun kodu 2005 derlemesinden geri derlendi (decompiled); `tools/exediff.py` iki
+çalıştırılabilir dosyayı yordam yordam karşılaştırır. Şunlar dışında ikisi aynı programdır:
+
+* **`main`** (`src/game/istanbul.c`). CD derlemesi 3D5C bayrağını 1 yapar, `o5737_cd_init()`'i
+  çağırır - MSCDEX yoksa ölümcül hata (varsa "CD sürücü tanındı…") - ve diski bekler
+  (`o5737_cd_vtoc_ok()` üç kez; olmazsa bir tuşa basılana kadar "CD'yi takın"; Esc çıkar). 2005
+  derlemesinde bu yerde `mov es:[3D5C],0` bulunur ve `DEMO.AMF` daha sonra yüklenir.
+  3D5C = 1 iken FRPOS video işlem kodu (opcode) her videodan önce diski ister.
+* **DEMOLAR'ın iki yordamı** (`src/game/demolar.c`): giriş/menü ve hikâye sahnesi. CD
+  derlemesinde orada yüklenecek, karartılacak ya da serbest bırakılacak bir modül yoktur; onun
+  yerine CD iz 2 veya 3 çalar. 2005 derlemesi de aynı `o5737_cd_play_track()` çağrılarını yapar,
+  ama CD modülü hiç ilklenmediği için bu çağrılar hemen döner.
+* **`ctl_flush_keys`** (`src/engine/nkontrol.c`): CD derlemesinde INT 21h AX=0C00h, 2005
+  derlemesinde bir `kbhit`/`getch` döngüsü.
+* **Farklı kaynak satırlarından doğanlar**: derlemelerin hata yordamlarına geçirdiği satır
+  numaraları ve dosya adları (`ED_LINE`, `ED_FILE`; CD derlemesi `T:` sürücüsünden
+  derlenmiştir) ve yalnızca CD derlemesinde bulunan birkaç dizgi.
+
+Geri derlenmiş kod `ED_CD`'yi tam olarak bu yerlerde sorgular; geri kalan her şey ortaktır.
+Veri segmenti yansısı (mirror) her ikisi için de 2005 derlemesininkidir.
+
+### Hangisi çalışır
+
+`edition = auto` (varsayılan), oyun ses izleri olan bir diskten (`DATA/LALE.CHD`) içe
+aktarıldıysa CD baskısını, dosya olarak içe aktarıldıysa 2005 baskısını seçer. `--edition cd`
+ya da `--edition 2005` (`lale.ini` içinde `edition`) mümkün olduğunda başka türlü karar verir:
+2005 baskısı CHD'den de çalışır - veri dosyalarını diskte bulur - oysa CD baskısı ses izleri
+olan bir disk olmadan çalışamaz. Bkz. [INSTALL.md](INSTALL.md).
+
+CD baskısında disk `DATA/LALE.CHD`'dir ve sanal MSCDEX'in D: sürücüsü olarak bağlanır
+(`src/platform/cdrom.c`, `chd.c`); oyunun kendi CD modülü (`src/game/cd5737.c`, 1:1 geri
+derlenmiş) onunla PC'dekiyle aynı aygıt istekleri üzerinden konuşur.
+
+Kayıtlı oyunlar, `GRP.DAT` ve `SES.CFG` her iki baskıda da `SAVE/` içinde tutulur ve iki baskı
+arasında birbirinin yerine kullanılabilir.
+
+## English
 
 Two builds of `IST.EXE` exist, and the port behaves as either (`g_edition`,
 `src/engine/edition.h`):
@@ -32,7 +85,7 @@ executables routine by routine. They are the same program except for:
 The decompiled code asks `ED_CD` at exactly these places; everything else is shared. The data
 segment mirror is the 2005 build's for both.
 
-## Which one runs
+### Which one runs
 
 `edition = auto` (the default) takes the CD edition when the game was imported from a disc with
 audio tracks (`DATA/LALE.CHD`), the 2005 edition when it was imported as files. `--edition cd`

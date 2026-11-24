@@ -14,7 +14,7 @@ this repository nor in the program; it takes them from your own copy.
 
 ## Belgeler / Documentation
 
-**Türkçe.** Belgeler İngilizcedir.
+**Türkçe.**
 
 * Oynamak için: oyun verisinin nereden alındığı (CD, disk kalıbı, 2005 sürümü) ve `DATA`,
   `SAVE`, `VIDEO` klasörleri: [`docs/INSTALL.md`](docs/INSTALL.md)
@@ -26,7 +26,7 @@ this repository nor in the program; it takes them from your own copy.
 * Çözümleme araçları: [`tools/README.md`](tools/README.md)
 * macOS sürümü: [`docs/MACOS.md`](docs/MACOS.md)
 
-**English.** The documents are in English.
+**English.**
 
 * Playing: where the game's data comes from (CD, disc image, the 2005 release) and the folders
   `DATA`, `SAVE`, `VIDEO`: [`docs/INSTALL.md`](docs/INSTALL.md)
@@ -51,7 +51,7 @@ yanındaki klasörlere yerleştirir. Oyunun her iki sürümü de desteklenir.
 | 2005 sürümü: `.zip`, `.7z`, `.rar` arşivi ya da açılmış klasörü | Oyun dosyaları `DATA/` klasörüne kopyalanır | 2005 |
 
 1. Kaynağı programın yanına koyun ya da `Lale64 <yol>` ile verin. Hiçbir şey bulunamazsa
-   program sorar: *Choose File* (dosya seç), *Choose Folder* (klasör seç).
+   program sorar: *Dosya Seç…* ya da *Klasör Seç…*.
 2. Aktarma bir kez yapılır; bundan sonra oyun `DATA/` klasöründen çalışır.
 3. Oyunun yazdığı her şey (kayıtlı oyunlar `*.SAV`, `GRP.DAT`, `SES.CFG`), her iki sürümde de
    çalıştırılabilir dosyanın yanındaki `SAVE/` klasörüne gider.
@@ -70,7 +70,7 @@ folders beside the executable. Both editions of the game are supported.
 | The 2005 release: a `.zip`, `.7z` or `.rar` archive, or its unpacked folder | the game's files are copied to `DATA/` | 2005 |
 
 1. Put the source beside the program, or name it: `Lale64 <path>`. If nothing is found, the
-   program asks: *Choose File*, *Choose Folder*.
+   program asks (in Turkish): *Dosya Seç…* (choose a file) or *Klasör Seç…* (choose a folder).
 2. The import happens once; from then on the game runs from `DATA/`.
 3. Everything the game writes (saved games `*.SAV`, `GRP.DAT`, `SES.CFG`) goes to `SAVE/` beside
    the executable, in both editions.

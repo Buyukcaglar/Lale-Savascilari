@@ -1,28 +1,45 @@
-; lale.ini - port options (copy to lale.ini next to the program;
-; the macOS app also reads ~/Library/Application Support/Lale64/lale.ini)
-; The command line overrides this file.  docs/INSTALL.md explains the folders.
+; lale.ini - programın ayarları / port options
+;
+; TR: Bu dosyayı programın yanına lale.ini adıyla kopyalayın (macOS uygulaması
+;     ~/Library/Application Support/Lale64/lale.ini dosyasını da okur).
+;     Komut satırı bu dosyadan önce gelir.  Klasörler: docs/INSTALL.md.
+; EN: Copy to lale.ini next to the program (the macOS app also reads
+;     ~/Library/Application Support/Lale64/lale.ini).  The command line
+;     overrides this file.  docs/INSTALL.md explains the folders.
 
-; What to take the game from at this start: the game CD's drive, a disc image
-; (.cue, .iso, .chd), a folder, or the 2005 release as .zip / .7z / .rar.
-; Not needed once the game is in DATA; without it the program looks beside
-; itself and in the CD drives, then asks.
+; TR: Oyun bu açılışta nereden alınsın: oyun CD'sinin sürücüsü, bir disk kalıbı
+;     (.cue, .iso, .chd), bir klasör ya da 2005 sürümünün .zip / .7z / .rar
+;     arşivi.  Oyun DATA'ya bir kez aktarıldıktan sonra gerekmez; boş kalırsa
+;     program kendi yanına ve CD sürücülerine bakar, bulamazsa sorar.
+; EN: What to take the game from at this start: the game CD's drive, a disc image
+;     (.cue, .iso, .chd), a folder, or the 2005 release as .zip / .7z / .rar.
+;     Not needed once the game is in DATA; without it the program looks beside
+;     itself and in the CD drives, then asks.
 source =
 
-; auto: the CD edition (1996) when DATA/LALE.CHD is a disc with audio tracks,
-; else the 2005 edition.  cd | 2005 decide otherwise (docs/EDITIONS.md).
+; TR: auto: DATA/LALE.CHD ses izleri olan bir disk ise CD sürümü (1996), yoksa
+;     2005 sürümü.  cd | 2005 ile kendiniz seçersiniz (docs/EDITIONS.md).
+; EN: auto: the CD edition (1996) when DATA/LALE.CHD is a disc with audio tracks,
+;     else the 2005 edition.  cd | 2005 decide otherwise (docs/EDITIONS.md).
 edition = auto
 
-; Where DATA, SAVE and VIDEO are (default: beside the executable)
+; TR: DATA, SAVE ve VIDEO klasörlerinin yeri (varsayılan: programın yanı)
+; EN: Where DATA, SAVE and VIDEO are (default: beside the executable)
 base_dir =
 
-; What videos start as when VIDEO holds upscaled copies: 4k | original.
-; Ctrl+V switches while the game runs.
+; TR: VIDEO klasöründe 4K kopyalar varken videolar nasıl başlasın: 4k | original.
+;     Oyun sırasında Ctrl+V ikisi arasında geçiş yapar.
+; EN: What videos start as when VIDEO holds upscaled copies: 4k | original.
+;     Ctrl+V switches while the game runs.
 video = 4k
 
-; ---- development ---------------------------------------------------------------
-; The game straight from a folder of the original's files (no DATA / SAVE)
+; ---- geliştirme / development ---------------------------------------------------
+; TR: Oyun doğrudan özgün dosyaların bulunduğu bir klasörden (DATA / SAVE yok)
+; EN: The game straight from a folder of the original's files (no DATA / SAVE)
 game_dir =
-; with game_dir and edition = cd: the disc (.cue, .chd)
+; TR: game_dir ve edition = cd ile: disk (.cue, .chd)
+; EN: with game_dir and edition = cd: the disc (.cue, .chd)
 cd_image =
-; old name of edition = cd
+; TR: edition = cd ayarının eski adı
+; EN: old name of edition = cd
 cd_music = 0

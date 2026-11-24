@@ -1,10 +1,287 @@
-# Progress
+# İlerleme / Progress
+
+**Dil / Language:** [Türkçe](#türkçe) · [English](#english)
+
+## Türkçe
+
+İşlevlerin durum açıklamaları: **taslak** (draft; yazıldı, henüz doğrulanmadı), **doğrulandı**
+(verified; bir karşılaştırmalı testi (differential test) geçiyor ya da kâhine (oracle) karşı
+denetlendi), **yerine konuldu** (replaced; platform/RTL karşılığı var, geri derlemeye
+(decompilation) gerek yok).
+
+### Kilometre taşları
+
+| # | Kilometre taşı | Durum |
+|---|---|---|
+| 1 | Temel: paket açıcı (unpacker), segment modeli, Ghidra hattı (pipeline), FPU düzeltmesi, listelemeler | tamam (2026-11-20) |
+| 2 | Envanter: tüm işlevler adlandırıldı ve modüller haritalandı | tamam (2026-11-21): 880 ad (`analysis/names.tsv`), modül haritası PLAN.md §2'de |
+| 3 | Biçimler, Python görüntüleyicileriyle birlikte belgelendi | tamam (2026-11-23): [`FORMATS.md`](FORMATS.md) içindeki her biçim tüm oyun dosyalarına karşı denetlendi - FLiB, PAL, PUR/SND, RES, CMP, GFL, FRPOS, GRP/SAV, TRDOS, KOR, RIX, AMF, DSD (`tools/fmtcheck.py`, görüntüleyiciler, testler); yalnızca bellekteki ISOSYS savaş durumu kısmen doğrulandı |
+| 4 | Platform katmanı: VGA öykünmesi (emulation), SDL3 ana programı (host), zamanlayıcı, girdi, ses | VGA: 13h/X/12h modlarının ekrana taranması (scan-out), BIOS tabloları ve DAC'ler DOSBox-X'e karşı doğrulandı; sanal CD sürücüsü + CD müziği seçeneği; SDL3 ana programı tamam (`src/platform/sdl3_main.c`: pencere + çizici (renderer), klavye/fare ile olay döngüsü, PIT saatli zamanlayıcı, `audio_sdl.c` üzerinden oyun + CD sesi) |
+| 5 | Motor (ALTDUZEY) geri derlendi | arayüzün altındaki tüm motor katmanları tamam ve bütünleştirildi (2026-11-21): tek DLL'de 103/103 karşılaştırmalı test, birebir Borland uzak öbek (far heap) düzeni; GRTEXT (10/10) + INTRFACE (34/34) tamam, 17 test, ana yapıda (base) (120/123 yeşil; kalan 3'ü WP16 ile birleştirilen 3DQUICK testleri). Oyun modülü dalgası WP13–17 tamam ve bütünleştirildi (2026-11-21): IST.EXE'nin her işlevi geri derlendi; son savaş testi gelmeden önce ortak DLL 218/219; bütün oyunun doğrulanması (docs/VERIFY.md): giriş bölümü (intro), DOSBox-X'te açılıştan menüye kadar orijinalle eşleşiyor (200 örnek, 0–50 s; EMS çift eşleme düzeltmesi); betikli oynanış (scripted play-through) play3 (okuma sayısı eşitlemesi + poke/srand çapaları) her denetim noktasında orijinalle birebir eşleşiyor – menü, karakter yaratma (chargen) x4, semt, kayıt, kapı/hazine olayı, savaş başlangıcı + 12 savaş tuşu (yazmaçlar, DAC, ekran, VRAM, DGROUP; GRP.DAT ve SAKLA001.SAV bayt bayt aynı) – hikâyeye geçişteki saate bağlı solmanın içindeki tek bir denetim noktası dışında. Yol üzerinde düzeltilenler: kayıt açıklaması arabelleği, DDS sürücüsünün vfs üzerinden yüklenmesi (en düşük boş bellek işaretleri (lowwater) 6E06/DE30 artık eşleşiyor), DOSBox-X SB16 IRQ 7 (ses bekleme). play3'ün karakter yaratma solması denetim noktası artık hikâye videosunun karesine bağlandı (aynı). play4 (2026-11-21, iki tarafta da ses açık): köpeğin yapay zekâsına kaybedilen büyü savaşı, oyun sonu + yükleme, kazanılan ikinci savaş, eşya değişimi, mal/silah dükkânları (tuşlarla ve fareyle alım/satım), yiyecek tezgâhı, kamp, kayıt – 112 denetim noktasının hepsi aynı (ana program/saat alanları dışında DGROUP, ekran, DAC); SAKLA002.SAV yalnızca açıklamanın kuyruğunda ayrılıyor, orijinalde ilklendirilmemiş yığın (stack); uyarlamada (port) hata bulunmadı, yeni, saate göreli `@n` betik zamanlaması. Hekim: play5 (2026-11-22, 4. semtte hazırlanmış kayıt): hekim (reddetme, ölü değil x3, diriltme, parası yetmiyor), falcı, otel odası + kamp + otelci, kayıt, geri adım/yana adım/görüş boyutu/karakter ekranı/seçenekler/şehir haritası – 39 denetim noktası aynı. Lale64.exe (eski adı lale.exe) giriş bölümünü çalıştırıyor (açılış EMS/DAC/VGA/ekranda DOSBox-X kâhiniyle eşleşiyor; sürücü yüklemesi dosya katmanından geçtiğinden beri açılıştaki öbek zinciri (107 blok) ve DGROUP aynı; hâlâ farklı olanlar AMP'nin özel kesme yığını, yerel (native) yordam işaretçileri ve DSMI saat evresi – hiçbirini oyun kodu okumuyor; 2026-11-22'de denetlendi). Daha önce: altyapı tamam (2026-11-20): DGROUP modeli `dg[]`, öykünmeli PC `pc.h`, Unicorn karşılaştırmalı test düzeneği, SDL3 ana program döngüsü; 1. dalga (EMS/MEMMAN/NKONTROL, DSMI DDS/zamanlayıcı, 386 blok kopyalayıcıları (blitter) + 3D dörtgenler, dosya katmanı + Borland stdio, AMP oynatıcı, MCP karıştırıcı) tamam |
+| 6 | Oyun modülleri geri derlendi | tamam (2026-11-21): main, DEMOLAR, CHARGEN, FRPOS, 3DQUICK, 3DSYS, ISOSYS, GFL – bkz. "Geri derlenmiş modüller" |
+| 7 | DSMI ses sistemi geri derlendi | tamam: oynatıcı, yükleyici, CDI, MCP karıştırıcı (doğrulandı); ses arka ucu ana programa bağlandı (NSES yerel MCP'yi SDISB16.DSD olarak kaydeder; `audio.c` / `audio_sdl.c`) |
+| 8 | DOSBox-X'e karşı bütün oyunun doğrulanması | play3, play4, play4load her denetim noktasında aynı (docs/VERIFY.md). Karar (kullanıcı, 2026-11-22): kayıt açıklamasının NUL'dan sonraki kuyruğu uyarlamada sıfır kalır (orijinalde ilklendirilmemiş yığın, hiç okunmaz). Boşluk kapatma dalgaları (gap waves) 2026-11-22/23 (aşağıda): hekim, ISOSYS Ctrl-Break / ses açık / kapı duvarı, 3DQUICK 100x100, CD sesi, play5..play10, playq, playx, DOSBox-X'in kendi içinde Ctrl-Break ve Ctrl+Alt+Del. Her DEMOLAR yordamı artık orijinale karşı bir oynanışta çalışıyor |
+| 9 | macOS derlemesi | tamam (2026-11-23): Apple Silicon üzerinde `Lale64` + `Lale64.app`, evrensel (universal) sürüm paketi; karşılaştırmalı test takımı ve DOSBox-X'e karşı betikli oynanışlar Mac'te çalışıyor – bkz. aşağıdaki "macOS uyarlaması" ve [`MACOS.md`](MACOS.md) |
+
+### İşlev durumu
+
+`python tools/funcstatus.py` tarafından `src/` içindeki `Original:` / `Verified:` yorumlarından
+üretildi (2026-11-23; `--list` her yordamı adıyla listeler). Yalnızca kendi `Original:` satırı
+olan yordamlar sayılır; bu yüzden bir modülün sayısı "Geri derlenmiş modüller" bölümündeki
+sayıdan düşük olabilir (birlikte belgelenen küçük yardımcılar).
+
+| Segment | Kaynaklar | İşlevler | doğrulandı | taslak | yerine konuldu | belirtilmemiş |
+|---|---|---|---|---|---|---|
+| 0000 | bc_farheap, bc_stdio, ngraphs, speaker | 65 | 61 | 4 | 0 | 0 |
+| 0546 | istanbul | 1 | 1 | 0 | 0 | 0 |
+| 05DC | intrface | 32 | 32 | 0 | 0 | 0 |
+| 08D0 | q3d | 8 | 8 | 0 | 0 | 0 |
+| 09D4 | memman | 21 | 21 | 0 | 0 | 0 |
+| 0AC6 | systems | 18 | 18 | 0 | 0 | 0 |
+| 0C7F | ngraphs | 15 | 15 | 0 | 0 | 0 |
+| 0D42 | nses | 11 | 9 | 2 | 0 | 0 |
+| 0DB7 | nkontrol | 11 | 8 | 3 | 0 | 0 |
+| 0DDF | dsmistr | 9 | 9 | 0 | 0 | 0 |
+| 0DF2 | dds | 11 | 11 | 0 | 0 | 0 |
+| 0E9E | memalloc | 4 | 3 | 1 | 0 | 0 |
+| 0EAE | cdi | 28 | 28 | 0 | 0 | 0 |
+| 0EF6 | amp | 32 | 32 | 0 | 0 | 0 |
+| 105B | amfload | 3 | 3 | 0 | 0 | 0 |
+| 10EF | timer | 9 | 9 | 0 | 0 | 0 |
+| 111B | amfload | 1 | 1 | 0 | 0 | 0 |
+| 1134 | ems | 9 | 9 | 0 | 0 | 0 |
+| 1145 | dsmitime | 6 | 6 | 0 | 0 | 0 |
+| 1154 | emsheap | 17 | 16 | 1 | 0 | 0 |
+| 122B | istanbul | 1 | 1 | 0 | 0 | 0 |
+| 2599 | blit386 | 11 | 11 | 0 | 0 | 0 |
+| 2700 | q3dview, q3dview_anim, q3dview_map | 28 | 28 | 0 | 0 | 0 |
+| 303F | s3d_camp, s3d_charscr, s3d_district, s3d_keys, s3d_loop, s3d_menu, s3d_move, s3d_panel, s3d_save | 30 | 30 | 0 | 0 | 0 |
+| 39E5 | chargen | 12 | 12 | 0 | 0 | 0 |
+| 3C2D | demolar | 13 | 13 | 0 | 0 | 0 |
+| 3FD1 | frpos, frpos_shop, frpos_util | 25 | 25 | 0 | 0 | 0 |
+| 4595 | iso_ai, iso_battle, iso_char, iso_combat, iso_draw, iso_field, iso_map, iso_spell, iso_turn, iso_util | 69 | 69 | 0 | 0 | 0 |
+| 5313 | gfl | 12 | 12 | 0 | 0 | 0 |
+| 5447 | fileman | 7 | 7 | 0 | 0 | 0 |
+| 5511 | ographs | 13 | 13 | 0 | 0 | 0 |
+| 559A | fatal | 4 | 3 | 1 | 0 | 0 |
+| 55CC | oses | 2 | 2 | 0 | 0 | 0 |
+| 5646 | vfile | 9 | 9 | 0 | 0 | 0 |
+| 569A | vfs | 13 | 13 | 0 | 0 | 0 |
+| 5737 | cd5737 | 15 | 15 | 0 | 0 | 0 |
+| 5784 | grtext | 10 | 10 | 0 | 0 | 0 |
+| **tümü** | | **585** | **573** | **12** | **0** | **0** |
+
+12 taslak şunlardır: `speaker.c` içindeki PC hoparlörü yordamları (`bc_readtimer`, `bc_delay`,
+`bc_sound`, `bc_nosound`: tek kullanıcıları olan `o559A_beep` hiçbir yerden başvurulmuyor), NSES
+getenv/setvect kancaları (ana programın ortamı, IVT yok), `ctl_div0_isr`, `ctl_timer_install`,
+`ctl_dds_timer_init` (bir kesme işleyicisi ve DSMI'ye iki ince çağrı; inceleme yoluyla),
+`MemRealloc` (hiç çağrılmıyor), `emsGetPageMapRaw` ve `o559A_beep` (başvurulmuyor).
+
+### Geri derlenmiş modüller
+
+| Modül | İşlevler | Durum |
+|---|---|---|
+| ovl5737 CD sesi (`src/game/cd5737.c`) | 15/15 | doğrulandı (2026-11-22, `tests/py/test_cd5737.py`, 16 test: her aygıt isteği, dönüş değeri ve DGROUP yazımı, bir MSCDEX modeli üzerinde orijinal koda karşı; 466/468 komut çalıştırıldı, kalan 2'sine ulaşılamaz). Düzeltilenler: MSCDEX yokken / yanlış sürücüde / yalnızca ses içeren diskte `vtoc_ok`, `play_track` içinde yığının yeniden kullanımı, `read_cfg` (içi boş bir taslaktı (stub)); `cdrom.c` artık CD olmayan bir sürücü için isteğe dokunmuyor ve alt birimi (subunit) dolduruyor, MSCDEX'in yaptığı gibi. Karşılaştırılmayan: MSCDEX olmadan `drive_info` (orijinalde ilklendirilmemiş uzak (far) işaretçi, çağıranı yok) |
+| Borland `rand/srand` (`src/rtl/bc_rand.c`) | 2/2 | doğrulandı (karşılaştırmalı, 4 tohum × 2000 adım) |
+| FILEMAN `fm_cmp_decode` (`src/engine/fileman.c`) | 1/7 | doğrulandı (karşılaştırmalı, oyunun CMP dosyaları + rastgele veri) |
+| DSMI DDS kayıt defteri seg0DF2 (`src/dsmi/dds.c`) | 11/11 | doğrulandı (karşılaştırmalı); DDSLoadDriver .DSD adlarını yerel sürücülere eşler |
+| DSMI dizgi yardımcıları seg0DDF (`src/dsmi/dsmistr.c`) | 9/9 | doğrulandı (karşılaştırmalı, tuhaflıklar korundu) |
+| DSMI Zamanlayıcı Hizmeti seg10EF (`src/dsmi/timer.c`) | 9/9 | doğrulandı (karşılaştırmalı: çağrı sırası, yuva tablosu, PIT yazımları) |
+| DSMI zaman tabanı seg1145 (`src/dsmi/dsmitime.c`) | 6/6 | doğrulandı (karşılaştırmalı) |
+| DSMI ham EMS seg1134 (`src/dsmi/ems.c`) | 9/9 | doğrulandı (karşılaştırmalı) |
+| DSMI EMS öbeği seg1154 (`src/dsmi/emsheap.c`) | 17/17 | başvurulmayan emsGetPageMapRaw dışında doğrulandı (blok yerleşimi bayt bayt aynı) |
+| DSMI MemAlloc seg0E9E (`src/dsmi/memalloc.c`) | 4/4 | dönüş kodları doğrulandı |
+| MEMMAN seg09D4 (`src/engine/memman.c`) | 22/22 | doğrulandı (karşılaştırmalı); birebir aktarılmış Borland uzak öbeği üzerinde (`far_malloc`/`far_free`, `mm_coreleft` → `bc_farcoreleft`); en düşük boş bellek işareti (low-water mark) 6E06 orijinalle eşleşiyor (5. kilometre taşı) |
+| NKONTROL seg0DB7 (`src/engine/nkontrol.c`) | 11/11 | tik/bayraklar doğrulandı; INT 09h kancası ve INT 23h işleyicisi DOSBox-X'e karşı (playbrk, playbrk3d, playcad); div-0 ISR ve iki DSMI zamanlayıcı çağrısı inceleme yoluyla |
+| Borland stdio/io (`src/rtl/bc_stdio.c`) | 40 yordam | doğrulandı (karşılaştırmalı, metin kipi dahil) |
+| stdio tanıtıcı (handle) katmanı ovl5646 (`src/engine/vfile.c`) | 9/9 | doğrulandı (karşılaştırmalı) |
+| FLiB sanal dosyaları ovl569A (`src/engine/vfs.c`) | 13/13 | doğrulandı (karşılaştırmalı, 8 arşivin hepsi) |
+| 386 blok kopyalayıcıları asm2599 (`src/engine/blit386.c`) | 11/11 | doğrulandı (karşılaştırmalı, hedefin tamamı) |
+| DSMI CDI seg0EAE + AMP 2.00 oynatıcı seg0EF6 + AMF yükleyici seg105B/111B (`src/dsmi/cdi.c, amp.c, amfload.c`) | 100/100 | doğrulandı (oyunun 15 AMF'sinin hepsi: 2,500 tik boyunca aynı CDI çağrı akışları) |
+| SDISB16.DSD'deki DSMI MCP v3.5 yazılım karıştırıcısı (`src/dsmi/mcp.c`) | tüm karıştırıcı + 26 CDI yuvası + SDI kabuğu | Unicorn'daki sürücüye karşı bit bit aynı olarak doğrulandı (DMA halkası); 22050 Hz stereo s16 |
+| NSES seg0D42 + OSES ovl55CC (`src/engine/nses.c, oses.c`) | 13/13 | getenv/setvect kancaları dışında doğrulandı; yerel MCP, SDISB16.DSD olarak kayıtlı |
+| Ses arka ucu (`src/platform/audio.c, audio_sdl.c`) | – | PIT ile saatlenen öykünmeli SB16 DMA; oyun + CD sesi tek bir SDL akışında; ana programa bağlandı |
+| FILEMAN'ın geri kalanı ovl5447 (`src/engine/fileman.c`) | 7/7 | doğrulandı (gerçek CKD üyeleri, >64 KB resimler, EMS yeniden eşleme noktaları) |
+| Ölümcül hata/çeşitli ovl559A (`src/engine/fatal.c`) | 4/4 | 3'ü doğrulandı; beep'e hiçbir yerden başvurulmuyor |
+| Borland uzak öbeği (`src/rtl/bc_farheap.c`) | 10 yordam | doğrulandı: seg:off, farcoreleft ve alan (arena) baytları, main() anlık görüntüsünden (snapshot) orijinale karşı; MEMMAN, DSMI MemAlloc/EMS öbeği, FILEMAN, dosya katmanı ve oyun modüllerinin hepsi bellek ayırmayı bunun üzerinden yapıyor |
+| GFL/GHD video oynatıcısı ovl5313 (`src/game/gfl.c`) | 12/12 | doğrulandı (çözücü 35 videonun hepsinde tools/gflview.py'ye karşı; oynatıcı orijinale karşı çalıştırıldı: DGROUP/EMS/ekran/palet/CDI) |
+| SYSTEMS seg0AC6 + NGRAPHS seg0C7F + OGRAPHS ovl5511 (`src/engine/systems.c, ngraphs.c, ographs.c`) | 52/52 | doğrulandı (23 test: DGROUP, A000, VGA yazmaçları/DAC/düzlemler, EMS); solma ara değerlemesi yalnızca ms=0'da |
+| main seg0546 + DEMOLAR ovl3C2D (`src/game/istanbul.c`, `demolar.c`) | 14/14 | doğrulandı (6 test: beklemeler, resim gösterme/solma, bölge çerçevesi, müziği kapatma; DOSBox-X'e karşı: açılış ve giriş bölümü, menünün her girdisi, hikâye slayt gösterisi (play8), oyun sonu (play4), final (play9), jenerik (playx, play9; arka plan yuvası 2026-11-23'te düzeltildi), şehir haritasıyla yolculuk (play10), yeni oyun girişi (play3, playq)) |
+| CHARGEN ovl39E5 (`src/game/chargen.c`) | 12/12 | doğrulandı (8 test: özellik zarları, çizim, GRP.DAT yükleme/kaydetme, iptal, tuşlarla ve fareyle 4 kişilik tam akış, animasyonlar) |
+| ISOSYS savaşları ovl4595 (`src/game/iso*.c`) | 77/77 | doğrulandı (32 test: kurallar, yapay zekâ ile 96 tohumlanmış tur, her vecize, 18 haritanın hepsinin savaş alanı, INT 0 işleyicisinin anlamı üzerinden sıfıra bölme, gerçek SAVAS.CKD grafikleriyle 8 tam betikli savaş); 2026-11-22 (`test_iso_d.py`, 12 test): Ctrl-Break (orijinal, INT 23h işleyicisi üzerinden bir sonraki kbhit()'te sona erer; uyarlama savaşa devam ediyordu – düzeltildi), ses açık yolları (tek çağrılarda ve üç tam savaşta aynı CDI/AMP çağrı sırası ve durumu), çubuk resmi olmayan kapı duvarı (oyunla gelen 18 haritada ortaya çıkamaz; zorlandığında orijinal 10h iç hatasıyla sona erer, uyarlama da öyle – çöp blit yok, çökme yok) |
+| FRPOS dükkân/olay betikleri ovl3FD1 (`src/game/frpos*.c`) | 33/33 | doğrulandı (5 test: 18 PCSn dosyasının hepsinin her olayı/tetikleyicisi, 33/33 işlem kodu; tools/frposdis.py) – kendi DLL'inde, dalgadan sonra ana yapıya katılıyor |
+| 3DSYS keşif ovl303F (`src/game/s3d*.c`) | 32/32 | doğrulandı (karakter ekranı, döngü, menüler, panel, kamp, hareket, tuşlar, orijinalin SAKLA001.SAV dosyası dahil kayıt yazma + okuma, semt yükleme/girme/konum, tüm duvar türleri); 2026-11-22 (`test_s3d_gap.py`): portre/bölge yordamı 303F:27F7 (44 durum) ve hiçbir kodun başvurmadığı iki yordam – hata ayıklama arabellekleri 303F:23ED, harita yazıcı 303F:189D (yazılan baytlar aynı) – doğrulandı |
+| 3DQUICK birinci şahıs çizicisi ovl2700 (`src/game/q3dview*.c`) | 36/36 | doğrulandı (15 test: ~340 görüş boyutunda açılış tabloları, 18 haritanın hepsi x 4 yön, otomatik harita, animasyonlar); 2026-11-22 (`test_q3dview_gap.py`, 5 test): oyunun yapılandırmasında (100 pencere, hız 9) dönüşler A000/yüzeyler/DGROUP'un tamamında aynı; 100x100 çizim zemin/tavan şeritlerine kadar aynı, orada orijinal (ve uyarlama) şerit blitter'ında sonsuza dek döner – oyun hiçbir zaman 100x100'de çizmez; "742 bayt" farkı, uyarlamada `q3d_draw_quad_mapped` içindeki 64 KB ofset sarmasının eksik olmasından kaynaklanıyordu (yalnızca göz ardı edilmiş bir ölümcül hatadan sonra) – `q3d.c` içinde düzeltildi (`far_at`) |
+| 3D dörtgenler seg08D0 (`src/game/q3d.c`) | 7/7 | doğrulandı (karşılaştırmalı, bit bit aynı x87 modeli); EMS kilit sarmalayıcısı inceleme yoluyla |
+
+### Boşluk dalgası (2026-11-22)
+
+Yukarıdaki boşluklar kapatılırken bulunan motor ve ana program düzeltmeleri:
+
+| Yer | Sorun | Düzeltme |
+|---|---|---|
+| `src/engine/intrface.h` | `ui_wait_voice` sessizlik örneğini DGROUP:DE1E'den alıyordu; orijinal DF1Eh'yi yığına iter (05DC:1E3C: ses yuvası 0Ah, bosch.pur) | sabit düzeltildi; `test_iso_d.test_sound_silence_sample` |
+| `src/engine/systems.c` | hedef satırı geleneksel bellek bloğunun üstünde kalan `sys_blit` / `sys_blit_recolor` (bir savaş metin kutusunun büyük baş harfi, y = -1 / -2) çöküyordu; orijinalin huge işaretçisi bloğun hemen altına sarar | parça, orijinalin 1 MB sarmasının yerleştirdiği yere yerleştirilir (320 genişlikli bir yüzey için: negatif satırlar bloğun altına düşer ve atılır, geri kalanı 0. satırdan itibaren çizilir; diğer genişliklerde parçanın tamamı bloğu ıskalar); `test_iso_d.test_textbox_capital`, `test_q3dview_gap.test_render_100` (`sys_blit`; `sys_blit_recolor` aynı akıl yürütmeyle, ona ulaşan test yok) |
+| `src/game/q3d.c` | dörtgen çizicide eksik 64 KB ofset sarması (yalnızca göz ardı edilmiş bir ölümcül hatadan sonra) | `far_at` |
+| `src/platform/cdrom.c` | CD olmayan bir sürücüye yapılan isteğe bir durum yazılıyordu; MSCDEX başlığa dokunmaz; alt birim doldurulmuyordu | MSCDEX'teki gibi |
+| `src/platform/pc.c`, `nkontrol.c`, `sdl3_main.c` | Ctrl-Break ana program tarafından üretilemiyordu | Ctrl+Pause / Ctrl+ScrollLock = BIOS Ctrl-Break (arabellek boşaltılır, 0000h sözcüğü, bir sonraki kbhit()'te INT 23h); oyunun INT 09h kancasına her basma kodu (make code) sunulur. Yazılan bir Ctrl+C sıradan bir tuş olarak kalır, tıpkı DOSBox-X'teki orijinalin ana menüde onu aldığı gibi (MS-DOS'un kendisi orada kesebilir – burada doğrulanamaz) |
+| `src/platform/sdl3_main.c` | bir tuşun bırakılması basılması gibi işleniyordu: Esc, Enter, Tab, imleç ve işlev tuşları etkileşimli oyunda iki kez itiliyordu (betikler pencereyi atlar) | bırakmalar yalnızca shift bayraklarını günceller |
+
+Dalganın son durumu (2026-11-23, cfcacce commit'inin derlemesi): karşılaştırmalı test takımı
+256/256 (out/base); play4 112/112 denetim noktası, play4load ve play5 (39/39), kayıt
+açıklamasının kuyruğu dışında (sıfır olarak tutulur, bkz. 8. kilometre taşı) DOSBox-X'teki
+orijinalle aynı. play4 ve play4load son `sys_blit` düzeltmesinden önceki derlemeyle, play5 ise
+ondan sonraki derlemeyle çalıştırıldı.
+
+İkinci tur (2026-11-23):
+
+* **play6** (4. semtin hikâye bayrakları 29, 97, 30, 98, 31, 99 ile hazırlanmış kayıt): hekimin
+  "kim" istemine sağ tıklama, 99 numaralı bayrağın açtığı kapının arkasındaki yiyecek tezgâhı
+  (reddetme, yeme, parası yetmiyor), seçenekler listesinin her girdisinin fareyle değiştirilip
+  tuşlarla geri alınması, iki yönde de başarılı yana adımlar; 46 denetim noktası aynı
+  (docs/VERIFY.md).
+* **Ctrl-C / Ctrl-S**: Microsoft'un yayımladığı MS-DOS kaynak kodundan (v2.0 ikili, v4.0 kaynak)
+  kesinleştirildi: INT 21h AH=0Bh (kbhit()) bekleyen bir ^C'yi okur ve INT 23h çağırır, ^S'yi
+  ve ondan sonraki karakteri okur; AH=07h (getch()) hiç denetlemez. Uyarlama MS-DOS'u izler
+  (`src/platform/pc.c`); DOSBox-X'in DOS'u karaktere bakmaz, bu yüzden orijinal orada yalnızca
+  Ctrl-Break ile kesilir; bu, referanstan bilinçli olarak ayrılan tek noktadır.
+  ^P / ^N (yazıcı yankısı) modellenmedi.
+* **Tuş bırakma düzeltmesi** canlı pencerede doğrulandı: Lale64.exe'ye gönderilen tuş
+  iletileriyle her Esc için bir giriş ekranı, her Aşağı/Yukarı için bir menü girdisi.
+
+### Boşluk dalgası 3 (2026-11-23)
+
+İkinci turun açık bıraktığı liste kapatıldı (ayrıntılar: docs/VERIFY.md "Gap wave 3"):
+
+* **4. semtin kapalı kapıları, silah ve mal dükkânları, fareyle üzerine gelip Enter ile
+  seçenekler**: play7, 53 denetim noktası aynı.
+* **Hikâye slayt gösterisi** (play8, 14), **final** (play9, 21), **menüden jenerik**
+  (playx, 13), **hızlı başlangıç** (playq), **şehir haritasıyla yolculuk** (play10, 16): kayıt
+  açıklamasının kuyruğu (önceki gibi) ve iki tur denetim noktasındaki RNG durumu dışında aynı
+  (bir portre göz kırpma zarı, bir varıştan sonraki saat evresi; ekran ve DGROUP'un geri kalanı
+  eşit).
+* **DOSBox-X içinde Ctrl-Break ve Ctrl+Alt+Del**: yeni betik olayı `kbd` (8042 komutu D2h
+  üzerinden ham tarama kodları) ve iki tarafta bir `int23` dökümü; ana menüde (playbrk) ve bir
+  semtte (playbrk3d, playcad) aynı.
+* **MSCDEX olmadan `o5737_cd_drive_info`**: yapısı gereği karşılaştırılamaz; INT 2Fh 1501h hiçbir
+  şey yazmadığında orijinal, ilklendirilmemiş bir yığın uzak işaretçisini okur; IST.EXE'de
+  çağıranı yok. `cd5737.c` içinde belgelendi.
+* **4.0'dan sonraki MS-DOS**: Ralf Brown's Interrupt List (her DOS sürümü için başvuru kaynağı,
+  delorie.com yansısı) INT 21h AH=0Bh için "DOS 1+ - ^C/^Break are checked, and INT 23
+  is called if either pressed" (^C/^Break denetlenir, biri basılmışsa INT 23 çağrılır), AH=07h
+  için "does not check ^C/^Break" (^C/^Break denetlenmez) der ve sürüme özgü bir istisna
+  vermez; uyarlamanın modellediği de budur.
+
+Yolda düzeltilenler:
+
+| Yer | Sorun | Düzeltme |
+|---|---|---|
+| `src/game/demolar.c` | `demo_credits_exit` ekrana 0Bh (grup.cmp) yerine 9. yüzeyi kopyalıyordu: jenerik, kayan pencerenin çevresinde bir önceki ekranı gösteriyordu | 0Bh yuvası, orijinaldeki gibi (3C2D:222C) |
+| `src/engine/nkontrol.c`, `src/platform/pc.c` | INT 09h kancası Ctrl+Alt+Del'de INT 23h işleyicisini doğrudan çağırıyordu; orijinal INT 1Bh çağırır, böylece DOS bir sonraki `kbhit()`'te keser | `pc_int1b()`; `int23` dökümü için INT 23h gözlemcisi |
+| `tools/verify/vcompare.py` | EMS sayfa eşlemi saat alanları (86F8, E7AC) bir sözcük kısaydı | 4 sözcük |
+| `tools/ghidra_run.sh`, `FixSwitch.java` | RTL'nin satır içi switch tablosu 0000:0B08 çözülemiyordu; fpupatch.py bir önceki switch listesi üzerinde çalışıyordu | C biçimi (satır içi tablolar); switch listesi değiştiğinde hat ikinci kez çalışır: 46 tablo, 0 çözülemeyen |
+
+### Gerçek CD, iki baskı, DATA / SAVE / VIDEO (2026-11-24)
+
+Kullanıcının oyun CD'sinden aldığı redumper dökümü (dump) geldi (`_references/cd`). Dökümün neyi
+kesinleştirdiği ve üzerine neler kurulduğu:
+
+* **Disk** ([`DISC.md`](DISC.md)): 1. ve 2. izler redump.org 91232 ile eşleşir; veri izi 48
+  örnek erken basılmıştır, içe aktarıcı bunu onarır; 3. izin son 48 örneği eksiktir. Veri
+  dosyaları 2005 sürümününkilere eşittir. Benzetilmiş kalıbın tahminleri (etiket, sektör
+  sayıları) doğru çıktı.
+* **İki baskı (edition)** ([`EDITIONS.md`](EDITIONS.md)): diskteki 1996 `IST.EXE`, 2005'tekinden
+  `main`, iki DEMOLAR yordamı ve `ctl_flush_keys` içinde, ayrıca hata çağrılarındaki satır
+  numaraları ve dosya adlarında ayrılır. Bunların hepsi `ED_CD` arkasında geri derlendi;
+  uyarlama ikisini de çalıştırır.
+* **Açılış ve içe aktarma** ([`INSTALL.md`](INSTALL.md)): `DATA/` (bir disk `LALE.CHD` olarak
+  ya da 2005 sürümünün dosyaları), `SAVE/` (oyunun yazdığı her şey, iki baskıda da), kaynaklar:
+  CD sürücüsü, cue/bin, ISO, CHD, klasör, ZIP, 7Z, RAR. CHD (v5, cdzl/cdfl) yazıcısı ve
+  okuyucusu, deflate, FLAC, Mode 1 EDC/ECC, ISO 9660 ve ZIP uyarlamanın kendi kodudur; hiçbir
+  kütüphane eklenmedi.
+* **4K videolar**: `VIDEO/` içindeki büyütülmüş kopyalar, oyunun kendi oynatıcısının üzerinde
+  kare kare gösterilir; Ctrl+V ikisi arasında geçiş yapar ve `4K Video` / `Orijinal Video`
+  bildirimini gösterir. Windows'ta Media Foundation, macOS'ta AVFoundation (ikincisi henüz
+  derlenmedi).
+* **Yolda bulunan: gerçek zamanda dikey geri dönüş (retrace) beklemeleri**
+  (`src/platform/pc.c`): ana programın boşta uyuması (500 us), öykünmeli saati 64 us'lik dikey
+  geri dönüş darbesinin üzerinden atlatıyordu; bu yüzden geri dönüşü bekleme birkaç kare
+  sürüyordu. Video oynatıcı geride kalıyor ve giriş bölümünün 79 karesinden yalnızca 20 kadarını
+  gösteriyordu; diğer bütün geri dönüş beklemeleri de aynı şekilde uzuyordu. Uyku artık darbeden
+  önce bitiyor ve 3DAh'nin art arda iki okuması arasında saat darbenin başlangıcını geçemiyor.
+  Tüm kareler oynuyor (79/79, 172/172 ölçüldü). Sanal zamanlı çalıştırmalar (testler, betikli
+  oynanışlar) hiç etkilenmemişti.
+* **Testler**: `tests/test_codecs.c` (ctest `codecs`, uydurma veriler üzerinde 288 denetim);
+  karşılaştırmalı test takımı ve diğer birim testleri değişmeden geçiyor.
+
+* **Türkçe iletişim kutuları, sistemin temasında** (2026-11-25, kullanıcının isteği): açılış
+  sorusu, içe aktarma ilerlemesi, hatalar ve Hakkında kutusu; Windows'ta yerel (`ui_win32.c`),
+  açık ve koyu, tema anında değişir; oyun penceresinin başlık çubuğu da modu izler. Tüm metinler
+  `src/platform/uitext.h` içinde. Bkz. [`INSTALL.md`](INSTALL.md#programın-iletişim-kutuları).
+* Windows için **Sürüm 1.0**: `tools/package_windows.sh` -> `dist/Lale64-1.0-Windows.zip`
+  (program, SDL3.dll, önce Türkçe sonra İngilizce bir okuma dosyası (`OKU BENI - READ ME.txt`), lisanslar,
+  `lale.ini.example`). Media Foundation ilk kullanımda yüklenir; bu yüzden program Windows'un N
+  sürümlerinde de açılır (orada 4K videolar olmadan).
+
+Açık kalanlar: fiziksel bir sürücüden ses (burada sürücü yok), eksiksiz bir 3. iz, yeni
+parçaların Mac derlemesi, CD baskısının DOSBox-X'te 1996 `IST.EXE`'ye karşı bir oynanışı.
+
+### macOS uyarlaması (2026-11-23)
+
+Bir Apple Silicon Mac üzerinde derlendi ve doğrulandı (macOS 27.2, Apple clang, Homebrew SDL3
+3.4.18, DOSBox-X 2026.10.01, Ghidra 12.2 + openjdk@21). Neler yazıldığı ve uyarlamanın ortak
+kodda neler bulduğu: [`MACOS.md`](MACOS.md).
+
+| Denetim | Sonuç |
+|---|---|
+| Derleme | `cmake --preset macos`: `Lale64`, `Lale64.app`, `lale_testlib.dylib`, derleyici uyarısı yok. `macos-release`: evrensel uygulama, statik SDL3, en az macOS 11. `windows-cross` (macOS için llvm-mingw 20261104): Windows programı aynı ağaçtan hâlâ derleniyor, uyarı yok – çalıştırılmadı |
+| Mac üzerinde çözümleme hattı | `tools/bootstrap.sh --tools --ghidra`: `ist_fpu.bin` tekrarlanan çalıştırmalarda aynı ve `fpupatch.py`'nin taramasıyla birebir aynı; 10,750 göreli dallanma, 0 yanlış. Ghidra'nın geri derleyicisinin (decompiler) sürümde arm64 Mac ikilisi yok: taslak C yok (ne uyarlamanın ne testlerin buna ihtiyacı var) |
+| `ctest`: `vga`, `cdaudio` | geçiyor |
+| Karşılaştırmalı test takımı (Unicorn'daki orijinal kod ile arm64 kütüphanesi karşı karşıya) | 256/256 geçiyor (`ctest`, son derleme, 2026-11-23; 29 dk). Yol üzerindeki üç başarısızlık gerçek bulgulardı (öykünmeli belleğin hizalanması, Windows'un bir erişim ihlalini `OSError`'a çevirmesine dayanan bir test, ve `cfcacce`'nin aynı anda ana dalda düzelttiği `sys_blit` sarması): bkz. MACOS.md "Found while porting" |
+| DOSBox-X'teki orijinale karşı bütün oyun (`tools/verify/pair.py`) | `play3` (27 denetim noktası), `play4` (112), `play4load`, `play5`: her denetim noktası aynı, `GRP.DAT` ve `SAKLA001.SAV` aynı. Tek farklar belgelenmiş olanlardır, Windows'takilerle aynı: kayıt açıklamasının NUL'dan sonraki kuyruğu (play4/play4load'da `SAKLA002.SAV` 48 bayt, play5'te 30; play4load'da yükleme menüsünün liste girdisi A6AB-A6DB). `play3` ve `play4` uyarlama tarafında son derlemeyle tekrarlandı: tüm denetim noktaları yine aynı |
+| Sürüm uygulamasının arm64 ve x86_64 dilimleri karşılaştırması (`play3`, Rosetta) | 108 döküm dosyasının hepsi ve yazılan `GRP.DAT` / `SAKLA001.SAV` bayt bayt aynı, ayrıca `macos` ön ayarının (preset) derlemesinin dökümleriyle de aynı |
+| Açılış (`startup` betiği) | `s_01000`, `s_05000` Windows'taki gibi: DGROUP aynı, resim yalnızca giriş videosunun karesinde farklı (VERIFY.md'de anlatılan, saate bağlı fark) |
+| Ses | SDL'in disk sürücüsü: giriş bölümünün 25 s'si kaydedildi, baştan sona sessiz değil (dinlenmedi) |
+| Uygulama | oyun dosyaları yanındayken LaunchServices üzerinden başlatıldı (dosyalar bulundu, 1500 kare sunuldu); Hakkında kutusu ekran dışında çizildi, açık ve koyu |
+
+Bir kişi tarafından denetlenmeyenler: kulakla ses, tam ekran, klasör iletişim kutusu ve Hakkında
+kutusunun bir ekranda görünümü (uyarlamayı yapan oturum ekran görüntüsü alamıyordu).
+
+### Çözümleme hattı düzeltmeleri (2026-11-20)
+
+| Sorun | Düzeltme | Etki |
+|---|---|---|
+| Hazır (stock) Ghidra, gerçek kip (real mode) yakın dallanmalarını *doğrusal* 64 KB sınırlarında sarıyor; segment-ofset sarması (TLINK'in >32 KB geriye çağrılar için kullandığı) da eksikti | `ia_rel16.patch` (+`rmseg` bağlamı), `FixNear` | 183 yanlış dallanma hedefi → 10,738 içinde 0 (her çalıştırmada `branchcheck.py` ile denetlenir) |
+| Switch atlama tabloları izlenmiyordu | `FixSwitch` | 45 tablo, 304 case hedefi ayrıştırıldı (disassembled) (ör. 33 FRPOS işlem kodu) |
+| FixFPU, yanlış akışlarla ulaşılan işlenenlerin içindeki `CD 3x` baytlarını yamıyor ve gerçek yerleri kaçırıyordu (ovl2700, ~650 bayt) | içe aktarmadan önce `tools/fpupatch.py` ile doğrusal tarama (switch tablolarını atlayarak); FixFPU yalnızca KUR.EXE için tutuldu (2026-11-21) | ikili görüntü (image) artık bağımsız taramayla aynı; 10,746 dallanma, hâlâ 0 yanlış |
+| Yanlış akışlardan doğan sahte işlevler | `PruneFunctions` | 10 tanesi kaldırıldı (2'sine "fragments" (parçalar) adı verilmişti) |
+| Toplam | | çözülen çağrı yerleri 5,034 → 5,573; dizgi başvuruları 951 → 1,019; geri derleme başarısızlıkları 25 → 4 |
+| RTL `__xcvt` (0000:0ADD, printf'in kayan nokta dönüşümü), `CMP` sınırı olmayan 3 girdili satır içi bir tablo üzerinden atlıyor (0000:0B08: float / double / long double); bu yüzden FixSwitch onu atlıyor, `fpupatch.py` da tablo sözcüklerini kod olarak tarayıp 0B13'teki `CD 3C` öykünücü çağrısını kaçırıyordu | FixSwitch C biçimi "inline": `JMP`'nin hemen ardındaki tablo, en düşük case hedefine kadar okunur; tablonun ötesini gösteren ve eşlenmiş her girdi kabul edilir, aksi halde yine raporlanır (2026-11-23) | 46 tablo / 307 case hedefi, 0 çözülemeyen; `__xcvt` tamamen çözüldü (48 → 514 bayt); 10,787 dallanma, 0 yanlış; fpupatch 2,022 → 2,023 yer |
+
+Artık çözülemeyen tablo kalmadı (2026-11-23). O günkü çalıştırmanın sayıları, `__xcvt`
+düzeltmesinden önce → sonra: çağrı yerleri 5,593 → 5,596, dizgi başvuruları 1,021 → 1,022 (yenisi
+yanlış pozitif: 0000:0C5B'deki `MOV CX,4`, DS:0004 sanılmış), geri derleme başarısızlıkları 3.
+`fpupatch.py`, *bir önceki* çalıştırmanın `build/ist_switches.tsv` dosyasındaki tablo
+aralıklarını atlar; bu yüzden temiz bir `build/` üzerinde `tools/ghidra_run.sh` hattı
+kendiliğinden ikinci kez çalıştırır.
+Bu tarihten önce yazılmış çağıran listeleri (`analysis/names/*.md`), switch'ler ya da yanlış
+çözülmüş yakın çağrılar üzerinden gelen çağıranları kaçırıyor olabilir; güncel listelemelere
+karşı yeniden denetleyin.
+
+### Referans çalışma ortamı
+
+`C:\DOSBox-X\dosbox-x.exe -conf tools/dosbox/ist.conf` orijinali `orig/` klasöründen çalıştırır
+(386, VGA, EMS, SB16). 2026-11-20'de giriş bölümüne kadar açıldığı doğrulandı.
+`tools/dosbox/oracle.py` onu hata ayıklayıcı bağlantısı üzerinden betikle yönetir (kesme
+noktaları, DGROUP/VGA/DAC dökümleri).
+
+## English
 
 Status legend for functions: **draft** (written, not yet verified), **verified** (passes a
 differential test or was checked against the oracle), **replaced** (platform/RTL
 equivalent, no decompilation needed).
 
-## Milestones
+### Milestones
 
 | # | Milestone | State |
 |---|---|---|
@@ -18,7 +295,7 @@ equivalent, no decompilation needed).
 | 8 | Full-game verification against DOSBox-X | play3, play4, play4load identical at every checkpoint (docs/VERIFY.md). Decision (user, 2026-11-22): the save description's tail after its NUL stays zeros in the port (uninitialised stack in the original, never read). Gap waves 2026-11-22/23 (below): doctor, ISOSYS Ctrl-Break / sound-on / door wall, 3DQUICK 100x100, CD audio, play5..play10, playq, playx, Ctrl-Break and Ctrl+Alt+Del in DOSBox-X itself. Every DEMOLAR routine now runs in a play-through against the original |
 | 9 | macOS build | done (2026-11-23): `Lale64` + `Lale64.app` on Apple Silicon, universal release package; differential suite and scripted play-throughs against DOSBox-X run on the Mac – see "macOS port" below and [`MACOS.md`](MACOS.md) |
 
-## Function status
+### Function status
 
 Generated by `python tools/funcstatus.py` from the `Original:` / `Verified:` comments
 of `src/` (2026-11-23; `--list` names every routine).  Only routines with their own
@@ -73,7 +350,7 @@ getenv/setvect hooks (host environment, no IVT), `ctl_div0_isr`, `ctl_timer_inst
 inspection), `MemRealloc` (never called), `emsGetPageMapRaw` and `o559A_beep`
 (unreferenced).
 
-## Decompiled modules
+### Decompiled modules
 
 | Module | Functions | State |
 |---|---|---|
@@ -110,7 +387,7 @@ inspection), `MemRealloc` (never called), `emsGetPageMapRaw` and `o559A_beep`
 | 3DQUICK first-person renderer ovl2700 (`src/game/q3dview*.c`) | 36/36 | verified (15 tests: start-up tables over ~340 view sizes, all 18 maps x 4 facings, automap, animations); 2026-11-22 (`test_q3dview_gap.py`, 5 tests): rotations in the game's configuration (100 window, speed 9) identical in whole A000/surfaces/DGROUP; 100x100 render identical up to the floor/ceiling strips, where the original (and the port) loops forever in the strip blitter – the game never renders at 100x100; the "742 bytes" were the port missing the 64 KB offset wrap in `q3d_draw_quad_mapped` (only after an ignored fatal error) – fixed in `q3d.c` (`far_at`) |
 | 3D quads seg08D0 (`src/game/q3d.c`) | 7/7 | verified (differential, bit-exact x87 model); EMS lock wrapper by inspection |
 
-## Gap wave (2026-11-22)
+### Gap wave (2026-11-22)
 
 Engine and host fixes found while closing the gaps above:
 
@@ -143,7 +420,7 @@ Second round (2026-11-23):
 * **Key release fix** confirmed in the live window: key messages posted to Lale64.exe, one
   intro screen per Esc, one menu entry per Down/Up.
 
-## Gap wave 3 (2026-11-23)
+### Gap wave 3 (2026-11-23)
 
 The list left open by the second round, closed (details: docs/VERIFY.md "Gap wave 3"):
 
@@ -173,7 +450,7 @@ Fixed on the way:
 | `tools/verify/vcompare.py` | the EMS page-map clock fields (86F8, E7AC) were one word short | 4 words |
 | `tools/ghidra_run.sh`, `FixSwitch.java` | the RTL's inline switch table 0000:0B08 unresolved; fpupatch.py ran on the previous switch list | form C (inline tables), the pipeline runs a second time when the switch list changed: 46 tables, 0 unresolved |
 
-## The real CD, both editions, DATA / SAVE / VIDEO (2026-11-24)
+### The real CD, both editions, DATA / SAVE / VIDEO (2026-11-24)
 
 The user's redumper dump of the game CD arrived (`_references/cd`).  What it settled and what
 was built on it:
@@ -201,10 +478,19 @@ was built on it:
 * **Tests**: `tests/test_codecs.c` (ctest `codecs`, 288 checks on made-up data); the differential
   suite and the other unit tests pass unchanged.
 
+* **Dialogs in Turkish, in the system's theme** (2026-11-25, the user's request): start-up
+  question, import progress, errors and the About box; native on Windows (`ui_win32.c`), light
+  and dark, re-themed on the fly; the game window's title bar follows the mode. All texts in
+  `src/platform/uitext.h`. See [`INSTALL.md`](INSTALL.md#the-programs-dialogs).
+* **Release 1.0** for Windows: `tools/package_windows.sh` -> `dist/Lale64-1.0-Windows.zip`
+  (program, SDL3.dll, a READ ME in Turkish then English, the licences, `lale.ini.example`).
+  Media Foundation is loaded on first use, so the program also starts on Windows N editions
+  (without the 4K videos there).
+
 Open: audio from a physical drive (no drive here), a complete track 3, the Mac build of the new
 parts, a play-through of the CD edition against the 1996 `IST.EXE` in DOSBox-X.
 
-## macOS port (2026-11-23)
+### macOS port (2026-11-23)
 
 Built and verified on an Apple Silicon Mac (macOS 27.2, Apple clang, Homebrew SDL3
 3.4.18, DOSBox-X 2026.10.01, Ghidra 12.2 + openjdk@21).  What was written, and what
@@ -225,7 +511,7 @@ the port found in shared code: [`MACOS.md`](MACOS.md).
 Not checked by a person: sound by ear, full screen, the folder dialog and the About
 box on a screen (the session that did the port could not capture the display).
 
-## Analysis pipeline fixes (2026-11-20)
+### Analysis pipeline fixes (2026-11-20)
 
 | Problem | Fix | Effect |
 |---|---|---|
@@ -244,7 +530,7 @@ skips the table ranges of the *previous* run's `build/ist_switches.tsv`, so on a
 Caller lists written before this date (`analysis/names/*.md`) may miss callers that go
 through switches or wrongly-resolved near calls; re-check against the current listings.
 
-## Reference runtime
+### Reference runtime
 
 `C:\DOSBox-X\dosbox-x.exe -conf tools/dosbox/ist.conf` runs the original from `orig/`
 (386, VGA, EMS, SB16). It was confirmed booting into the intro on 2026-11-20.
