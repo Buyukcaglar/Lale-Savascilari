@@ -223,8 +223,13 @@ kesinleştirdiği ve üzerine neler kurulduğu:
   `lale.ini.example`). Media Foundation ilk kullanımda yüklenir; bu yüzden program Windows'un N
   sürümlerinde de açılır (orada 4K videolar olmadan).
 
+* **CD baskısı orijinaline karşı** (2026-11-25): `pair.py --cd`, 1996 `IST.EXE` DOSBox-X'te;
+  intro'nun 1600 örneğinin tamamı portun görüntü durumlarıyla eşleşir (bkz.
+  [`VERIFY.md`](VERIFY.md#cd-baskısı-1996---port-ve-orijinal-2026-11-25)).
+
 Açık kalanlar: fiziksel bir sürücüden ses (burada sürücü yok), eksiksiz bir 3. iz, yeni
-parçaların Mac derlemesi, CD baskısının DOSBox-X'te 1996 `IST.EXE`'ye karşı bir oynanışı.
+parçaların Mac derlemesi, CD baskısının intro'dan ötesinin (oynanışın) 1996 `IST.EXE`'ye
+karşı karşılaştırılması.
 
 ### macOS uyarlaması (2026-11-23)
 
@@ -487,8 +492,12 @@ was built on it:
   Media Foundation is loaded on first use, so the program also starts on Windows N editions
   (without the 4K videos there).
 
+* **CD edition against its original** (2026-11-25): `pair.py --cd`, the 1996 `IST.EXE` in
+  DOSBox-X; all 1600 samples of the intro match video states of the port (see
+  [`VERIFY.md`](VERIFY.md#cd-edition-1996---port-vs-original-2026-11-25)).
+
 Open: audio from a physical drive (no drive here), a complete track 3, the Mac build of the new
-parts, a play-through of the CD edition against the 1996 `IST.EXE` in DOSBox-X.
+parts, a comparison of the CD edition beyond the intro (game play) against the 1996 `IST.EXE`.
 
 ### macOS port (2026-11-23)
 
