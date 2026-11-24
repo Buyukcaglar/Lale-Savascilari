@@ -10,6 +10,26 @@ annotated, portable C. The aim is 1:1 fidelity with the original `IST.EXE`.
 * Analysis tooling: [`tools/README.md`](tools/README.md)
 * The macOS port: [`docs/MACOS.md`](docs/MACOS.md)
 
+## 4K videos / 4K videolar
+
+**English.** All 34 videos of the game, upscaled from 320x200 to 4K (H.264 MP4, 1.08 GB):
+**[Lale Savascilari 4K Video Pack on ModDB](https://www.moddb.com/mods/lale-savascilari-4k-video-pack/downloads/lale-savascilari-4k-video-pack)**
+(MD5 `2ad684edf009f77449def40685f1bce3`).
+
+1. Download and unzip `Lale-Savascilari-Video-4k.zip`.
+2. Put the `VIDEO` folder next to the program (the folder that holds the executable).
+3. Start the game. The videos play in 4K. Press **Ctrl+V** at any time to switch between 4K
+   and the original video. The game's own sound is kept; only the picture changes.
+
+**Türkçe.** Oyunun 34 videosunun tamamı, 320x200'den 4K'ya büyütülmüş halde (H.264 MP4,
+1,08 GB): **[ModDB'de Lale Savaşçıları 4K Video Paketi](https://www.moddb.com/mods/lale-savascilari-4k-video-pack/downloads/lale-savascilari-4k-video-pack)**
+(MD5 `2ad684edf009f77449def40685f1bce3`).
+
+1. `Lale-Savascilari-Video-4k.zip` dosyasını indirip açın.
+2. `VIDEO` klasörünü programın yanına (çalıştırılabilir dosyanın bulunduğu klasöre) koyun.
+3. Oyunu başlatın. Videolar 4K oynar. İstediğiniz anda **Ctrl+V** ile 4K ve orijinal video
+   arasında geçiş yapabilirsiniz. Oyunun kendi sesi korunur; yalnızca görüntü değişir.
+
 ## Getting started (Windows)
 
 ```sh
