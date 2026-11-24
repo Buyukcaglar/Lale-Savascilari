@@ -22,6 +22,7 @@
 #include "platform/cdsector.h"
 #include "platform/flac.h"
 #include "platform/zdeflate.h"
+#include "platform/uitext.h"
 
 #define FRAME        2448u              /* sector + subcode */
 #define SECTOR       2352u
@@ -665,7 +666,7 @@ int chd_create_cd(const char *path, const CdromTrack *tracks, int ntracks, uint3
 
     memset(&w, 0, sizeof w);
     if (ntracks < 1 || ntracks > CDROM_MAX_TRACKS || leadout == 0) {
-        seterr(err, errlen, "bad disc layout", NULL);
+        seterr(err, errlen, T_E_DISC_LAYOUT, NULL);
         return -1;
     }
     /* the tracks as the CHD stores them: one after the other, each from where
@@ -675,7 +676,7 @@ int chd_create_cd(const char *path, const CdromTrack *tracks, int ntracks, uint3
         uint32_t end = i + 1 < ntracks ? tracks[i + 1].start : leadout;
         int mode = 1;
         if (end <= start) {
-            seterr(err, errlen, "bad disc layout", NULL);
+            seterr(err, errlen, T_E_DISC_LAYOUT, NULL);
             return -1;
         }
         if (!tracks[i].audio && tracks[i].sector_size != 2048
@@ -699,7 +700,7 @@ int chd_create_cd(const char *path, const CdromTrack *tracks, int ntracks, uint3
     w.bucket = malloc(sizeof *w.bucket * w.nbucket);
     w.f = fopen(path, "wb");
     if (!w.map || !w.digest || !w.bucket || !w.f) {
-        seterr(err, errlen, "cannot create", path);
+        seterr(err, errlen, T_E_CREATE, path);
         goto done;
     }
     memset(w.bucket, 0xFF, sizeof *w.bucket * w.nbucket);
@@ -838,7 +839,7 @@ int chd_create_cd(const char *path, const CdromTrack *tracks, int ntracks, uint3
     rc = 0;
     goto done;
 io:
-    seterr(err, errlen, "cannot write", path);
+    seterr(err, errlen, T_E_WRITE, path);
 done:
     if (w.f)
         fclose(w.f);
@@ -980,7 +981,7 @@ static int read_metadata(Chd *c, char *err, size_t errlen)
             int n = sscanf(text, "TRACK:%d TYPE:%31s SUBTYPE:%31s FRAMES:%d PREGAP:%d PGTYPE:%31s PGSUB:%31s POSTGAP:%d",
                            &number, type, subtype, &frames, &pregap, pgtype, pgsub, &postgap);
             if (n < 4 || frames <= 0 || number < 1 || number > 99) {
-                seterr(err, errlen, "bad track metadata", text);
+                seterr(err, errlen, T_E_CHD_TRACK_META, text);
                 return -1;
             }
             Seg *s = &c->seg[c->ntracks];
@@ -990,7 +991,7 @@ static int read_metadata(Chd *c, char *err, size_t errlen)
             s->audio = strcmp(type, "AUDIO") == 0;
             s->cooked = strcmp(type, "MODE1") == 0 || strcmp(type, "MODE2_FORM1") == 0;
             if (!s->audio && !s->cooked && strcmp(type, "MODE1_RAW") != 0 && strcmp(type, "MODE2_RAW") != 0) {
-                seterr(err, errlen, "unsupported track type", type);
+                seterr(err, errlen, T_E_TRACK_TYPE, type);
                 return -1;
             }
             if (!stored)
@@ -1009,7 +1010,7 @@ static int read_metadata(Chd *c, char *err, size_t errlen)
         off = next;
     }
     if (!c->ntracks) {
-        seterr(err, errlen, "not a CD image (no track metadata)", NULL);
+        seterr(err, errlen, T_E_CHD_NOT_CD, NULL);
         return -1;
     }
     c->leadout = lba;
@@ -1026,15 +1027,15 @@ Chd *chd_open(const char *path, char *err, size_t errlen)
         return NULL;
     c->f = fopen(path, "rb");
     if (!c->f) {
-        seterr(err, errlen, "cannot open", path);
+        seterr(err, errlen, T_E_OPEN, path);
         goto fail;
     }
     if (fread(h, 1, sizeof h, c->f) != sizeof h || memcmp(h, "MComprHD", 8) != 0) {
-        seterr(err, errlen, "not a CHD file", path);
+        seterr(err, errlen, T_E_CHD_NOT_CHD, path);
         goto fail;
     }
     if (get_be(h + 8, 4) != 124 || get_be(h + 12, 4) != 5) {
-        seterr(err, errlen, "only CHD version 5 is supported", path);
+        seterr(err, errlen, T_E_CHD_VERSION, path);
         goto fail;
     }
     for (int i = 0; i < 4; i++) {
@@ -1043,7 +1044,7 @@ Chd *chd_open(const char *path, char *err, size_t errlen)
             char tag[80];
             snprintf(tag, sizeof tag, "%c%c%c%c (this program reads cdzl and cdfl: "
                      "chdman createcd -c cdzl,cdfl)", h[16 + 4 * i], h[17 + 4 * i], h[18 + 4 * i], h[19 + 4 * i]);
-            seterr(err, errlen, "CHD compression not supported", tag);
+            seterr(err, errlen, T_E_CHD_CODEC, tag);
             goto fail;
         }
     }
@@ -1051,12 +1052,12 @@ Chd *chd_open(const char *path, char *err, size_t errlen)
     c->metaoffset = get_be(h + 48, 8);
     for (int i = 0; i < 20; i++)
         if (h[104 + i]) {
-            seterr(err, errlen, "CHD with a parent is not supported", path);
+            seterr(err, errlen, T_E_CHD_PARENT, path);
             goto fail;
         }
     if (get_be(h + 56, 4) != HUNK || get_be(h + 60, 4) != FRAME || c->logical == 0
         || c->logical > (uint64_t)450000 * FRAME) {
-        seterr(err, errlen, "not a CD image (hunk or unit size)", path);
+        seterr(err, errlen, T_E_CHD_NOT_CD_SIZE, path);
         goto fail;
     }
     memcpy(c->rawsha1, h + 64, 20);
@@ -1064,7 +1065,7 @@ Chd *chd_open(const char *path, char *err, size_t errlen)
     c->hunkcount = (uint32_t)((c->logical + HUNK - 1) / HUNK);
     c->map = calloc(c->hunkcount, 12);
     if (!c->map || read_map(c, get_be(h + 40, 8))) {
-        seterr(err, errlen, "damaged CHD (hunk map)", path);
+        seterr(err, errlen, T_E_CHD_MAP, path);
         goto fail;
     }
     if (read_metadata(c, err, errlen))
@@ -1177,7 +1178,7 @@ int chd_verify(Chd *c, ChdProgressFn progress, void *pctx, char *err, size_t err
         if (read_hunk(c, h, hunk, 0)) {
             char n[32];
             snprintf(n, sizeof n, "%u", (unsigned)h);
-            seterr(err, errlen, "damaged CHD: hunk", n);
+            seterr(err, errlen, T_E_CHD_HUNK, n);
             goto done;
         }
         sha1_add(&raw, hunk, left < HUNK ? (size_t)left : HUNK);
@@ -1188,7 +1189,7 @@ int chd_verify(Chd *c, ChdProgressFn progress, void *pctx, char *err, size_t err
     }
     sha1_done(&raw, digest);
     if (memcmp(digest, c->rawsha1, 20) != 0) {
-        seterr(err, errlen, "damaged CHD: the data's SHA-1 differs from the header", NULL);
+        seterr(err, errlen, T_E_CHD_SHA_DATA, NULL);
         goto done;
     }
     /* the overall SHA-1: the data's, then (tag, SHA-1) of the checksummed metadata, sorted */
@@ -1219,7 +1220,7 @@ int chd_verify(Chd *c, ChdProgressFn progress, void *pctx, char *err, size_t err
     sha1_add(&all, metabuf, (size_t)nmeta * 24);
     sha1_done(&all, digest);
     if (memcmp(digest, c->sha1, 20) != 0) {
-        seterr(err, errlen, "damaged CHD: the overall SHA-1 differs from the header", NULL);
+        seterr(err, errlen, T_E_CHD_SHA_ALL, NULL);
         goto done;
     }
     rc = 0;

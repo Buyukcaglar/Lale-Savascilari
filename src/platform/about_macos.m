@@ -19,6 +19,7 @@
 
 #include "platform/about.h"
 #include "platform/pc.h"
+#include "platform/uitext.h"
 
 @interface LaleAboutTarget : NSObject
 - (void)showAbout:(id)sender;
@@ -79,7 +80,7 @@ void about_show(void)
         link.allowsEditingTextAttributes = YES;
         [box addSubview:link];
 
-        [box addSubview:label(@"Licenses:", NSMakeRect(0, TEXT_H, W, LABEL_H))];
+        [box addSubview:label(utf8(T_ABOUT_LICENSES), NSMakeRect(0, TEXT_H, W, LABEL_H))];
 
         /* AppKit's own scroll view + text view pair (container sizes and
            resizing set up as text in a scroll view needs them) */
@@ -104,7 +105,7 @@ void about_show(void)
         alert.accessoryView = box;
         if (NSApp.applicationIconImage)
             alert.icon = NSApp.applicationIconImage;
-        [alert addButtonWithTitle:@"OK"];
+        [alert addButtonWithTitle:utf8(T_OK)];
         [alert layout];
         alert.window.initialFirstResponder = alert.buttons.firstObject;
 
@@ -153,13 +154,14 @@ void about_install(SDL_Window *window)
         g_target = [[LaleAboutTarget alloc] init];
         for (NSMenuItem *item in app.itemArray) {
             if (item.action == @selector(orderFrontStandardAboutPanel:)) {
+                item.title = utf8(T_ABOUT_MENU_MAC);
                 item.target = g_target;
                 item.action = @selector(showAbout:);
                 return;
             }
         }
         /* a menu bar without the standard item: add ours at the top */
-        NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:@"About Lale64"
+        NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:utf8(T_ABOUT_MENU_MAC)
                                                       action:@selector(showAbout:)
                                                keyEquivalent:@""];
         item.target = g_target;

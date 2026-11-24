@@ -26,6 +26,8 @@
 
 #include "platform/about.h"
 #include "platform/pc.h"
+#include "platform/ui.h"
+#include "platform/uitext.h"
 
 #define SC_LALE_ABOUT    0x1080u      /* system-menu command (low 4 bits 0, below 0xF000) */
 #define IDC_ABOUT_ICON    201
@@ -71,14 +73,15 @@ static wchar_t *wide(const char *s, int crlf)
 
 /* ---- theme ---------------------------------------------------------------------- */
 
-/* 1 when the system's app mode is dark (light when it records none) */
-static int theme_dark(void)
+static int theme_dark(void) { return ui_win32_dark(); }
+
+/* The title bar of a window light or dark with the system's app mode. */
+static void title_bar(HWND h)
 {
-    DWORD v = 1u, n = sizeof v;
-    if (RegGetValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
-                     L"AppsUseLightTheme", RRF_RT_REG_DWORD, NULL, &v, &n) != ERROR_SUCCESS)
-        return 0;
-    return v == 0u;
+    BOOL on = theme_dark() ? TRUE : FALSE;
+    /* DWMWA_USE_IMMERSIVE_DARK_MODE: 20 (19 on Windows 10 before build 18985) */
+    if (FAILED(DwmSetWindowAttribute(h, 20u, &on, sizeof on)))
+        (void)DwmSetWindowAttribute(h, 19u, &on, sizeof on);
 }
 
 static void theme_apply(HWND dlg)
@@ -87,9 +90,8 @@ static void theme_apply(HWND dlg)
     HWND c = GetDlgItem(dlg, IDC_ABOUT_LICENSE);
     g_dark = theme_dark();
     on = g_dark ? TRUE : FALSE;
-    /* DWMWA_USE_IMMERSIVE_DARK_MODE: 20 (19 on Windows 10 before build 18985) */
-    if (FAILED(DwmSetWindowAttribute(dlg, 20u, &on, sizeof on)))
-        (void)DwmSetWindowAttribute(dlg, 19u, &on, sizeof on);
+    (void)on;
+    title_bar(dlg);
     if (c) {                                   /* the licence's scroll bar */
         (void)SetWindowTheme(c, g_dark ? L"DarkMode_Explorer" : NULL, NULL);
         (void)SendMessageW(c, WM_THEMECHANGED, 0u, 0);
@@ -142,6 +144,27 @@ static void draw_button(const DRAWITEMSTRUCT *di)
         (void)SelectObject(di->hDC, old);
 }
 
+/* Word breaks of the licence box: at blanks only.  The edit control's own
+   rule also breaks after letters it does not know, among them Turkish ş and
+   ğ ("birleş-tirme"). */
+static int CALLBACK break_at_blanks(LPWSTR text, int at, int len, int code)
+{
+    switch (code) {
+    case WB_ISDELIMITER:
+        return text[at] == L' ' || text[at] == L'\r' || text[at] == L'\n' || text[at] == L'\t';
+    case WB_LEFT:
+        while (at > 0 && text[at - 1] != L' ' && text[at - 1] != L'\n')
+            at--;
+        return at;
+    case WB_RIGHT:
+        while (at < len && text[at] != L' ' && text[at] != L'\r' && text[at] != L'\n')
+            at++;
+        return at;
+    default:
+        return 0;
+    }
+}
+
 /* ---- the dialog ------------------------------------------------------------------- */
 
 static INT_PTR CALLBACK about_proc(HWND dlg, UINT msg, WPARAM w, LPARAM l)
@@ -153,6 +176,7 @@ static INT_PTR CALLBACK about_proc(HWND dlg, UINT msg, WPARAM w, LPARAM l)
         wchar_t *lic = wide(about_licenses, 1);
         if (icon)
             (void)SendDlgItemMessageW(dlg, IDC_ABOUT_ICON, STM_SETICON, (WPARAM)icon, 0);
+        (void)SendDlgItemMessageW(dlg, IDC_ABOUT_LICENSE, EM_SETWORDBREAKPROC, 0, (LPARAM)break_at_blanks);
         if (lic) {
             (void)SetDlgItemTextW(dlg, IDC_ABOUT_LICENSE, lic);
             free(lic);
@@ -161,8 +185,15 @@ static INT_PTR CALLBACK about_proc(HWND dlg, UINT msg, WPARAM w, LPARAM l)
         g_field = CreateSolidBrush(DARK_FIELD);
         theme_apply(dlg);
         (void)SetFocus(GetDlgItem(dlg, IDOK));
+        if (getenv("LALE_UI_SHOT"))             /* test hook (ui_win32.c): a picture, then closed */
+            (void)SetTimer(dlg, 1u, 500u, NULL);
         return FALSE;                          /* focus set */
     }
+    case WM_TIMER:
+        (void)KillTimer(dlg, 1u);
+        ui_win32_shot(dlg);
+        EndDialog(dlg, 1);
+        return TRUE;
     case WM_DESTROY:
         if (g_bg) { (void)DeleteObject(g_bg); g_bg = NULL; }
         if (g_field) { (void)DeleteObject(g_field); g_field = NULL; }
@@ -246,8 +277,8 @@ void about_show(void)
     static Tmpl t;
     DWORD style = DS_MODALFRAME | DS_SETFONT | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU;
     wchar_t *title = wide(about_title, 0), *l1 = wide(about_line1, 0), *l2 = wide(about_line2, 0),
-            *url = wide(about_url, 0);
-    if (g_open || !title || !l1 || !l2 || !url)
+            *url = wide(about_url, 0), *lic = wide(T_ABOUT_LICENSES, 0), *ok = wide(T_OK, 0);
+    if (g_open || !title || !l1 || !l2 || !url || !lic || !ok)
         goto out;
     memset(&t, 0, sizeof t);
     t_word(&t, LOWORD(style)); t_word(&t, HIWORD(style));
@@ -264,16 +295,16 @@ void about_show(void)
     t_item(&t, WS_CHILD | WS_VISIBLE | SS_LEFT, 42, 21, 208, 9, 0xFFFF, 0x0082, l2);
     t_item(&t, WS_CHILD | WS_VISIBLE | WS_TABSTOP | SS_LEFT | SS_NOTIFY, 42, 32, 208, 9,
            IDC_ABOUT_LINK, 0x0082, url);
-    t_item(&t, WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 48, 240, 9, 0xFFFF, 0x0082, L"Licenses:");
+    t_item(&t, WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 48, 240, 9, 0xFFFF, 0x0082, lic);
     t_item(&t, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
            10, 59, 240, 108, IDC_ABOUT_LICENSE, 0x0081, L"");
-    t_item(&t, WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_OWNERDRAW, 200, 174, 50, 15, IDOK, 0x0080, L"OK");
+    t_item(&t, WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_OWNERDRAW, 200, 174, 50, 15, IDOK, 0x0080, ok);
     g_open = 1;
     (void)DialogBoxIndirectParamW(GetModuleHandleW(NULL), (LPCDLGTEMPLATEW)t.buf, g_hwnd, about_proc, 0);
     g_open = 0;
     pc_resync_clock();                         /* the game was paused: no catching up */
 out:
-    free(title); free(l1); free(l2); free(url);
+    free(title); free(l1); free(l2); free(url); free(lic); free(ok);
 }
 
 /* ---- the system menu ------------------------------------------------------------------ */
@@ -284,6 +315,8 @@ static LRESULT CALLBACK subclass_proc(HWND h, UINT msg, WPARAM w, LPARAM l)
         about_show();
         return 0;
     }
+    if (msg == WM_SETTINGCHANGE && l && CompareStringOrdinal((LPCWCH)l, -1, L"ImmersiveColorSet", -1, TRUE) == CSTR_EQUAL)
+        title_bar(h);                          /* the game's window follows the system's mode too */
     return CallWindowProcW(g_sdl_proc, h, msg, w, l);
 }
 
@@ -295,12 +328,15 @@ void about_install(SDL_Window *window)
     if (!h || g_hwnd)
         return;
     g_hwnd = h;
+    title_bar(h);                              /* the game's window: light or dark title bar */
     m = GetSystemMenu(h, FALSE);
     if (m) {
         /* "About…" in its own group just above Close (the menu's last item) */
         int n = GetMenuItemCount(m);
         int at = n > 0 ? n - 1 : 0;
-        (void)InsertMenuW(m, (UINT)at, MF_BYPOSITION | MF_STRING, SC_LALE_ABOUT, L"&About…");
+        wchar_t *label = wide("&" T_ABOUT_MENU, 0);
+        (void)InsertMenuW(m, (UINT)at, MF_BYPOSITION | MF_STRING, SC_LALE_ABOUT, label ? label : L"?");
+        free(label);
         (void)InsertMenuW(m, (UINT)at + 1, MF_BYPOSITION | MF_SEPARATOR, 0u, NULL);
     }
     g_sdl_proc = (WNDPROC)SetWindowLongPtrW(h, GWLP_WNDPROC, (LONG_PTR)subclass_proc);

@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "platform/uitext.h"
 
 #define MAX_FILES 99
 
@@ -134,7 +135,7 @@ int cdrom_open(const char *cue_path)
     g.error[0] = 0;
     FILE *cue = fopen(cue_path, "rb");
     if (!cue)
-        return fail("cannot open cue sheet", cue_path);
+        return fail(T_E_CUE_OPEN, cue_path);
 
     /* directory of the cue sheet: FILE names are relative to it */
     char dir[1024];
@@ -155,15 +156,15 @@ int cdrom_open(const char *cue_path)
         while (isspace((unsigned char)*p)) p++;
         if (!strncmp(p, "FILE", 4)) {
             char *q1 = strchr(p, '"'), *q2 = q1 ? strchr(q1 + 1, '"') : NULL;
-            if (!q1 || !q2) { fclose(cue); return fail("bad FILE line", p); }
-            if (!strstr(q2, "BINARY")) { fclose(cue); return fail("only BINARY files supported", p); }
-            if (g.nfiles == MAX_FILES) { fclose(cue); return fail("too many files", NULL); }
+            if (!q1 || !q2) { fclose(cue); return fail(T_E_CUE_FILE_LINE, p); }
+            if (!strstr(q2, "BINARY")) { fclose(cue); return fail(T_E_CUE_BINARY, p); }
+            if (g.nfiles == MAX_FILES) { fclose(cue); return fail(T_E_CUE_MANY_FILES, NULL); }
             *q2 = 0;
             char path[2048];
             snprintf(path, sizeof path, "%s%s", dir, q1 + 1);
             FILE *f = fopen(path, "rb");
-            if (!f) { fclose(cue); return fail("cannot open track file", path); }
-            if (file_size(f) < 0) { fclose(f); fclose(cue); return fail("cannot size track file", path); }
+            if (!f) { fclose(cue); return fail(T_E_TRACK_OPEN, path); }
+            if (file_size(f) < 0) { fclose(f); fclose(cue); return fail(T_E_TRACK_SIZE, path); }
             file_base += file_secs;      /* previous file's length          */
             g.files[g.nfiles++] = f;
             file_secs = 0;               /* known once TRACK gives the sector size */
@@ -173,7 +174,7 @@ int cdrom_open(const char *cue_path)
             char type[32] = {0};
             if (sscanf(p + 5, "%u %31s", &n, type) != 2 || !g.nfiles || n < 1 || n > 99
                 || g.ntracks == CDROM_MAX_TRACKS) {
-                fclose(cue); return fail("bad TRACK line", p);
+                fclose(cue); return fail(T_E_CUE_TRACK_LINE, p);
             }
             cur = &g.tracks[g.ntracks++];
             memset(cur, 0, sizeof *cur);
@@ -183,7 +184,7 @@ int cdrom_open(const char *cue_path)
             else if (!strcmp(type, "MODE1/2352")) { cur->sector_size = 2352; }
             else if (!strcmp(type, "MODE2/2352")) { cur->sector_size = 2352; }
             else if (!strcmp(type, "MODE1/2048")) { cur->sector_size = 2048; }
-            else { fclose(cue); return fail("unsupported track type", type); }
+            else { fclose(cue); return fail(T_E_TRACK_TYPE, type); }
             /* the file's length in sectors, in this track's sector size */
             int64_t sz = file_size(g.files[cur->file]);
             file_secs = (uint32_t)(sz / cur->sector_size);
@@ -201,7 +202,7 @@ int cdrom_open(const char *cue_path)
     }
     fclose(cue);
     if (!g.ntracks)
-        return fail("no tracks in cue sheet", cue_path);
+        return fail(T_E_CUE_NO_TRACKS, cue_path);
     g.leadout = file_base + pregap_total + file_secs;
     for (int i = 0; i < g.ntracks; i++) {
         uint32_t next = (i + 1 < g.ntracks) ? g.tracks[i + 1].start : g.leadout;
@@ -229,7 +230,7 @@ int cdrom_open_source(const CdromTrack *tracks, int ntracks, uint32_t leadout, c
     if (ntracks < 1 || ntracks > CDROM_MAX_TRACKS || !src || !src->read_sector) {
         if (src && src->close)
             src->close(src->ctx);
-        return fail("bad disc layout", NULL);
+        return fail(T_E_DISC_LAYOUT, NULL);
     }
     memcpy(g.tracks, tracks, (size_t)ntracks * sizeof *tracks);
     g.ntracks = ntracks;

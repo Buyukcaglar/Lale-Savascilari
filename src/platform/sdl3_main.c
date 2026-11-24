@@ -61,6 +61,7 @@
 #include "platform/options.h"
 #include "platform/pc.h"
 #include "platform/setup.h"
+#include "platform/ui.h"
 #include "rtl/bc_farheap.h"
 #include "rtl/bc_stdio.h"
 
@@ -660,6 +661,8 @@ static int host_open_window(void)
     SDL_SetWindowAspectRatio(window, 4.0f / 3.0f, 4.0f / 3.0f);
     set_window_icon(window);
     about_install(window);               /* Windows: system menu, macOS: app menu - About... */
+    if (SDL_getenv("LALE_UI_SHOT") && SDL_getenv("LALE_UI_ABOUT"))
+        about_show();                        /* test hook (ui_win32.c): its picture */
     SDL_SetRenderVSync(renderer, 0);      /* pacing comes from the emulated retrace */
     SDL_StartTextInput(window);
     pc_set_host_pump(host_pump);
@@ -1231,6 +1234,7 @@ int main(int argc, char **argv)
         SDL_Log("SDL_Init failed: %s", SDL_GetError());
         return 1;
     }
+    ui_init();                           /* the system's dark mode for menus and pickers (ui.h) */
     pc_reset();
     /* c0 start-up: DGROUP from the image, the far heap as it is at main() */
     dg_reset();

@@ -29,6 +29,7 @@
 #include "platform/drive.h"
 #include "platform/iso9660.h"
 #include "platform/zipfile.h"
+#include "platform/uitext.h"
 
 #define CHD_NAME "LALE.CHD"
 #define TMP_NAME "_import"          /* <base>/DATA/_import: unpacked archives, removed afterwards */
@@ -249,18 +250,18 @@ static int copy_file(const char *src, const char *dst, Ui *ui, char *err, size_t
     int rc = -1;
     snprintf(tmp, sizeof tmp, "%s.tmp", dst);
     if (!in) {
-        seterr(err, errlen, "cannot read", src);
+        seterr(err, errlen, T_E_READ, src);
         return -1;
     }
     out = fopen(tmp, "wb");
     if (!out) {
-        seterr(err, errlen, "cannot create", dst);
+        seterr(err, errlen, T_E_CREATE, dst);
         fclose(in);
         return -1;
     }
     while ((n = fread(buf, 1, sizeof buf, in)) > 0) {
         if (fwrite(buf, 1, n, out) != n) {
-            seterr(err, errlen, "cannot write (disk full?)", dst);
+            seterr(err, errlen, T_E_WRITE_FULL, dst);
             goto done;
         }
         ui->done += n;
@@ -270,20 +271,20 @@ static int copy_file(const char *src, const char *dst, Ui *ui, char *err, size_t
         }
     }
     if (ferror(in)) {
-        seterr(err, errlen, "cannot read", src);
+        seterr(err, errlen, T_E_READ, src);
         goto done;
     }
     rc = 1;
 done:
     fclose(in);
     if (fclose(out) != 0 && rc == 1) {
-        seterr(err, errlen, "cannot write (disk full?)", dst);
+        seterr(err, errlen, T_E_WRITE_FULL, dst);
         rc = -1;
     }
     if (rc == 1) {
         remove(dst);
         if (rename(tmp, dst) != 0) {
-            seterr(err, errlen, "cannot create", dst);
+            seterr(err, errlen, T_E_CREATE, dst);
             rc = -1;
         }
     }
@@ -301,10 +302,10 @@ static int import_files(const char *dir, const char *base, int move, Ui *ui, cha
     struct dirent *de;
     int rc = INSTALL_FILES;
     if (!d) {
-        seterr(err, errlen, "cannot read the folder", dir);
+        seterr(err, errlen, T_E_READ_FOLDER, dir);
         return -1;
     }
-    ui->text = "Copying the game files to DATA";
+    ui->text = T_P_COPY_FILES;
     ui->done = ui->total = 0;
     while ((de = readdir(d)) != NULL)
         if (wanted(de->d_name)) {
@@ -342,7 +343,7 @@ static int import_files(const char *dir, const char *base, int move, Ui *ui, cha
     if (rc == INSTALL_FILES) {
         snprintf(dst, sizeof dst, "%s/DATA", base);
         if (!install_have_files(dst)) {
-            seterr(err, errlen, "the game is incomplete (3D.CKD, 0GFL.CKD, TRDOS.DAT and the others are needed)", dir);
+            seterr(err, errlen, T_E_INCOMPLETE, dir);
             rc = -1;
         }
     }
@@ -392,7 +393,7 @@ static int check_game_disc(const CdromSource *src, uint32_t *volume, char *err, 
     IsoFs fs;
     IsoEntry e;
     if (iso_mount(&fs, iso_from_source, (void *)src) != 0 || iso_find(&fs, "3D.CKD", &e) != 0) {
-        seterr(err, errlen, "this is not the game's CD (no 3D.CKD on it)", NULL);
+        seterr(err, errlen, T_E_NOT_GAME_CD, NULL);
         return -1;
     }
     *volume = fs.volume_sectors;
@@ -412,12 +413,12 @@ static int write_chd(const char *base, const CdromTrack *tracks, int ntracks, ui
         return -1;
     snprintf(tmp, sizeof tmp, "%s/DATA/" CHD_NAME ".tmp", base);
     snprintf(final, sizeof final, "%s/DATA/" CHD_NAME, base);
-    ui->text = "Writing the disc to DATA/" CHD_NAME;
+    ui->text = T_P_WRITE_CHD;
     rc = chd_create_cd(tmp, tracks, ntracks, leadout, &csrc, chd_progress, ui, &st, err, errlen);
     if (rc != 0)
         return rc == 1 ? 0 : -1;
     if (cnt.bad_volume) {
-        snprintf(num, sizeof num, "%u sectors of the data track could not be read (a dirty or scratched disc?)",
+        snprintf(num, sizeof num, T_E_BAD_SECTORS_FMT,
                  (unsigned)cnt.bad_volume);
         seterr(err, errlen, num, NULL);
         remove(tmp);
@@ -426,7 +427,7 @@ static int write_chd(const char *base, const CdromTrack *tracks, int ntracks, ui
     if (cnt.bad_other)
         fprintf(stderr, "import: %u sectors outside the files could not be read; written as silence\n",
                 (unsigned)cnt.bad_other);
-    ui->text = "Checking DATA/" CHD_NAME;
+    ui->text = T_P_CHECK_DATA_CHD;
     c = chd_open(tmp, err, errlen);
     rc = c ? chd_verify(c, chd_progress, ui, err, errlen) : -1;
     chd_close(c);
@@ -436,7 +437,7 @@ static int write_chd(const char *base, const CdromTrack *tracks, int ntracks, ui
     }
     remove(final);
     if (rename(tmp, final) != 0) {
-        seterr(err, errlen, "cannot create", final);
+        seterr(err, errlen, T_E_CREATE, final);
         remove(tmp);
         return -1;
     }
@@ -562,7 +563,7 @@ static int import_iso(const char *path, const char *base, Ui *ui, char *err, siz
     CdromSource src = { isofile_read, NULL, &iso };
     int rc;
     if (!iso.f || iso.sectors < 20 || iso.sectors > 450000) {
-        seterr(err, errlen, "cannot read the image", path);
+        seterr(err, errlen, T_E_READ_IMAGE, path);
         if (iso.f)
             fclose(iso.f);
         return -1;
@@ -591,7 +592,7 @@ static int import_chd(const char *path, const char *base, Ui *ui, char *err, siz
     CdromSource src = { chdsrc_read, NULL, c };
     rc = check_game_disc(&src, &volume, err, errlen);
     if (rc == 0) {
-        ui->text = "Checking the CHD";
+        ui->text = T_P_CHECK_CHD;
         rc = chd_verify(c, chd_progress, ui, err, errlen);
         if (rc == 1) {
             chd_close(c);
@@ -604,7 +605,7 @@ static int import_chd(const char *path, const char *base, Ui *ui, char *err, siz
     snprintf(final, sizeof final, "%s/DATA/" CHD_NAME, base);
     if (ieq(path, final))
         return INSTALL_DISC;                    /* it is the installed one */
-    ui->text = "Copying the CHD to DATA";
+    ui->text = T_P_COPY_CHD;
     ui->done = 0;
     ui->total = file_size(path);
     rc = copy_file(path, final, ui, err, errlen);
@@ -641,7 +642,7 @@ static int import_tree(const char *dir, const char *base, int move, Ui *ui, char
         return import_image(found, base, ui, err, errlen);
     if (find_game_folder(dir, 4, found, sizeof found))
         return import_files(found, base, move, ui, err, errlen);
-    seterr(err, errlen, "neither the game's files (3D.CKD and the others) nor a disc image (.cue, .chd, .iso) in", dir);
+    seterr(err, errlen, T_E_NOTHING_HERE, dir);
     return -1;
 }
 
@@ -675,7 +676,7 @@ static int unzip(const char *path, const char *tmp, Ui *ui, char *err, size_t er
     int rc = 1;
     if (!z)
         return -1;
-    ui->text = "Unpacking the archive";
+    ui->text = T_P_UNPACK;
     ui->done = ui->total = 0;
     for (int i = 0; i < zip_count(z); i++)
         if (unpack_ext(zip_entry(z, i)->name))
@@ -800,7 +801,7 @@ static int import_archive(const char *path, const char *base, Ui *ui, char *err,
     snprintf(tmp, sizeof tmp, "%s/DATA/" TMP_NAME, base);
     remove_tree(tmp);
     if (install_mkdir(tmp) != 0) {
-        seterr(err, errlen, "cannot create", tmp);
+        seterr(err, errlen, T_E_CREATE, tmp);
         return -1;
     }
     if (ext_is(path, "zip"))
@@ -808,12 +809,12 @@ static int import_archive(const char *path, const char *base, Ui *ui, char *err,
     if (rc < 0) {                               /* not a ZIP, or one for a full unpacker */
         remove_tree(tmp);
         install_mkdir(tmp);
-        ui->text = "Unpacking the archive";
+        ui->text = T_P_UNPACK;
         ui->done = ui->total = 0;
         int r = unpack_with_tools(path, tmp, ui);
         rc = r == 0 ? 1 : r == 1 ? 0 : -1;
         if (rc < 0)
-            seterr(err, errlen, "cannot unpack the archive (unpack it yourself and give the folder)", path);
+            seterr(err, errlen, T_E_UNPACK, path);
     }
     if (rc == 1)
         rc = import_tree(tmp, base, 1, ui, err, errlen);
@@ -833,12 +834,12 @@ int install_import(const char *base, const char *source, InstallProgressFn progr
         err[0] = 0;
     snprintf(dir, sizeof dir, "%s/DATA", base);
     if (install_mkdir(dir) != 0) {
-        seterr(err, errlen, "cannot create the folder", dir);
+        seterr(err, errlen, T_E_CREATE_FOLDER, dir);
         return -1;
     }
     snprintf(dir, sizeof dir, "%s/SAVE", base);
     if (install_mkdir(dir) != 0) {
-        seterr(err, errlen, "cannot create the folder", dir);
+        seterr(err, errlen, T_E_CREATE_FOLDER, dir);
         return -1;
     }
     if (drive_is_optical(source))
@@ -849,7 +850,7 @@ int install_import(const char *base, const char *source, InstallProgressFn progr
     if (is_dir(src))
         return import_tree(src, base, 0, &ui, err, errlen);
     if (!is_file(src)) {
-        seterr(err, errlen, "no such file or folder", source);
+        seterr(err, errlen, T_E_NO_SUCH, source);
         return -1;
     }
     if (image_rank(src))
@@ -859,7 +860,7 @@ int install_import(const char *base, const char *source, InstallProgressFn progr
         memcpy(dot, ".cue", 5);
         if (is_file(src))
             return import_cue(src, base, &ui, err, errlen);
-        seterr(err, errlen, "a .bin image needs its .cue file beside it", source);
+        seterr(err, errlen, T_E_BIN_NEEDS_CUE, source);
         return -1;
     }
     return import_archive(src, base, &ui, err, errlen);

@@ -17,6 +17,7 @@
 #include <windows.h>
 #include <winioctl.h>
 #include <ntddcdrm.h>
+#include "platform/uitext.h"
 
 #define CHUNK 16                        /* sectors per read */
 
@@ -147,7 +148,7 @@ int drive_open(const char *drive, CdromTrack *tracks, uint32_t *leadout, CdromSo
     DWORD got = 0;
     Drive *d;
     if (!drive_letter(drive)) {
-        seterr(err, errlen, "not a drive", drive);
+        seterr(err, errlen, T_E_NOT_DRIVE, drive);
         return -1;
     }
     d = calloc(1, sizeof *d);
@@ -156,14 +157,14 @@ int drive_open(const char *drive, CdromTrack *tracks, uint32_t *leadout, CdromSo
     snprintf(dev, sizeof dev, "\\\\.\\%c:", drive_letter(drive));
     d->h = CreateFileA(dev, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
     if (d->h == INVALID_HANDLE_VALUE) {
-        seterr(err, errlen, "cannot open the drive", drive);
+        seterr(err, errlen, T_E_DRIVE_OPEN, drive);
         free(d);
         return -1;
     }
     memset(&toc, 0, sizeof toc);
     if (!DeviceIoControl(d->h, IOCTL_CDROM_READ_TOC, NULL, 0, &toc, sizeof toc, &got, NULL)
         || toc.LastTrack < toc.FirstTrack || toc.LastTrack > CDROM_MAX_TRACKS) {
-        seterr(err, errlen, "no disc in the drive, or its table of contents cannot be read", drive);
+        seterr(err, errlen, T_E_DRIVE_NO_DISC, drive);
         drive_close(d);
         return -1;
     }
@@ -217,7 +218,7 @@ int drive_open(const char *drive, CdromTrack *tracks, uint32_t *leadout, CdromSo
 {
     (void)tracks; (void)leadout; (void)src;
     if (err && errlen)
-        snprintf(err, errlen, "reading a disc straight from the drive is not implemented on this system: %s", drive);
+        snprintf(err, errlen, T_E_DRIVE_NOT_HERE ": %s", drive);
     return -1;
 }
 

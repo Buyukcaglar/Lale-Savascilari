@@ -86,10 +86,12 @@ set(LALE_HOST_SRC
     src/platform/audio_sdl.c
     src/platform/about.c
     src/platform/about_win32.c
+    src/platform/ui.c
+    src/platform/ui_win32.c
 )
 if(APPLE)
-    list(APPEND LALE_HOST_SRC src/platform/about_macos.m src/platform/hdvideo_avf.m)
-    set_source_files_properties(src/platform/about_macos.m src/platform/hdvideo_avf.m
+    list(APPEND LALE_HOST_SRC src/platform/about_macos.m src/platform/hdvideo_avf.m src/platform/ui_macos.m)
+    set_source_files_properties(src/platform/about_macos.m src/platform/hdvideo_avf.m src/platform/ui_macos.m
                                 PROPERTIES COMPILE_OPTIONS -fobjc-arc)
 endif()
 add_executable(lale ${LALE_HOST_SRC})
@@ -104,6 +106,9 @@ if(WIN32)
     target_link_libraries(lale PRIVATE dwmapi uxtheme shell32 advapi32)
     # the 4K videos (hdvideo_mf.c): Media Foundation
     target_link_libraries(lale PRIVATE mfreadwrite mfplat mfuuid ole32)
+    # ... loaded at first use, so that the program starts without them too
+    # (Windows N editions; hdreader_available() in hdvideo_mf.c)
+    target_link_options(lale PRIVATE -Wl,--delayload=mfplat.dll -Wl,--delayload=mfreadwrite.dll)
 endif()
 target_include_directories(lale PRIVATE src)
 target_link_libraries(lale PRIVATE lale_game lale_platform SDL3::SDL3)

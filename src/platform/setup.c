@@ -12,9 +12,8 @@
 #include "platform/chd.h"
 #include "platform/drive.h"
 #include "platform/install.h"
-
-/* "İstanbul Efsaneleri - Lale Savaşçıları" */
-static const char title[] = "\xC4\xB0stanbul Efsaneleri - Lale Sava\xC5\x9F\xC3\xA7\xC4\xB1lar\xC4\xB1";
+#include "platform/ui.h"
+#include "platform/uitext.h"
 
 static SDL_Window   *win;
 static SDL_Renderer *ren;
@@ -25,7 +24,7 @@ static void show_error(const char *msg)
 {
     SDL_Log("%s", msg);
     if (dialogs)
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, title, msg, win);
+        ui_message(win, 1, msg, NULL, 0, 0, 0);
 }
 
 /* ---- folders ---------------------------------------------------------------------- */
@@ -75,67 +74,21 @@ static int is_dir(const char *path)
 
 /* ---- progress ----------------------------------------------------------------------- */
 
-static void text_at(float x, float y, float scale, const char *s)
-{
-    SDL_SetRenderScale(ren, scale, scale);
-    SDL_RenderDebugText(ren, x / scale, y / scale, s);
-    SDL_SetRenderScale(ren, 1.0f, 1.0f);
-}
-
 static int progress(void *ctx, const char *text, uint64_t done, uint64_t total)
 {
-    static Uint64 last;
-    static const char *last_text;
-    static int quit;
-    SDL_Event ev;
-    Uint64 now = SDL_GetTicks();
     (void)ctx;
-    while (SDL_PollEvent(&ev))
-        if (ev.type == SDL_EVENT_QUIT || (ev.type == SDL_EVENT_KEY_DOWN && ev.key.scancode == SDL_SCANCODE_ESCAPE))
-            quit = 1;
-    if (quit)
-        return 1;
-    if (text != last_text) {
-        SDL_Log("%s", text);
-        last_text = text;
-        last = 0;
-    }
-    if (now - last < 40 || !ren)
+    if (!dialogs)
         return 0;
-    last = now;
+    return ui_progress(win, progress_source, text, total ? (double)done / (double)total : -1.0);
+}
 
-    int w = 0, h = 0;
-    char line[160];
-    SDL_GetCurrentRenderOutputSize(ren, &w, &h);
-    float s = (float)(w / 420 > 0 ? w / 420 : 1), x = (float)w * 0.1f, bw = (float)w * 0.8f;
-    float y = (float)h * 0.36f, bh = 14.0f * s;
-    SDL_SetRenderDrawColor(ren, 12, 12, 20, 255);
-    SDL_RenderClear(ren);
-    SDL_SetRenderDrawColor(ren, 150, 150, 160, 255);
-    text_at(x, y - 26.0f * s, s, progress_source);
-    SDL_SetRenderDrawColor(ren, 235, 235, 235, 255);
-    text_at(x, y - 13.0f * s, s, text);
-    SDL_FRect frame = { x, y, bw, bh };
-    SDL_RenderRect(ren, &frame);
-    if (total) {
-        float f = (float)((double)done / (double)total);
-        SDL_FRect bar = { x + 2.0f * s, y + 2.0f * s, (bw - 4.0f * s) * (f > 1.0f ? 1.0f : f), bh - 4.0f * s };
-        SDL_SetRenderDrawColor(ren, 200, 60, 50, 255);
-        SDL_RenderFillRect(ren, &bar);
-        snprintf(line, sizeof line, "%d %%", (int)(f * 100.0f));
-    } else {                                            /* length unknown: a block going round */
-        float f = (float)(now % 2000) / 2000.0f;
-        SDL_FRect bar = { x + 2.0f * s + (bw - 4.0f * s) * 0.85f * f, y + 2.0f * s, (bw - 4.0f * s) * 0.15f, bh - 4.0f * s };
-        SDL_SetRenderDrawColor(ren, 200, 60, 50, 255);
-        SDL_RenderFillRect(ren, &bar);
-        line[0] = 0;
-    }
-    SDL_SetRenderDrawColor(ren, 235, 235, 235, 255);
-    text_at(x, y + bh + 6.0f * s, s, line);
-    SDL_SetRenderDrawColor(ren, 110, 110, 120, 255);
-    text_at(x, (float)h - 16.0f * s, s, "Esc or closing the window cancels");
-    SDL_RenderPresent(ren);
-    return 0;
+/* The import's message ends in ": <source>" when it is about the source as a
+   whole; the dialog names the source above it already. */
+static void drop_source(char *err, const char *source)
+{
+    size_t n = strlen(err), k = strlen(source);
+    if (n > k + 2 && strcmp(err + n - k, source) == 0 && err[n - k - 2] == ':')
+        err[n - k - 2] = 0;
 }
 
 /* INSTALL_FILES / INSTALL_DISC, 0 cancelled, -1 failed (message in err) */
@@ -147,8 +100,11 @@ static int import(const GameSetup *g, const char *source, char *err, size_t errl
     progress_source = *leaf ? leaf : source;
     SDL_Log("importing %s", source);
     int rc = install_import(g->base, source, progress, NULL, err, errlen);
-    if (rc < 0)
+    ui_progress_close();
+    if (rc < 0) {
         SDL_Log("import of %s failed: %s", source, err);
+        drop_source(err, source);
+    }
     return rc;
 }
 
@@ -166,28 +122,33 @@ static void SDLCALL pick_cb(void *userdata, const char *const *list, int filter)
     pick_done = 1;
 }
 
-/* 1 with a path in out, 0 when the player quits */
-static int ask_source(const char *text, char *out, size_t size)
+/* 1 with a path in out, 0 when the player quits.  `error`: the text says
+   what was wrong with the last choice. */
+static int ask_source(const char *text, int error, char *out, size_t size)
 {
-    static const SDL_MessageBoxButtonData buttons[] = {
-        { SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 1, "Choose File\xE2\x80\xA6" },
-        { 0, 2, "Choose Folder\xE2\x80\xA6" },
-        { SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 0, "Quit" },
-    };
+    static const char *const buttons[] = { T_CHOOSE_FILE, T_CHOOSE_FOLDER, T_QUIT };
     static const SDL_DialogFileFilter filters[] = {
-        { "Disc images and archives of the game", "cue;iso;chd;zip;7z;rar" },
-        { "All files", "*" },
+        { T_FILTER_GAME, "cue;iso;chd;zip;7z;rar" },
+        { T_FILTER_ALL, "*" },
     };
     for (;;) {
-        SDL_MessageBoxData box = { SDL_MESSAGEBOX_INFORMATION, win, title, text, 3, buttons, NULL };
-        int hit = 0;
-        if (!SDL_ShowMessageBox(&box, &hit) || hit == 0)
+        int hit = ui_message(win, error, text, buttons, 3, 0, 2);
+        if (hit != 0 && hit != 1)
             return 0;
         pick_done = 0;
-        if (hit == 1)
-            SDL_ShowOpenFileDialog(pick_cb, NULL, win, filters, 2, NULL, false);
-        else
-            SDL_ShowOpenFolderDialog(pick_cb, NULL, win, NULL, false);
+        /* the system's picker; its title and buttons in Turkish where it lets
+           them be set (the rest is the system's, in its own language) */
+        SDL_PropertiesID p = SDL_CreateProperties();
+        SDL_SetPointerProperty(p, SDL_PROP_FILE_DIALOG_WINDOW_POINTER, win);
+        SDL_SetStringProperty(p, SDL_PROP_FILE_DIALOG_TITLE_STRING, hit == 0 ? T_PICK_FILE_TITLE : T_PICK_FOLDER_TITLE);
+        SDL_SetStringProperty(p, SDL_PROP_FILE_DIALOG_ACCEPT_STRING, T_PICK_ACCEPT);
+        SDL_SetStringProperty(p, SDL_PROP_FILE_DIALOG_CANCEL_STRING, T_CANCEL);
+        if (hit == 0) {
+            SDL_SetPointerProperty(p, SDL_PROP_FILE_DIALOG_FILTERS_POINTER, (void *)filters);
+            SDL_SetNumberProperty(p, SDL_PROP_FILE_DIALOG_NFILTERS_NUMBER, 2);
+        }
+        SDL_ShowFileDialogWithProperties(hit == 0 ? SDL_FILEDIALOG_OPENFILE : SDL_FILEDIALOG_OPENFOLDER, pick_cb, NULL, p);
+        SDL_DestroyProperties(p);
         while (!pick_done) {
             SDL_PumpEvents();
             SDL_Delay(10);
@@ -209,7 +170,12 @@ int setup_game(const LaleOptions *o, SDL_Window *window, SDL_Renderer *renderer,
     int imported = INSTALL_NONE;
     win = window;
     ren = renderer;
-    dialogs = interactive;
+    dialogs = interactive || SDL_getenv("LALE_UI_SHOT") != NULL;      /* (ui_win32.c's test hook) */
+    if (ren) {                                          /* the game's window stays black behind the dialogs */
+        SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
+        SDL_RenderClear(ren);
+        SDL_RenderPresent(ren);
+    }
     memset(g, 0, sizeof *g);
 
     exe_dir(exe, sizeof exe);
@@ -227,7 +193,7 @@ int setup_game(const LaleOptions *o, SDL_Window *window, SDL_Renderer *renderer,
     snprintf(g->data, sizeof g->data, "%s/DATA", g->base);
     snprintf(g->save, sizeof g->save, "%s/SAVE", g->base);
     if (install_mkdir(g->base) != 0 || install_mkdir(g->data) != 0 || install_mkdir(g->save) != 0) {
-        snprintf(msg, sizeof msg, "Cannot create the folders DATA and SAVE in\n%s", g->base);
+        snprintf(msg, sizeof msg, T_NO_FOLDERS_FMT, g->base);
         show_error(msg);
         return -1;
     }
@@ -244,7 +210,7 @@ int setup_game(const LaleOptions *o, SDL_Window *window, SDL_Renderer *renderer,
         if (imported == 0)
             return 1;
         if (imported < 0) {
-            snprintf(msg, sizeof msg, "Cannot use\n%s\n\n%s", o->source, err);
+            snprintf(msg, sizeof msg, T_CANNOT_USE_FMT, o->source, err);
             show_error(msg);
             return -1;
         }
@@ -263,28 +229,21 @@ int setup_game(const LaleOptions *o, SDL_Window *window, SDL_Renderer *renderer,
                 return 1;
         }
         /* 3. ask */
-        const char *text =
-            "This program needs your copy of the original game. It takes either\n\n"
-            "  the game CD: put it in the drive and start again, or choose an image of it\n"
-            "  (.cue with its .bin files, .iso, .chd), or\n\n"
-            "  the files of the 2005 release: a .zip, .7z or .rar archive, or the folder\n"
-            "  they were unpacked to.\n\n"
-            "The game is copied to the folder DATA beside this program; saved games go to SAVE.";
+        const char *text = T_ASK_SOURCE;
         while (imported <= 0) {
             char path[1024];
-            if (!interactive) {
+            if (!dialogs) {
                 SDL_Log("no game installed in %s: start with the path of the game CD image (.cue, .iso, .chd), "
                         "of an archive of the 2005 release (.zip, .7z, .rar) or of its folder", g->data);
                 return -1;
             }
-            if (!ask_source(text, path, sizeof path))
+            if (!ask_source(text, text == msg, path, sizeof path))
                 return 1;
             imported = import(g, path, err, sizeof err);
             if (imported == 0)
                 return 1;
             if (imported < 0) {
-                snprintf(msg, sizeof msg, "Cannot use\n%s\n\n%s\n\nChoose the game CD's image or the files of the 2005 release.",
-                         path, err);
+                snprintf(msg, sizeof msg, T_CANNOT_USE_PICK_FMT, path, err);
                 text = msg;
             }
         }
@@ -298,7 +257,7 @@ int setup_game(const LaleOptions *o, SDL_Window *window, SDL_Renderer *renderer,
         want = EDITION_2005;                            /* just brought in: that one, this time */
     if (have_chd && (want != EDITION_2005 || !have_files)) {
         if (chd_mount(chd, err, sizeof err) != 0) {
-            snprintf(msg, sizeof msg, "Cannot use %s\n\n%s\n\nDelete the file and give the program the game CD again.", chd, err);
+            snprintf(msg, sizeof msg, T_BAD_CHD_FMT, chd, err);
             if (!have_files || want == EDITION_CD) {
                 show_error(msg);
                 return -1;
@@ -312,9 +271,7 @@ int setup_game(const LaleOptions *o, SDL_Window *window, SDL_Renderer *renderer,
         }
     }
     if (want == EDITION_CD && !(g->disc && audio)) {
-        show_error("The CD edition needs the game CD with its audio tracks (DATA/LALE.CHD).\n\n"
-                   "Start the program with the CD in the drive or with its image (.cue), "
-                   "or set edition = 2005.");
+        show_error(T_CD_EDITION_NEEDS_DISC);
         return -1;
     }
     g->edition = want >= 0 ? want : g->disc && audio ? EDITION_CD : EDITION_2005;

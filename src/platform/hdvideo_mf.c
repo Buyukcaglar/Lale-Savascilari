@@ -48,7 +48,17 @@ static void start_mf(void)
     mf_state = SUCCEEDED(mf_error) ? 1 : -1;
 }
 
-int hdreader_available(void) { return 1; }
+/* Media Foundation is missing on the "N" editions of Windows without the
+   Media Feature Pack.  Its two libraries are therefore linked to be loaded at
+   their first use (CMakeLists.txt: --delayload), and nothing of them is used
+   unless they can be loaded: the program then runs without the 4K videos. */
+int hdreader_available(void)
+{
+    static int have = -1;
+    if (have < 0)
+        have = LoadLibraryW(L"mfplat.dll") != NULL && LoadLibraryW(L"mfreadwrite.dll") != NULL;
+    return have;
+}
 
 static int read_format(HdReader *r)
 {

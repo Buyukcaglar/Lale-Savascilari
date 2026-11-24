@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "platform/zdeflate.h"
+#include "platform/uitext.h"
 
 struct ZipFile {
     FILE     *f;
@@ -37,7 +38,7 @@ ZipFile *zip_open(const char *path, char *err, size_t errlen)
         return NULL;
     z->f = fopen(path, "rb");
     if (!z->f) {
-        seterr(err, errlen, "cannot open", path);
+        seterr(err, errlen, T_E_OPEN, path);
         goto fail;
     }
     /* the end-of-central-directory record: the last 22 bytes, or before a comment */
@@ -52,18 +53,18 @@ ZipFile *zip_open(const char *path, char *err, size_t errlen)
             break;
         }
     if (at < 0) {
-        seterr(err, errlen, "not a ZIP archive", path);
+        seterr(err, errlen, T_E_ZIP_NOT_ZIP, path);
         goto fail;
     }
     uint32_t count = le16(tail + at + 10), cdsize = le32(tail + at + 12), cdoff = le32(tail + at + 16);
     if (count == 0xFFFF || cdoff == 0xFFFFFFFF || cdsize > 64u * 1024 * 1024) {
-        seterr(err, errlen, "ZIP64 archives are not supported", path);
+        seterr(err, errlen, T_E_ZIP_ZIP64, path);
         goto fail;
     }
     cd = malloc(cdsize + 1);
     z->e = calloc(count + 1, sizeof *z->e);
     if (!cd || !z->e || fseek(z->f, (long)cdoff, SEEK_SET) || fread(cd, 1, cdsize, z->f) != cdsize) {
-        seterr(err, errlen, "damaged ZIP archive", path);
+        seterr(err, errlen, T_E_ZIP_DAMAGED, path);
         goto fail;
     }
     for (uint32_t p = 0; z->n < (int)count && p + 46 <= cdsize && le32(cd + p) == 0x02014B50;) {
@@ -152,17 +153,17 @@ int zip_extract(ZipFile *z, const ZipEntry *e, const char *dest,
     Xfer x = { z->f, NULL, e->csize, 0, 0, tick, ctx, 0, 0, 0 };
     int rc = -1;
     if ((e->flags & 1) || (e->method != 0 && e->method != 8) || e->usize == 0xFFFFFFFF) {
-        seterr(err, errlen, "ZIP entry is encrypted or packed with an unsupported method", e->name);
+        seterr(err, errlen, T_E_ZIP_METHOD, e->name);
         return -1;
     }
     if (fseek(z->f, (long)e->offset, SEEK_SET) || fread(lh, 1, 30, z->f) != 30 || le32(lh) != 0x04034B50
         || fseek(z->f, (long)(le16(lh + 26) + le16(lh + 28)), SEEK_CUR)) {
-        seterr(err, errlen, "damaged ZIP archive at", e->name);
+        seterr(err, errlen, T_E_ZIP_DAMAGED, e->name);
         return -1;
     }
     x.out = fopen(dest, "wb");
     if (!x.out) {
-        seterr(err, errlen, "cannot create", dest);
+        seterr(err, errlen, T_E_CREATE, dest);
         return -1;
     }
     if (e->method == 0) {
@@ -172,7 +173,7 @@ int zip_extract(ZipFile *z, const ZipEntry *e, const char *dest,
             if (xfer_write(&x, buf, n))
                 break;
     } else if (z_inflate(xfer_read, &x, xfer_write, &x, NULL) != 0 && !x.stopped && !x.failed) {
-        seterr(err, errlen, "damaged ZIP archive (deflate stream)", e->name);
+        seterr(err, errlen, T_E_ZIP_DEFLATE, e->name);
         goto done;
     }
     if (x.stopped) {
@@ -180,11 +181,11 @@ int zip_extract(ZipFile *z, const ZipEntry *e, const char *dest,
         goto done;
     }
     if (x.failed || fflush(x.out)) {
-        seterr(err, errlen, "cannot write (disk full?)", dest);
+        seterr(err, errlen, T_E_WRITE_FULL, dest);
         goto done;
     }
     if (x.written != e->usize || x.crc != e->crc) {
-        seterr(err, errlen, "damaged ZIP archive (CRC-32 or size)", e->name);
+        seterr(err, errlen, T_E_ZIP_CRC, e->name);
         goto done;
     }
     rc = 0;

@@ -3,19 +3,22 @@
  * the one in the Civ64 project").  Not part of the original game: a port
  * addition of the host, like the window icon.
  *
- * Content (about.c, portable, shared by every host):
- *   title    "About İstanbul Efsaneleri: Lale Savaşçıları 64bit vX.Y"
- *   lines    "64bit version by Onur BUYUKCAGLAR"
- *            "with Anthropic Claude AI assistance"
+ * Content (about.c, portable, shared by every host; all of it Turkish, the
+ * texts are in uitext.h - the user's request of 2026-11-25):
+ *   title    "İstanbul Efsaneleri: Lale Savaşçıları 64bit vX.Y Hakkında"
+ *   lines    "64 bit sürüm: Onur BUYUKCAGLAR"
+ *            "Anthropic Claude yapay zekâ desteğiyle"
  *   link     the project's repository (opens in the default browser)
  *   licences the port's MIT licence + the note that the original game is
- *            not part of it, then the third-party notices (SDL3, zlib licence)
+ *            not part of it, then the third-party notices (SDL3, zlib
+ *            licence), in Turkish; the binding English originals are
+ *            docs/LICENSES.txt, which the packages carry as LICENSES.txt
  *
- * Windows (about_win32.c): "About…" in the window's system menu (title-bar
+ * Windows (about_win32.c): "Hakkında…" in the window's system menu (title-bar
  * icon / Alt+Space), just above Close; a native modal dialog that follows the
  * system's light/dark app theme.  The game is paused while it is open (its
  * emulated clock does not run and does not catch up afterwards).
- * macOS (about_macos.m): the application menu's "About Lale64" item (where
+ * macOS (about_macos.m): the application menu's "Lale64 Hakkında" item (where
  * SDL's menu bar has the standard, empty About panel); a native alert with
  * the same content, light or dark with the system.  The game is paused the
  * same way.
