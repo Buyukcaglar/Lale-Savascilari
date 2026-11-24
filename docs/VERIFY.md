@@ -517,6 +517,22 @@ uzak öbek (far heap) ve DGROUP, bir DOSBox-X bellek yakalamasına karşı).
 
 Açık bir DSMI başlatma farkı kalmadı.
 
+#### CD baskısı (1996) - port ve orijinal, 2026-11-25
+
+`pair.py --cd <disk.cue>` aynı betiği 1996 CD baskısında çalıştırır: port
+`--cd-image <cue> --edition cd` ile, DOSBox-X'te 1996 `IST.EXE` (diskin dosyaları,
+`orig_cd/`) ve D: olarak bağlanmış disk kalıbı ile (DOSBox-X'in kendi MSCDEX'i).
+1996 derlemesinin DGROUP'u 16E3'tedir ve kancanın kullandığı değişkenler 0C0h ileridedir
+(rastgele sayı durumu 94C4 -> 9584, ms saati E74A -> E80A; iki programın baytları
+üzerinde denetlendi); `dbx_replay.py --cd` kancaya segment olarak DGROUP + 0Ch verir.
+DGROUP bayt bayt karşılaştırılmaz (1996 veri segmentinin düzeni farklıdır).
+
+Sonuç (`intro`, CD baskısı, 400 s, 1600 örnek): ilk 46 s'deki örnekler kontrol noktasında
+farklıdır - açılışta CD denetimi ve video, 2005 baskısındaki gibi orijinalin saatinde daha
+geç başlar; 46,5 s'den sonraki 1479 örnek ve `GRP.DAT` aynıdır. `frames_match.py` ile
+(port `--frame-log`, 234 ayrı görüntü durumu) orijinalin **1600 örneğinin tamamı** portta
+bir görüntü durumuyla eşleşir; ayrışma yok.
+
 `tools/verify/mkscript.py` betikleri oluşturur (yukarıdaki `play3`; `play2` kontrol
 noktası etkisizleştirmesi olmayan eski sürümdür);
 `tools/verify/mksave.py` hazırlanmış kayıtları oluşturur.
@@ -1120,6 +1136,22 @@ at main()'s call of the intro against a DOSBox-X memory capture).
   compared frame by frame with `frames_match.py`).
 
 No open DSMI start-up difference remains.
+
+#### CD edition (1996) - port vs original, 2026-11-25
+
+`pair.py --cd <disc.cue>` runs the same script in the 1996 CD edition: the port with
+`--cd-image <cue> --edition cd`, DOSBox-X with the 1996 `IST.EXE` (the disc's files,
+`orig_cd/`) and the disc image mounted as D: (DOSBox-X's own MSCDEX). The 1996 build's
+DGROUP is at 16E3 and the variables the hook uses sit 0C0h further in (random state
+94C4 -> 9584, the ms clock E74A -> E80A; checked on the bytes of both programs);
+`dbx_replay.py --cd` gives the hook DGROUP + 0Ch as its segment. DGROUP is not compared
+byte for byte (the 1996 data segment is laid out differently).
+
+Result (`intro`, CD edition, 400 s, 1600 samples): the samples of the first 46 s differ at
+the checkpoint - the CD check at start-up and the video begin later on the original's
+clock, as in the 2005 edition; the 1479 samples from 46.5 s on and `GRP.DAT` are
+identical. With `frames_match.py` (the port's `--frame-log`, 234 distinct video states)
+**all 1600 samples** of the original match a state of the port; no divergence.
 
 `tools/verify/mkscript.py` builds the scripts (`play3` above; `play2` is
 the older version without the checkpoint neutralisation);

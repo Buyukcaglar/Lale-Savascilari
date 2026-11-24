@@ -43,8 +43,14 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
 
 #include "engine/dgroup.h"
 #include "engine/edition.h"
@@ -89,8 +95,11 @@ static void hd_toggle(void);
 
 static void toggle_fullscreen(void)
 {
-    if (window)
-        SDL_SetWindowFullscreen(window, !(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN));
+    if (window) {
+        bool full = !(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN);
+        SDL_SetWindowFullscreen(window, full);
+        SDL_Log("full screen: %s", full ? "on" : "off");
+    }
 }
 
 /* ======================================================================== */
@@ -165,6 +174,14 @@ static void key_down(const SDL_KeyboardEvent *k)
     pc_set_shift_flags(shift);
     if (!k->down)
         return;                                         /* release: shift flags only */
+    /* Alt+Enter: full screen <-> window, the host's as in DOSBox (the game has
+       no use for Alt+Enter: BIOS keyboard, INT 09h traps only Ctrl+Alt+Del).
+       Every system; on the Mac also Cmd+Return / Cmd+F below. */
+    if ((m & SDL_KMOD_ALT) && (k->scancode == SDL_SCANCODE_RETURN || k->scancode == SDL_SCANCODE_KP_ENTER)) {
+        if (!k->repeat)
+            toggle_fullscreen();
+        return;
+    }
     /* Ctrl+V: 4K videos <-> original videos - the host's, when there are 4K files */
     if (hd_files && k->key == SDLK_V && (m & SDL_KMOD_CTRL)) {
         if (!k->repeat)
@@ -1195,9 +1212,29 @@ static int run_game(const LaleOptions *o)
 
 /* ======================================================================== */
 
+#ifdef _WIN32
+/* Lale64.exe is a windowed program (no console window of its own, the
+   user's request of 2026-11-25).  Its log - SDL_Log, the game's own start-up
+   lines - still goes where it is sent: to a pipe or file the starter gave it
+   (tests, tools/verify), or, started from a command prompt, to that console. */
+static void console_for_log(void)
+{
+    HANDLE e = GetStdHandle(STD_ERROR_HANDLE);
+    if (e && e != INVALID_HANDLE_VALUE && GetFileType(e) != FILE_TYPE_UNKNOWN)
+        return;                                         /* redirected: keep it */
+    if (!AttachConsole(ATTACH_PARENT_PROCESS))
+        return;                                         /* started from Explorer: no log */
+    (void)freopen("CONOUT$", "w", stdout);
+    (void)freopen("CONOUT$", "w", stderr);
+}
+#endif
+
 int main(int argc, char **argv)
 {
     LaleOptions opt;
+#ifdef _WIN32
+    console_for_log();
+#endif
     options_defaults(&opt);
 #ifdef __APPLE__
     options_load_ini(&opt, mac_ini_path());             /* the app's own, then ./lale.ini */

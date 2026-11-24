@@ -40,6 +40,8 @@ Sürümler
   geçişte sağ üst köşede üç saniye "4K Video" ya da "Orijinal Video" yazar.
   Oyunun kendi sesi korunur; yalnızca görüntü değişir.
 
+Tam ekran: Alt+Enter, tam ekran ile pencere arasında geçiş yapar.
+
 Program penceresi ve iletişim kutuları Türkçedir ve Windows'un açık/koyu
 temasına uyar.  "Hakkında" kutusu: pencere başlığındaki simgeye tıklayın (ya
 da Alt+Boşluk) > Hakkında….
@@ -90,6 +92,8 @@ Editions
   each switch.  The game's own sound is kept; only the picture changes.
 
 Source code and documentation: https://github.com/Buyukcaglar/Lale-Savascilari
+
+Full screen: Alt+Enter switches between full screen and the window.
 
 The program's window and dialogs are in Turkish and follow Windows' light or
 dark mode.  The About box: click the icon in the window's title bar (or

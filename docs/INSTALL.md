@@ -116,6 +116,14 @@ konursa, orijinal görüntünün yerine onlar gösterilir:
   çözülür ve o ana kadar orijinal görüntü gösterilir: birkaç saniyede bir anahtar kare varsa
   0.2-0.4 s.
 
+### Pencere ve tuşlar
+
+* **Alt+Enter**: tam ekran ile pencere arasında geçiş (her sistemde; macOS'ta ⌘Return ve ⌘F de).
+  Görüntü 4:3 kalır; daha geniş bir ekranda yanlarda siyah şeritler olur. Alt+Enter yalnızca
+  programındır, oyuna iletilmez (oyunun kendisi Alt+Enter kullanmaz).
+* **Ctrl+V**: 4K ve orijinal videolar arasında geçiş (bkz. [4K videolar](#4k-videolar)).
+* **Alt+Boşluk** (Windows): pencerenin menüsü, içinde *Hakkında…*.
+
 ### Programın iletişim kutuları
 
 Uyarlamanın oyuncuya kendisinin gösterdiği her şey (yukarıdaki soru, içe aktarmanın ilerlemesi,
@@ -295,6 +303,14 @@ of the original picture:
   (measured with 2882×2160 H.264), spent before the game starts the video. A switch to 4K in the
   middle of a video decodes from the key frame before that moment and shows the original until
   then: 0.2-0.4 s with a key frame every few seconds.
+
+### Window and keys
+
+* **Alt+Enter**: full screen <-> window (every system; on macOS also ⌘Return and ⌘F). The
+  picture stays 4:3, with black bars at the sides of a wider display. Alt+Enter belongs to the
+  program and does not reach the game (the game itself has no use for Alt+Enter).
+* **Ctrl+V**: 4K <-> original videos (see [4K videos](#4k-videos)).
+* **Alt+Space** (Windows): the window's menu, with *Hakkında…* (About).
 
 ### The program's dialogs
 
