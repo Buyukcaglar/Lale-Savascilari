@@ -31,6 +31,13 @@ DGSEG = 0x16E0 + LOAD
 MAIN_SEG = 0x0546 + LOAD
 SRAND_RET = 0x0292                 # 0546:028D CALLF srand; next instruction
 HOOK_SEG = 0xD800
+# The 1996 CD build (--cd): its DGROUP starts 3 paragraphs later (16E3) and
+# the variables the hook uses sit 0C0h further in (tools/exediff.py --data:
+# RTL random state 94C4 -> 9584, NKONTROL's ms clock E74A -> E80A).  The hook
+# addresses them through its own segment value, so for that build it gets
+# DGROUP + 0Ch: the same offsets then reach the 1996 addresses.
+DGSEG_CD = 0x16E3 + LOAD
+DG_HOOK_CD = DGSEG_CD + 0x0C
 UMB_MCB = 0xCC00
 EV_BASE = 0x1000
 
@@ -102,10 +109,10 @@ class Replay:
     def rd(self, seg, off, n):
         return self.o.dump(seg, off, n, self.tmp)
 
-    def install(self, evs, seed):
+    def install(self, evs, seed, dg_hook=DGSEG):
         o = self.o
         if seed >= 0:
-            self.sm(DGSEG, 0x94C4, struct.pack('<HH', seed & 0xFFFF, 0))
+            self.sm(dg_hook, 0x94C4, struct.pack('<HH', seed & 0xFFFF, 0))
         mcb = self.rd(UMB_MCB, 0, 16)
         size = struct.unpack_from('<H', mcb, 3)[0] * 16
         owner = struct.unpack_from('<H', mcb, 1)[0]
@@ -116,7 +123,7 @@ class Replay:
         ivt = self.rd(0, 0, 0x100)
         o16, o21, o33 = (struct.unpack_from('<I', ivt, n * 4)[0] for n in (0x16, 0x21, 0x33))
         struct.pack_into('<III', img, 0x08, o16, o21, o33)
-        struct.pack_into('<HHH', img, 0x14, 0, len(evs), DGSEG)
+        struct.pack_into('<HHH', img, 0x14, 0, len(evs), dg_hook)
         e16, e21, e33, self.marker = struct.unpack_from('<4H', img, 0x30)
         table = b''.join(struct.pack('<IHHHH', t, ty, a & 0xFFFF, b & 0xFFFF, c & 0xFFFF)
                          for t, ty, a, b, c, _ in evs)
@@ -173,15 +180,18 @@ class Replay:
         p = os.path.join(self.out, name)
         open(p + '.vga', 'wb').write(vga)
         self.dump_video(name, vga)
-        open(p + '.dg', 'wb').write(self.rd(DGSEG, 0, 0x10000))
+        open(p + '.dg', 'wb').write(self.rd(getattr(self, 'dgseg', DGSEG), 0, 0x10000))
         open(p + '.txt', 'w').write(f'clock {clock}\nevent {idx}\nscript_time {t}\nreads {reads}\n')
         print(f'{name}: clock {clock} reads {reads}', flush=True)
         return name != 'int23'                          # the program ends in its handler
 
 
-def make_conf(game_dir, out):
+def make_conf(game_dir, out, cd=None):
     base = open(os.path.join(ROOT, 'tools', 'dosbox', 'ist.conf'), encoding='utf-8').read()
-    base = base.replace('mount c "orig"', f'mount c "{os.path.abspath(game_dir)}"')
+    mount = f'mount c "{os.path.abspath(game_dir)}"'
+    if cd:                       # the CD edition: the disc as D:, DOSBox-X's own MSCDEX
+        mount += f'\nimgmount d "{os.path.abspath(cd)}" -t iso'
+    base = base.replace('mount c "orig"', mount)
     path = os.path.join(out, '_ist.conf')
     open(path, 'w', encoding='utf-8').write(base)
     return path
@@ -195,12 +205,13 @@ def main():
     ap.add_argument('--timeout', type=float, default=1800)
     ap.add_argument('--seed', type=int)
     ap.add_argument('--port', type=int, default=7777)
+    ap.add_argument('--cd', metavar='CUE', help='mount this disc image as D: (the 1996 CD edition)')
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
     evs, seed = parse_script(args.script)
     if args.seed is not None:
         seed = args.seed
-    conf = make_conf(args.game_dir, args.out)
+    conf = make_conf(args.game_dir, args.out, args.cd)
     t0 = time.time()
     with Oracle(port=args.port, conf=conf) as o:
         o.load_seg = LOAD
@@ -210,7 +221,8 @@ def main():
         o.wait_at(MAIN_SEG, SRAND_RET, timeout=120)
         o.x('BPDEL *')
         r = Replay(o, args.out)
-        r.install(evs, seed)
+        r.dgseg = DGSEG_CD if args.cd else DGSEG
+        r.install(evs, seed, DG_HOOK_CD if args.cd else DGSEG)
         print(f'hook installed, {len(evs)} events, seed {seed}', flush=True)
         while time.time() - t0 < args.timeout:
             o.run()
