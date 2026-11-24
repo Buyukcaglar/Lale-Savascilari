@@ -572,6 +572,7 @@ char gfl_play_loop(void)
     g_gfl_last_frame = -1;
     gfl_show_frame(0);
     g_gfl_start_ms = g_clock_ms;
+    pc_video_event(PC_VIDEO_START, NULL);       /* port: the host may show a better copy (hdvideo.h) */
     if (g_sound_on != 0 && g_gfl_abytes > 0) {
         snd_play_sample(GFL_SND_SLOT, g_gfl_abytes, 0x40, 0, (uint8_t)(g_snd_channels - 1));
         snd_play_sample(GFL_SND_SLOT, g_gfl_abytes, 0x40, 0, (uint8_t)(g_snd_channels - 2));
@@ -605,6 +606,9 @@ char gfl_play_loop(void)
  * The file names are sprintf'd into the DGROUP string literal
  * "01234567.012" (6BD9, 13 bytes).  The whole playback runs inside
  * mm_ems_lock(DE26) / mm_ems_unlock.
+ * Port: the three pc_video_event() calls (here and in gfl_play_loop) tell
+ * the host when a video is asked for, starts and ends; they do nothing to
+ * the game (platform/pc.h, platform/hdvideo.h).
  * Verified: tests/py/test_gfl.py (unicorn differential, whole playback
  * of INTRO), 2026-11-20.
  */
@@ -614,12 +618,14 @@ char gfl_play(const char *name)
 
     if (strlen(name) > 8)
         o559A_fatal(DGSTR(0x6BE7), 0x16, DGSTR(0x6BFA), -1);
+    pc_video_event(PC_VIDEO_OPEN, name);        /* port: hdvideo.h */
     mm_ems_lock(g_blit_lock, 0x19, DGSTR(0x6C16));
     sprintf(g_gfl_name_buf, DGSTR(0x6C29), name);       /* "%s.GHD" */
     gfl_load_ghd(g_gfl_name_buf);
     sprintf(g_gfl_name_buf, DGSTR(0x6C30), name);       /* "%s.GFL" */
     gfl_open_gfl(g_gfl_name_buf);
     key = gfl_play_loop();
+    pc_video_event(PC_VIDEO_STOP, name);        /* port: hdvideo.h */
     gfl_close();
     mm_ems_unlock(g_blit_lock);
     return key;

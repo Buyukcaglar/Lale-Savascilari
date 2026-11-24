@@ -12,13 +12,16 @@
  *                   (letterboxed when the window is not 4:3: full screen).
  *
  * Default action: the game, ist_main() (src/game/istanbul.c), after the
- * set-up istanbul.h asks of the host (pc_reset, game folder, dg_reset +
- * bc_farheap_reset, CD music / audio, pump/present hooks).  The game folder
- * holds the original files (3D.CKD, SES.CFG ...): --game-dir / game_dir, else
- * the working directory if it has them, else ./orig.  macOS, where an app
- * started from the Finder has no useful working directory, goes on looking
- * (find_game_dir below): beside the app, ~/Library/Application Support/Lale64,
- * and at last asks for the folder and remembers the answer.
+ * set-up istanbul.h asks of the host (pc_reset, the game's folders, dg_reset +
+ * bc_farheap_reset, audio, pump/present hooks).  Where the game's files come
+ * from is setup.h: DATA and SAVE beside the executable, filled at the first
+ * start from the player's CD, disc image, archive or folder.  With
+ * --game-dir the program runs in a folder of the DOS game as it is instead
+ * (development, tools/verify).
+ *
+ * Videos: with 4K copies of the game's videos in the folder VIDEO, Ctrl+V
+ * switches between them and the originals at any time (hdvideo.h); the keys
+ * are the same on Windows and macOS.
  *
  * macOS keyboard (key_down): Command combinations belong to the host
  * (Cmd+Q quit and the rest of SDL's menu bar; Cmd+Return / Cmd+F full screen;
@@ -27,11 +30,12 @@
  * the LEFT Option key is the PC's Alt, the right one keeps typing characters.
  *
  * Options: lale.ini + command line (src/platform/options.c).
- *     Lale64 [--game-dir <dir>] [--ist-args n]          the game
+ *     Lale64 [<source>] [--edition cd|2005] [--ist-args n]   the game (options.h)
  *     Lale64 ... --frames <n> [--screenshot f.bmp]      quit after n frames (tests)
  *     Lale64 --script s.txt --out <dir> [--seed n] [--step-us n] [--frame-log <dir>]
  *                                           input script / verification mode
  *                                           (docs/VERIFY.md, "input scripts" below)
+ *     Lale64 ... --video-toggle-at <n>        the Ctrl+V switch at the n-th frame (tests)
  * Test modes:
  *     Lale64 --cd-music --cd-image <disc.cue> --cd-play 2 [--seconds 15]
  *     Lale64 --vga-test                       VGA/host smoke test (palette, mouse)
@@ -43,14 +47,20 @@
 #include <string.h>
 
 #include "engine/dgroup.h"
+#include "engine/edition.h"
 #include "game/cd5737.h"
 #include "game/istanbul.h"
 #include "platform/about.h"
 #include "platform/app_icon.h"
 #include "platform/audio_sdl.h"
+#include "engine/nkontrol.h"
+#include "game/gfl.h"
 #include "platform/cdrom.h"
+#include "platform/hdvideo.h"
+#include "platform/chd.h"
 #include "platform/options.h"
 #include "platform/pc.h"
+#include "platform/setup.h"
 #include "rtl/bc_farheap.h"
 #include "rtl/bc_stdio.h"
 
@@ -72,6 +82,9 @@ static int              script_mode;                    /* --script: host input 
 #endif
 /* the PC's Alt key: both Alt keys, on macOS the left Option key only */
 #define HOST_KMOD_ALT (HOST_APPLE ? SDL_KMOD_LALT : SDL_KMOD_ALT)
+
+static int  hd_files;                   /* video files in VIDEO: 0 = no 4K switch (see below) */
+static void hd_toggle(void);
 
 static void toggle_fullscreen(void)
 {
@@ -151,10 +164,18 @@ static void key_down(const SDL_KeyboardEvent *k)
     pc_set_shift_flags(shift);
     if (!k->down)
         return;                                         /* release: shift flags only */
+    /* Ctrl+V: 4K videos <-> original videos - the host's, when there are 4K files */
+    if (hd_files && k->key == SDLK_V && (m & SDL_KMOD_CTRL)) {
+        if (!k->repeat)
+            hd_toggle();
+        return;
+    }
     if (HOST_APPLE && (m & SDL_KMOD_GUI)) {             /* Command: the host's, never the game's */
         if (k->repeat)
             return;
-        if (k->scancode == SDL_SCANCODE_PERIOD)
+        if (hd_files && k->key == SDLK_V)
+            hd_toggle();                                /* Cmd+V as well, as a Mac user would try */
+        else if (k->scancode == SDL_SCANCODE_PERIOD)
             pc_ctrl_break();                            /* Cmd+. : the Mac's break key */
         else if (k->scancode == SDL_SCANCODE_RETURN || k->scancode == SDL_SCANCODE_KP_ENTER ||
                  k->scancode == SDL_SCANCODE_F)
@@ -245,6 +266,233 @@ static SDL_FRect present_rect(void)
     return r;
 }
 
+/* ---- the videos in 4K (hdvideo.h) ------------------------------------------------ */
+
+static int          hd_on;              /* the player's choice: 1 = 4K, 0 = original */
+static HdVideo     *hd;                 /* decoder of the video the game is playing */
+static char         hd_name[16];        /* that video's name, "" between videos */
+static int          hd_started;         /* its clock runs (PC_VIDEO_START seen) */
+static int          hd_waiting;         /* inside the wait for the first frame */
+static SDL_Texture *hd_tex;
+static int          hd_tex_w, hd_tex_h;
+static int          hd_have;            /* hd_tex holds a frame of this video */
+static SDL_FRect    hd_src;             /* the picture inside the frame (side bars cut off) */
+static int          hd_bar;             /* narrowest black side bar seen in this video, -1 = none yet */
+static Uint64       hd_asked;           /* SDL_GetTicks() when its decoder was started */
+static int          hd_frame;           /* the game's frame hd_time() saw last */
+static int          hd_seen;            /* how many different frames of the game it saw (statistics) */
+static Uint64       hd_frame_ns;        /* SDL_GetTicksNS() when it first saw it */
+static const char  *notice_text;        /* "4K Video" / "Orijinal Video" after a switch */
+static Uint64       notice_until;       /* SDL_GetTicks() */
+static Uint64       last_draw;
+static int          present_count;
+static int          toggle_at;          /* --video-toggle-at <n>: switch at the n-th frame (tests) */
+static int          capture_request;    /* the next draw_output() keeps what it drew */
+static SDL_Surface *captured;
+
+/* The video's time in seconds.  It follows the frame the game itself has on
+   the screen, not the game's clock: frame n of the original stands for the
+   time n / fps, and the 4K picture changes in the same window update as the
+   game's.  Within that frame's tenth of a second the host's clock counts
+   on, which is what lets a copy with more frames per second show its
+   in-between frames; it stops just short of the next frame's time, so the
+   4K picture never runs ahead of the game. */
+static double hd_time(void)
+{
+    if (!hd_started)
+        return 0.0;
+    int n = g_gfl_last_shown, fps = g_gfl_fps ? g_gfl_fps : 10;
+    Uint64 now = SDL_GetTicksNS();
+    if (n != hd_frame) {
+        hd_frame = n;
+        hd_frame_ns = now;
+        hd_seen++;
+    }
+    if (n < 0)
+        return 0.0;
+    double part = (double)(now - hd_frame_ns) / 1e9 * (double)fps;
+    return ((double)n + (part > 0.98 ? 0.98 : part)) / (double)fps;
+}
+
+static int hd_showing(void) { return hd && hd_on && hd_started && hd_have; }
+
+/* The picture inside the frame.  A frame no wider than 16:10 is all picture.
+   A wider one (a 16:9 canvas) is taken to be padded at the sides: the black
+   bars are measured on 15 rows, the narrowest seen in this video counts (a
+   black frame says nothing), and the picture is the centred 4:3 or 16:10
+   part if the bars are that wide. */
+static void hd_measure(const uint8_t *pix, int w, int h)
+{
+    hd_src = (SDL_FRect){ 0.0f, 0.0f, (float)w, (float)h };
+    if ((int64_t)w * 100 <= (int64_t)h * 165)
+        return;
+    int limit = w / 2, bar = limit;
+    for (int i = 1; i < 16 && bar > 0; i++) {
+        const uint8_t *row = pix + (size_t)(h * i / 16) * (size_t)w * 4;
+        int l = 0, r = 0;
+        while (l < bar && row[4 * l] < 28 && row[4 * l + 1] < 28 && row[4 * l + 2] < 28)
+            l++;
+        const uint8_t *end = row + (size_t)(w - 1) * 4;
+        while (r < bar && end[-4 * r] < 28 && end[-4 * r + 1] < 28 && end[-4 * r + 2] < 28)
+            r++;
+        bar = l < r ? l : r;
+    }
+    if (bar < limit && (hd_bar < 0 || bar < hd_bar))
+        hd_bar = bar;
+    if (hd_bar < 0)
+        return;
+    int tol = w / 200 + 2, bar43 = (w - h * 4 / 3) / 2, bar1610 = (w - h * 8 / 5) / 2;
+    int cut = hd_bar >= bar43 - tol ? bar43 : hd_bar >= bar1610 - tol ? bar1610 : 0;
+    if (cut > 0)
+        hd_src = (SDL_FRect){ (float)cut, 0.0f, (float)(w - 2 * cut), (float)h };
+}
+
+static void hd_upload(void *ctx, const uint8_t *pix, int w, int h)
+{
+    (void)ctx;
+    if (!hd_tex || w != hd_tex_w || h != hd_tex_h) {
+        if (hd_tex)
+            SDL_DestroyTexture(hd_tex);
+        hd_tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, w, h);
+        if (!hd_tex) {
+            SDL_Log("4K video: no %dx%d texture: %s", w, h, SDL_GetError());
+            return;
+        }
+        SDL_SetTextureScaleMode(hd_tex, SDL_SCALEMODE_LINEAR);
+        hd_tex_w = w;
+        hd_tex_h = h;
+    }
+    SDL_UpdateTexture(hd_tex, NULL, pix, w * 4);
+    hd_measure(pix, w, h);
+    if (!hd_have && SDL_getenv("LALE_VIDEO_STATS"))
+        SDL_Log("4K video: %s on the screen %u ms after it was asked for, at video time %.2f s", hd_name,
+                (unsigned)(SDL_GetTicks() - hd_asked), hd_time());
+    hd_have = 1;
+}
+
+static void hd_close_current(void)
+{
+    if (hd)
+        hdvideo_close(hd);
+    hd = NULL;
+    hd_have = 0;
+}
+
+static void hd_open_current(double start)
+{
+    char path[1400];
+    if (hd || !hd_name[0] || !hdvideo_find(hd_name, path, sizeof path))
+        return;
+    hd = hdvideo_open(path, start);
+    hd_asked = SDL_GetTicks();
+    hd_have = 0;
+    hd_bar = -1;
+}
+
+/* What the game's video player reports (pc_video_event). */
+static void host_video_event(int event, const char *name)
+{
+    switch (event) {
+    case PC_VIDEO_OPEN:
+        hd_close_current();
+        snprintf(hd_name, sizeof hd_name, "%s", name);
+        hd_started = 0;
+        if (hd_on) {
+            /* The first frame is decoded before the game goes on, so that the
+               video does not begin as the original and turn sharp a moment
+               later.  To the game this is time spent opening the file; its
+               timer keeps running (pc_poll), as it did during a disk read. */
+            Uint64 t0 = SDL_GetTicks();
+            hd_open_current(0.0);
+            hd_waiting = 1;
+            while (hd && hdvideo_ready(hd) == 0 && SDL_GetTicks() - t0 < 3000) {
+                pc_poll();
+                SDL_Delay(1);
+            }
+            hd_waiting = 0;
+            if (!hd_on || (hd && hdvideo_ready(hd) < 0))
+                hd_close_current();             /* switched off meanwhile, or unplayable */
+            SDL_Log("video %s: %s", hd_name, hd ? "4K" : "original (no 4K file)");
+        }
+        break;
+    case PC_VIDEO_START:
+        hd_started = 1;
+        hd_frame = -2;
+        hd_seen = 0;
+        break;
+    case PC_VIDEO_STOP:
+        if (SDL_getenv("LALE_VIDEO_STATS"))
+            SDL_Log("video %s: the game showed %d of its %d frames (%s)", hd_name, hd_seen, (int)g_gfl_nframes,
+                    hd ? "4K" : "original");
+        hd_close_current();
+        hd_name[0] = 0;
+        hd_started = 0;
+        break;
+    default:
+        break;
+    }
+}
+
+static void draw_notice(const SDL_FRect *area)
+{
+    /* letters the size of the game's own 8-pixel text on its 200 lines */
+    float s = SDL_floorf(area->h / 200.0f);
+    if (s < 2.0f)
+        s = 2.0f;
+    float tw = (float)strlen(notice_text) * 8.0f * s, pad = 3.0f * s, m = 4.0f * s;
+    SDL_FRect box = { area->x + area->w - tw - 2.0f * pad - m, area->y + m, tw + 2.0f * pad, 8.0f * s + 2.0f * pad };
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 170);
+    SDL_RenderFillRect(renderer, &box);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_SetRenderScale(renderer, s, s);
+    SDL_RenderDebugText(renderer, (box.x + pad) / s, (box.y + pad) / s, notice_text);
+    SDL_SetRenderScale(renderer, 1.0f, 1.0f);
+}
+
+/* The window: the game's picture, over it the 4K frame while one is shown,
+   over that the notice of the last switch for its three seconds. */
+static void draw_output(void)
+{
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+    SDL_FRect area = present_rect();
+    if (texture)
+        SDL_RenderTexture(renderer, texture, NULL, &area);
+    if (hd_showing())
+        SDL_RenderTexture(renderer, hd_tex, &hd_src, &area);
+    if (notice_text) {
+        if (SDL_GetTicks() < notice_until)
+            draw_notice(&area);
+        else
+            notice_text = NULL;
+    }
+    if (capture_request) {
+        capture_request = 0;
+        captured = SDL_RenderReadPixels(renderer, NULL);
+    }
+    SDL_RenderPresent(renderer);
+    last_draw = SDL_GetTicks();
+}
+
+/* Ctrl+V */
+static void hd_toggle(void)
+{
+    hd_on = !hd_on;
+    notice_text = hd_on ? "4K Video" : "Orijinal Video";
+    notice_until = SDL_GetTicks() + 3000;
+    SDL_Log("videos: %s", notice_text);
+    if (!hd_waiting) {
+        if (hd_on)
+            hd_open_current(hd_time());         /* in the middle of a video: from where it is */
+        else
+            hd_close_current();
+    }
+    if (renderer)
+        draw_output();
+}
+
 static void host_pump(void)
 {
     static Uint64 last;
@@ -301,6 +549,9 @@ static void host_pump(void)
         }
     }
     audio_sdl_pump();
+    /* the notice appears and goes on time even while the game draws nothing */
+    if (notice_text && renderer && SDL_GetTicks() - last_draw > 100)
+        draw_output();
 }
 
 static void host_present(void)
@@ -332,19 +583,38 @@ static void host_present(void)
         for (int x = 0; x < w; x++)
             rgba[y * w + x] = frame.blanked ? 0 : pal[frame.pixels[(y * rep) * frame.width + x]];
     SDL_UpdateTexture(texture, NULL, rgba, w * 4);
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
-    SDL_FRect area = present_rect();
-    SDL_RenderTexture(renderer, texture, NULL, &area);
-    SDL_RenderPresent(renderer);
+    if (toggle_at && ++present_count == toggle_at)
+        hd_toggle();
+    if (hd_started) {
+        double t = hd_time();
+        if (hd && hd_on)
+            hdvideo_present(hd, t, hd_upload, NULL);
+    }
+    /* --screenshot of a frame with a 4K picture or a notice: what the window shows */
+    if (frames_left == 1 && screenshot_path && *screenshot_path && (hd_showing() || notice_text)) {
+        capture_request = 1;
+        if (hd_showing())
+            SDL_Log("4K video: %s, the game shows frame %d, the window the 4K frame of %.3f s", hd_name,
+                    (int)g_gfl_last_shown, hdvideo_shown_pts(hd));
+    }
+    draw_output();
     if (frames_left > 0 && --frames_left == 0) {
         if (screenshot_path && *screenshot_path) {
-            SDL_Surface *shot = SDL_CreateSurfaceFrom(w, h, SDL_PIXELFORMAT_XRGB8888, rgba, w * 4);
+            SDL_Surface *shot = captured ? captured
+                                         : SDL_CreateSurfaceFrom(w, h, SDL_PIXELFORMAT_XRGB8888, rgba, w * 4);
             if (!shot || !SDL_SaveBMP(shot, screenshot_path))
                 SDL_Log("screenshot %s: %s", screenshot_path, SDL_GetError());
             else
-                SDL_Log("screenshot %s (%dx%d)", screenshot_path, w, h);
+                SDL_Log("screenshot %s (%dx%d)", screenshot_path, shot->w, shot->h);
             SDL_DestroySurface(shot);
+            if (captured) {                     /* and the game's own picture of that moment beside it */
+                char own[1100];
+                snprintf(own, sizeof own, "%s.game.bmp", screenshot_path);
+                shot = SDL_CreateSurfaceFrom(w, h, SDL_PIXELFORMAT_XRGB8888, rgba, w * 4);
+                if (shot)
+                    SDL_SaveBMP(shot, own);
+                SDL_DestroySurface(shot);
+            }
         }
         SDL_Log("--frames reached: quitting");
         audio_sdl_close();
@@ -373,6 +643,8 @@ static void set_window_icon(SDL_Window *w)
 
 static int host_open_window(void)
 {
+    if (window)
+        return 0;
     /* "İstanbul Efsaneleri - Lale Savaşçıları" in UTF-8 (SDL's encoding), written
      * with escapes so the source's own encoding cannot change it. */
     static const char window_title[] =
@@ -839,19 +1111,9 @@ static int vga_test(void)
 /* the game                                                                 */
 /* ======================================================================== */
 
-static int has_game_files(const char *dir)
-{
-    char path[1100];
-    snprintf(path, sizeof path, "%s/3D.CKD", dir);
-    SDL_PathInfo info;
-    return SDL_GetPathInfo(path, &info) && info.type == SDL_PATHTYPE_FILE;
-}
-
 #ifdef __APPLE__
-/* ---- macOS: the game folder of an app started from the Finder -------------- */
-
 /* ~/Library/Application Support/Lale64/lale.ini: the options file of the app
-   (read before ./lale.ini); the folder picked below is remembered there. */
+   (read before ./lale.ini). */
 static const char *mac_ini_path(void)
 {
     static char path[1100];
@@ -864,149 +1126,59 @@ static const char *mac_ini_path(void)
     }
     return path;
 }
+#endif
 
-/* game_dir = <dir> into the app's lale.ini, its other lines kept */
-static void mac_remember_game_dir(const char *dir)
+static GameSetup game_setup;
+
+/* The game's files, its edition and its CD drive (setup.h).  0 = ready. */
+static int prepare_game(const LaleOptions *o)
 {
-    const char *ini = mac_ini_path();
-    char *old = NULL;
-    size_t n = 0;
-    if (!*ini)
-        return;
-    FILE *f = fopen(ini, "r");
-    if (f) {
-        old = malloc(65536);
-        n = old ? fread(old, 1, 65535, f) : 0;
-        fclose(f);
-        if (old)
-            old[n] = 0;
-    }
-    f = fopen(ini, "w");
-    if (f) {
-        for (char *line = old; line && *line;) {
-            char *nl = strchr(line, '\n');
-            size_t len = nl ? (size_t)(nl - line) + 1 : strlen(line);
-            const char *p = line + strspn(line, " \t");
-            if (strncmp(p, "game_dir", 8) != 0 || (p[8] != ' ' && p[8] != '=' && p[8] != '\t'))
-                fwrite(line, 1, len, f);
-            line += len;
-        }
-        if (n && old[n - 1] != '\n')
-            fputc('\n', f);
-        fprintf(f, "game_dir = %s\n", dir);
-        fclose(f);
-    }
-    free(old);
-}
-
-static int  mac_pick_done;
-static char mac_pick_path[1024];
-
-static void SDLCALL mac_pick_cb(void *userdata, const char * const *list, int filter)
-{
-    (void)userdata; (void)filter;
-    mac_pick_path[0] = 0;
-    if (list && list[0])
-        snprintf(mac_pick_path, sizeof mac_pick_path, "%s", list[0]);
-    mac_pick_done = 1;
-}
-
-/* Asks for the folder of the original game until one with the game files is
-   picked (1, in buf) or the request is cancelled (0). */
-static int mac_ask_game_dir(char *buf, size_t size)
-{
-    /* "İstanbul Efsaneleri - Lale Savaşçıları" */
-    static const char title[] = "\xC4\xB0stanbul Efsaneleri - Lale Sava\xC5\x9F\xC3\xA7\xC4\xB1lar\xC4\xB1";
-    static const SDL_MessageBoxButtonData buttons[] = {
-        { SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 1, "Choose Folder\xE2\x80\xA6" },
-        { SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 0, "Quit" },
-    };
-    const char *text =
-        "This program needs the files of the original game (3D.CKD, IST.EXE and the others).\n\n"
-        "Choose the folder that holds them. It is remembered; saved games are written there too.";
-    for (;;) {
-        SDL_MessageBoxData box = { SDL_MESSAGEBOX_INFORMATION, NULL, title, text, 2, buttons, NULL };
-        int hit = 0;
-        if (!SDL_ShowMessageBox(&box, &hit) || hit != 1)
-            return 0;
-        mac_pick_done = 0;
-        SDL_ShowOpenFolderDialog(mac_pick_cb, NULL, NULL, NULL, false);
-        while (!mac_pick_done) {
-            SDL_PumpEvents();
-            SDL_Delay(10);
-        }
-        if (!mac_pick_path[0])
-            return 0;                                   /* cancelled */
-        if (has_game_files(mac_pick_path)) {
-            snprintf(buf, size, "%s", mac_pick_path);
+    if (*o->game_dir) {
+        /* development and the test tools: the DOS game's folder as it is */
+        int want_cd = o->cd_music || !strcmp(o->edition, "cd");
+        char path[1100], err[512] = "";
+        SDL_PathInfo info;
+        snprintf(path, sizeof path, "%s/3D.CKD", o->game_dir);
+        if (!want_cd && !(SDL_GetPathInfo(path, &info) && info.type == SDL_PATHTYPE_FILE)) {
+            SDL_Log("no game files (3D.CKD) in '%s'", o->game_dir);
             return 1;
         }
-        text = "That folder does not hold the game: there is no 3D.CKD in it.\n\n"
-               "Choose the folder with the files of the original game.";
-    }
-}
-
-/* Beside the app (or the bare program), the app's support folder, the user. */
-static const char *mac_find_game_dir(int interactive)
-{
-    static char found[1100];
-    char dir[1024];
-    const char *base = SDL_GetBasePath();   /* .../Lale64.app/Contents/Resources/ or the program's folder */
-    if (base) {
-        snprintf(dir, sizeof dir, "%s", base);
-        char *app = strstr(dir, ".app/");
-        if (app) {                                      /* the folder that holds the .app */
-            *app = 0;
-            char *slash = strrchr(dir, '/');
-            if (slash)
-                *slash = 0;
-        } else if (dir[0] && dir[strlen(dir) - 1] == '/') {
-            dir[strlen(dir) - 1] = 0;
+        pc_set_game_dir(o->game_dir);
+        if (want_cd) {
+            size_t n = strlen(o->cd_image);
+            int is_chd = n > 4 && SDL_strcasecmp(o->cd_image + n - 4, ".chd") == 0;
+            if (is_chd ? chd_mount(o->cd_image, err, sizeof err) : cdrom_open(o->cd_image)) {
+                SDL_Log("edition cd: cannot use the image '%s': %s", o->cd_image, is_chd ? err : cdrom_error());
+                return 1;
+            }
+            mscdex_set_present(1);
+            pc_use_disc_files(1);
+            g_edition = EDITION_CD;
         }
-        if (has_game_files(dir))
-            return snprintf(found, sizeof found, "%s", dir), found;
-        snprintf(found, sizeof found, "%s/orig", dir);
-        if (has_game_files(found))
-            return found;
+        SDL_Log("game folder: %s, edition: %s", o->game_dir, want_cd ? "1996 CD" : "2005");
+        return 0;
     }
-    char *pref = SDL_GetPrefPath(NULL, "Lale64");
-    if (pref) {
-        snprintf(found, sizeof found, "%s", pref);
-        SDL_free(pref);
-        if (found[0])
-            found[strlen(found) - 1] = 0;               /* the trailing '/' */
-        if (has_game_files(found))
-            return found;
+    if (host_open_window())
+        return 1;
+    if (setup_game(o, window, renderer, !script_mode && !frames_left, &game_setup) != 0)
+        return 1;
+    pc_set_dirs(game_setup.data, game_setup.save);
+    if (!script_mode && (hd_files = hdvideo_scan(game_setup.video)) > 0) {
+        hd_on = strcmp(o->video, "original") != 0;
+        pc_set_host_video(host_video_event);
+        SDL_Log("4K videos: %d files in %s; Ctrl+V switches (now: %s)", hd_files, game_setup.video,
+                hd_on ? "4K" : "original");
     }
-    if (interactive && mac_ask_game_dir(dir, sizeof dir)) {
-        mac_remember_game_dir(dir);
-        return snprintf(found, sizeof found, "%s", dir), found;
+    if (game_setup.disc) {
+        pc_use_disc_files(1);
+        mscdex_set_present(game_setup.edition == EDITION_CD);
     }
-    return NULL;
+    g_edition = (int16_t)game_setup.edition;
+    return 0;
 }
-#endif /* __APPLE__ */
 
 static int run_game(const LaleOptions *o)
 {
-    const char *dir = o->game_dir;
-    if (!*dir)
-        dir = has_game_files(".") ? "." : "orig";
-#ifdef __APPLE__
-    if (!has_game_files(dir)) {
-        /* scripted and counted runs (tests) never put up a dialog */
-        const char *d = mac_find_game_dir(!script_mode && !frames_left);
-        if (d)
-            dir = d;
-        else if (!script_mode && !frames_left)
-            return 1;                                   /* the request was cancelled */
-    }
-#endif
-    if (!has_game_files(dir)) {
-        SDL_Log("no game files (3D.CKD) in '%s': use --game-dir <folder of the original game>", dir);
-        return 1;
-    }
-    SDL_Log("game folder: %s", dir);
-    pc_set_game_dir(dir);
     if (host_open_window())
         return 1;
     /* IST.EXE's command line: only the number of arguments counts */
@@ -1047,6 +1219,7 @@ int main(int argc, char **argv)
         else if (strcmp(k, "--seed") == 0)    cmd_seed = (int32_t)strtol(v, NULL, 0);
         else if (strcmp(k, "--step-us") == 0) step_us = (uint32_t)strtoul(v, NULL, 0);
         else if (strcmp(k, "--frame-log") == 0) snprintf(fl_dir, sizeof fl_dir, "%s", v);
+        else if (strcmp(k, "--video-toggle-at") == 0) toggle_at = atoi(v);
         else { i++; continue; }
         memmove(&argv[i], &argv[i + 2], (size_t)(argc - i - 1) * sizeof *argv);
         argc -= 2;
@@ -1083,7 +1256,15 @@ int main(int argc, char **argv)
     }
 
     int rc = 0;
-    if (opt.cd_music) {
+    frames_left = opt.frames;
+    screenshot_path = opt.screenshot;
+    if (!opt.cd_play_track && !vgat) {
+        if (prepare_game(&opt) != 0) {
+            cdrom_close();
+            SDL_Quit();
+            return 1;
+        }
+    } else if (opt.cd_music) {
         if (cd5737_port_enable(opt.cd_image) == 0) {
             SDL_Log("CD music on: %s (%d tracks, drive %c:)", opt.cd_image,
                     cdrom_track_count(), 'A' + CDROM_DRIVE_INDEX);
@@ -1091,7 +1272,7 @@ int main(int argc, char **argv)
             SDL_Log("CD music off: cannot use image '%s': %s", opt.cd_image, cdrom_error());
         }
     }
-    audio_sdl_open(cd5737_active());
+    audio_sdl_open(cd5737_active() || g_edition == EDITION_CD);
     if (opt.cd_play_track) {
         if (!cd5737_active()) {
             SDL_Log("--cd-play needs --cd-music and a usable --cd-image");
@@ -1100,12 +1281,8 @@ int main(int argc, char **argv)
             rc = cd_play_test(&opt);
         }
     } else if (vgat) {
-        frames_left = opt.frames;
-        screenshot_path = opt.screenshot;
         rc = host_open_window() ? 1 : vga_test();
     } else {
-        frames_left = opt.frames;
-        screenshot_path = opt.screenshot;
         rc = run_game(&opt);
     }
     audio_sdl_close();

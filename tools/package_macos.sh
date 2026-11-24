@@ -39,15 +39,13 @@ cat > "$STAGE/READ ME.txt" <<EOF
 Istanbul Efsaneleri: Lale Savascilari 64bit $VER - macOS
 (macOS 11 or later, Apple Silicon and Intel)
 
-This is a port of the game's program only.  It needs the files of the
-original game (3D.CKD, IST.EXE, SES.CFG and the others).  Put them
-
-    in the folder that holds Lale64.app, or in a folder "orig" beside it, or
-    in ~/Library/Application Support/Lale64
-
-or start the app and choose their folder when it asks; the choice is
-remembered (~/Library/Application Support/Lale64/lale.ini).  Saved games are
-written into that folder, as the original did.
+This is a port of the game's program only.  It needs the original game:
+a disc image of the game CD (.cue + .bin, .iso or .chd), or the 2005
+release as a .zip / .7z / .rar or a folder.  Put it beside Lale64.app, or
+start the app and choose it when it asks.  The game is imported once into
+a folder DATA beside the app; saved games are written to SAVE there.
+Upscaled videos in a folder VIDEO beside the app are shown in place of the
+originals (Ctrl+V switches).
 
 First start: the app is not notarised by Apple.  Right-click Lale64.app and
 choose Open (once), or run:  xattr -dr com.apple.quarantine Lale64.app

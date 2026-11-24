@@ -31,20 +31,22 @@ to shared code: the program is not run or tested on the Mac.
 
 ## The game folder
 
-The original's files are not in the repository or in the app.  `Lale64` takes
-`--game-dir` / `game_dir`, else the working directory if it has `3D.CKD`, else
-`./orig`.  An app started from the Finder has no useful working directory, so on
-macOS the search goes on (`mac_find_game_dir`):
+**Since 2026-11-24** the game's data is imported at the first start, on every system
+alike ([`INSTALL.md`](INSTALL.md)): into `DATA/`, `SAVE/` and `VIDEO/` beside the
+executable - on macOS the folder that holds `Lale64.app` - or, when that folder cannot
+be written to, into `~/Library/Application Support/Lale64`.  The Mac-only search
+(`mac_find_game_dir`) and its `game_dir = ...` line are gone; `--game-dir <folder>`
+remains as the development option that runs the game straight from the original's
+files.  A disc in a drive is read through its mounted volume (as files) on macOS;
+disc images become `DATA/LALE.CHD` as elsewhere.
 
-1. the folder that holds `Lale64.app` (or the bare program), then `orig` in it;
-2. `~/Library/Application Support/Lale64`;
-3. a dialog asks for the folder; the answer is written as `game_dir = ...` to
-   `~/Library/Application Support/Lale64/lale.ini`.
+`~/Library/Application Support/Lale64/lale.ini` is still the app's options file; it is
+read before `./lale.ini`, and the command line overrides both.  Scripted and counted
+runs (`--script`, `--frames`) never put up a dialog.
 
-That `lale.ini` is the app's options file; it is read before `./lale.ini`, and the
-command line overrides both.  Scripted and counted runs (`--script`, `--frames`)
-never put up the dialog.  Saved games (`SAKLA*.SAV`) and `GRP.DAT` are written
-into the game folder, as the original does.
+**Not yet built or run on the Mac**: this start-up and import, and the 4K-video decoder
+`src/platform/hdvideo_avf.m` (AVFoundation).  They were written on Windows against the
+documented interfaces.
 
 ## Keyboard, mouse, window
 

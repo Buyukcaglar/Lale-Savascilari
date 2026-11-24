@@ -1,4 +1,4 @@
-# The CD (redump.org 91232) and the simulated image
+# The CD (redump.org 91232), its dump and the simulated image
 
 Reference: <http://redump.org/disc/91232/> (cue, MD5, SHA-1 and SFV files fetched 2026-11-20).
 
@@ -19,6 +19,24 @@ Reference: <http://redump.org/disc/91232/> (cue, MD5, SHA-1 and SFV files fetche
 SHA-1: track 1 `ee8c6070624f36b6ff40f3bf109fe08f72202a70`, track 2
 `e2923e2c9c2a08185e7f4fdabedaa020cd0a18dc`, track 3 `f70cdd125e3f52231a83ec2e401057550ed193f9`.
 
+## The dump (`_references/cd`)
+
+Made with redumper from the user's disc; `tools/cddump.py` analyses it, the port imports it
+([INSTALL.md](INSTALL.md)).
+
+* **Track 1** is an ISO 9660 volume `ISTANBUL` of 116,020 sectors followed by a 150-sector
+  post-gap (116,170 in all). 23 files dated 1995-05-02 to 1996-11-10: the eight `.CKD` archives,
+  `TRDOS.DAT`, `GRPHAZIR.DAT`, the four sound drivers `SDI*.DSD`, `BOSCH.KOR`, `SONPAL.PAL`,
+  `IST.EXE` (384,560 bytes), the installer `KUR.EXE`, `NASIL.EXE`, three `.PIF` files and
+  `ISTANBUL.TXT`. No `SES.CFG`, `GRP.DAT` or saved game: the installer and the game write those.
+  All data files equal those of the 2005 release.
+* **Mastering quirk**: the 116,020 data sectors sit 48 samples (192 bytes) early on the disc; the
+  post-gap and the audio are at offset 0. redumper's track split therefore leaves the post-gap
+  scrambled and the audio tracks 192 bytes early. Read at the corrected positions, **tracks 1
+  and 2 match redump.org's sums** above.
+* **Track 3** ends 192 bytes (48 samples) short - the drive did not read into the lead-out - so
+  its sums differ from redump.org's. A drive that can overread the lead-out would complete it.
+
 ## How the game uses the CD
 
 * **ovl5737** is an MSCDEX client:
@@ -32,39 +50,33 @@ SHA-1: track 1 `ee8c6070624f36b6ff40f3bf109fe08f72202a70`, track 2
   * **track 0** resumes or replays from `ui_cd_music` 05DC:08F6.
 * **For the last track it plays, the length is `status − start − 150`**: the end of the disc minus the
   2 s lead-in.
-* **The IST.EXE we have (dated 2005-02-08) never enables CD audio.** `o5737_cd_init`
-  (5737:0198, which sets the active flag 16E0:8F4E) has no callers. Every play request
-  therefore returns immediately, even with the disc mounted; this was checked in DOSBox-X
-  with the simulated image as D:.
+* **The 2005 `IST.EXE` never enables CD audio.** `o5737_cd_init` (5737:0198, which sets the
+  active flag 16E0:8F4E) has no callers there. Every play request therefore returns immediately,
+  even with the disc mounted (checked in DOSBox-X). The 1996 `IST.EXE` on the disc calls it from
+  `main` and plays the tracks.
 * **The videos are local.** The GFL videos load from `0GFL.CKD` (218 MB) through the archive
   layer (ovl569A). Before playing one, the FRPOS video opcode (3FD1:1540) checks the flag
   16E0:3D5C:
   * if it is 1, the opcode calls `o5737_cd_vtoc_ok` (INT 2Fh 1505h) up to 3 times;
   * if there is no disc, it shows "Biz size CD'yi sürücüden çıkarmayın…", and on refusal
     "CD'yi takmayacaksanız size animasyon falan yok!".
-* **The CD build is patched off.** DGROUP initialises 3D5C to **1**, and `main` overwrites it
-  with 0 at 0546:02DD, a 12-byte `mov es:[3D5C],0` right after `ctl_timer_install`.
-  * Hypothesis: the 2005 re-release patched out the CD requirement there, and probably the
-    `cd_init` call with it.
-  * Confirm against the 1997 disc's IST.EXE once the real dump is available.
+* **The disc check.** DGROUP initialises 3D5C to **1**. In the 2005 build `main` overwrites it
+  with 0 at 0546:02DD, a 12-byte `mov es:[3D5C],0` right after `ctl_timer_install`. The 1996
+  build has its CD start-up in that place: `o5737_cd_init()`, then the wait for the disc. This
+  confirms what the 2005 build suggested before the disc was at hand; [EDITIONS.md](EDITIONS.md)
+  lists every difference between the two.
 
-## CD-music option (port)
+## The disc in the port
 
-| Setting | |
-|---|---|
-| `lale.ini` | `cd_music = 1`, `cd_image = path/to/disc.cue` |
-| command line | `--cd-music --cd-image <cue>` |
-| default | **off**, i.e. the original 2005 behaviour |
+The port runs either edition ([EDITIONS.md](EDITIONS.md)). The CD edition gets its disc as
+`DATA/LALE.CHD`, mounted as drive D: of the virtual MSCDEX (`src/platform/cdrom.c`, `chd.c`);
+the decompiled CD module (`src/game/cd5737.c`, tested in `tests/test_cdaudio.c`) builds the
+same request blocks and uses the same length maths as the original.
 
-* **When on,** the port opens the image with the virtual MSCDEX drive (`src/platform/cdrom.c`,
-  drive D:) and calls the decompiled `o5737_cd_init()`. From then on the unchanged game code
-  plays track 2 in the intro and menu, plays track 3 in the story slideshow, and loops through
-  `ui_cd_music`.
-* **3D5C is left at 0,** so the videos still play from `0GFL.CKD` without a disc check.
-* **Test mode:** `lale --cd-music --cd-image <cue> --cd-play 2 [--seconds 15]` plays a track
-  through the module and its loop logic.
-* **The module is decompiled 1:1** in `src/game/cd5737.c`: it builds the same request blocks
-  in a DGROUP mirror and uses the same length maths. It is tested in `tests/test_cdaudio.c`.
+Development options: `--game-dir <folder> --cd-image <cue|chd> --edition cd` runs the CD
+edition from a folder of files plus an image (`--cd-music` is the old name of `--edition cd`;
+before the real disc was at hand it switched the CD module on inside the 2005 program);
+`--cd-music --cd-image <cue> --cd-play 2 [--seconds 15]` plays one track through the module.
 
 ## Simulated image (`tools/cdsim.py`)
 
@@ -75,10 +87,11 @@ exact sector counts and track types above. `tools/dosbox/ist_cd.conf` mounts it 
   SAKLA001.SAV). It uses 115,833 sectors, and the rest is zero-padded to 116,170. Sectors are raw
   Mode 1: sync, BCD MSF header, EDC and ECC P/Q, checked by `cdsim.py selftest` against a scalar
   reference implementation. The PVD dates are unset, as on the real disc. The volume label
-  (`ISTANBUL`) and the file layout are **guesses**.
+  (`ISTANBUL`) turned out right; the order of the files on the real disc is different
+  (`0GFL.CKD` comes first, at sector 21).
 * **Tracks 2 and 3** hold original music synthesised by the script: a drone, an oud-like pluck in
   the Hicaz makam, and frame-drum usul patterns. There are no samples or recordings, the output is
   deterministic, and it is dedicated to the public domain under **CC0 1.0**.
 
-When the real dump arrives, `python tools/cdsim.py verify <cue>` checks it against the hashes
-above.
+`python tools/cdsim.py verify <cue>` compares an image in redump.org's layout with the hashes
+above; `python tools/chd.py verify <chd>` does the same for the tracks inside a CHD.

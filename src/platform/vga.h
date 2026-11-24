@@ -115,6 +115,11 @@ uint8_t vga_mem_read8(VgaState *v, uint32_t addr);
 
 /* Frame timing derived from the programmed CRTC + dot clock. */
 double  vga_refresh_hz(const VgaState *v);
+/* Microseconds until bit 3 of port 3DAh (vertical retrace) next goes to 1;
+   0 while it is 1; negative when the card has no clock.  For the host's
+   idle sleep (pc_poll), which must not sleep across the retrace pulse - it
+   lasts two scan lines, 64 us in mode 13h. */
+double  vga_us_to_vretrace(const VgaState *v);
 
 void    vga_render(const VgaState *v, VgaFrame *out);
 

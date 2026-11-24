@@ -4,6 +4,8 @@
  */
 #include "engine/nkontrol.h"
 
+#include "engine/edition.h"
+
 #include "dsmi/dds.h"
 #include "dsmi/timer.h"
 #include "platform/pc.h"
@@ -37,7 +39,7 @@ int16_t ctl_ctrlbrk_handler(void)
 void ctl_install(void)
 {
     if (g_sys_flags & 0x10)
-        o559A_fatal(DGSTR(0x7529), 0x11C, NULL, 0x1A);
+        o559A_fatal(ED_FILE(0x7529), 0x11C, NULL, 0x1A);
     /* E73E = getvect(23h); setvect(23h, ctl_int23_isr);
        E746 = getvect(09h); setvect(09h, ctl_int09_isr);
        E742 = getvect(00h); setvect(00h, ctl_div0_isr);
@@ -96,7 +98,7 @@ uint16_t ctl_div0_isr(void)
  */
 void ctl_int23_isr(void)
 {
-    o559A_fatal(DGSTR(0x753D), 0x16F, g_reset_attempt ? DGSTR(0x7551) : DGSTR(0x7586), -1);
+    o559A_fatal(ED_FILE(0x753D), 0x16F, g_reset_attempt ? DGSTR(0x7551) : DGSTR(0x7586), -1);
 }
 
 /*
@@ -130,10 +132,16 @@ int ctl_int09_isr(uint8_t scan)
  * ctl_flush_keys - while (kbhit()) getch();
  *
  * Original: IST.EXE 0DB7:01E3 (NKONTROL.L), far.
+ * CD build (0DBA:01E4): "mov ax,0C00h / int 21h" instead - DOS empties the
+ * console's type-ahead itself.
  * Verified: tests/py/test_nkontrol.py (C only; uses the BIOS keyboard), 2026-11-20.
  */
 void ctl_flush_keys(void)
 {
+    if (ED_CD) {
+        pc_dos_flush_keys();
+        return;
+    }
     while (pc_kbhit())
         pc_getch();
 }
@@ -174,7 +182,7 @@ int16_t ctl_timer_install(void)
 void ctl_free_checked(uint16_t ref, int16_t line, const char *file)
 {
     if (mm_ref(ref) == NULL)
-        o559A_fatal(DGSTR(0x75A8), 0x1E0, DGSTR(0x75BC), -1);
+        o559A_fatal(ED_FILE(0x75A8), ED_LINE(0x1E0, 0x1DD), DGSTR(0x75BC), -1);
     mm_free(mm_ref(ref), line, file);
     mm_ref_set(ref, NULL);
 }

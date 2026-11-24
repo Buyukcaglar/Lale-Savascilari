@@ -1,6 +1,7 @@
 /*
- * cdrom.c - virtual CD-ROM drive (cue/bin image) and MSCDEX device requests.
- * See cdrom.h.  References: Microsoft MSCDEX 2.21 extensions spec (device
+ * cdrom.c - virtual CD-ROM drive and MSCDEX device requests.  The disc is a
+ * cue/bin image read here, or any other sector source (cdrom_open_source: the
+ * CHD of src/platform/chd.c).  See cdrom.h.  References: Microsoft MSCDEX 2.21 extensions spec (device
  * request layouts, IOCTL control blocks), DOSBox-X src/dos/dos_mscdex.cpp
  * (values the spec leaves open, marked "DOSBox-X").
  */
@@ -18,8 +19,12 @@ static struct {
     int        ntracks;
     CdromTrack tracks[CDROM_MAX_TRACKS];
     uint32_t   leadout;
-    FILE      *files[MAX_FILES];
+    FILE      *files[MAX_FILES];      /* cue/bin image                        */
     int        nfiles;
+    CdromSource src;                  /* where sectors come from              */
+    uint32_t   cache_lba;             /* the sector in `cache` (valid: cache_ok) */
+    int        cache_ok;
+    uint8_t    cache[2352];
     char       error[256];
     int        mscdex;
 
@@ -56,6 +61,8 @@ static int fail(const char *msg, const char *arg)
 
 void cdrom_close(void)
 {
+    if (g.src.close)
+        g.src.close(g.src.ctx);
     for (int i = 0; i < g.nfiles; i++)
         if (g.files[i])
             fclose(g.files[i]);
@@ -94,6 +101,31 @@ static uint32_t msf_text(const char *s)      /* "mm:ss:ff" -> frames */
     unsigned m = 0, sec = 0, f = 0;
     sscanf(s, "%u:%u:%u", &m, &sec, &f);
     return (m * 60 + sec) * 75 + f;
+}
+
+/* The cue/bin image as a sector source.  2048-byte tracks come back as Mode 1
+   sectors without sync pattern, EDC and ECC (nothing here looks at them). */
+static int cue_read_sector(void *ctx, uint32_t lba, uint8_t *raw)
+{
+    (void)ctx;
+    for (int i = g.ntracks - 1; i >= 0; i--) {
+        const CdromTrack *t = &g.tracks[i];
+        if (lba < t->start)
+            continue;
+        if (lba >= t->start + t->sectors)
+            return -1;                      /* a gap no file holds */
+        FILE *f = g.files[t->file];
+        uint64_t off = t->file_offset + (uint64_t)(lba - t->start) * t->sector_size;
+        if (seek64(f, off) != 0)
+            return -1;
+        if (t->sector_size == 2048) {
+            memset(raw, 0, 2352);
+            raw[15] = 1;
+            return fread(raw + 16, 1, 2048, f) == 2048 ? 0 : -1;
+        }
+        return fread(raw, 1, 2352, f) == 2352 ? 0 : -1;
+    }
+    return -1;
 }
 
 int cdrom_open(const char *cue_path)
@@ -183,9 +215,67 @@ int cdrom_open(const char *cue_path)
         }
         g.tracks[i].sectors = next - g.tracks[i].start;
     }
+    g.src.read_sector = cue_read_sector;
     g.open = 1;
     g.state = ST_STOPPED;
     g.pos = 0;
+    return 0;
+}
+
+int cdrom_open_source(const CdromTrack *tracks, int ntracks, uint32_t leadout, const CdromSource *src)
+{
+    cdrom_close();
+    g.error[0] = 0;
+    if (ntracks < 1 || ntracks > CDROM_MAX_TRACKS || !src || !src->read_sector) {
+        if (src && src->close)
+            src->close(src->ctx);
+        return fail("bad disc layout", NULL);
+    }
+    memcpy(g.tracks, tracks, (size_t)ntracks * sizeof *tracks);
+    g.ntracks = ntracks;
+    g.leadout = leadout;
+    g.src = *src;
+    g.open = 1;
+    g.state = ST_STOPPED;
+    g.pos = 0;
+    return 0;
+}
+
+/* ---- sectors -------------------------------------------------------------- */
+
+static const CdromTrack *track_at(uint32_t lba)
+{
+    const CdromTrack *t = g.ntracks ? &g.tracks[0] : NULL;
+    for (int i = 0; i < g.ntracks; i++)
+        if (g.tracks[i].start <= lba)
+            t = &g.tracks[i];
+    return t;
+}
+
+int cdrom_read_raw(uint32_t lba, uint8_t *raw)
+{
+    if (!g.open || lba >= g.leadout)
+        return -1;
+    if (!g.cache_ok || g.cache_lba != lba) {
+        g.cache_ok = 0;
+        if (g.src.read_sector(g.src.ctx, lba, g.cache) != 0)
+            return -1;
+        g.cache_lba = lba;
+        g.cache_ok = 1;
+    }
+    memcpy(raw, g.cache, 2352);
+    return 0;
+}
+
+int cdrom_read_data(uint32_t lba, uint8_t *user)
+{
+    uint8_t raw[2352];
+    const CdromTrack *t = track_at(lba);
+    if (!g.open || !t || t->audio || lba < t->start || lba >= t->start + t->sectors
+        || cdrom_read_raw(lba, raw) != 0)
+        return -1;
+    /* Mode 1: user data after sync + header; Mode 2 (XA form 1): after the subheader too */
+    memcpy(user, raw + (raw[15] == 2 ? 24 : 16), 2048);
     return 0;
 }
 
@@ -215,15 +305,6 @@ static void wr_redbook(uint8_t *p, uint32_t lba)
     p[1] = (uint8_t)(a / 75 % 60);
     p[2] = (uint8_t)(a / 4500);
     p[3] = 0;
-}
-
-static const CdromTrack *track_at(uint32_t lba)
-{
-    const CdromTrack *t = g.ntracks ? &g.tracks[0] : NULL;
-    for (int i = 0; i < g.ntracks; i++)
-        if (g.tracks[i].start <= lba)
-            t = &g.tracks[i];
-    return t;
 }
 
 static void set_status(uint8_t *req, uint16_t st)
@@ -361,7 +442,7 @@ void mscdex_send_request(uint8_t drive, uint8_t *req, uint8_t *xfer)
 
 void cdrom_render(int16_t *out, size_t frames)
 {
-    uint8_t buf[CDROM_FRAMES_PER_SECTOR * 4];
+    uint8_t buf[2352];
     while (frames) {
         if (g.state != ST_PLAYING || g.pos >= g.end) {
             if (g.state == ST_PLAYING)
@@ -375,16 +456,12 @@ void cdrom_render(int16_t *out, size_t frames)
         if (n > frames) n = frames;
         if (g.pos + n > g.end) n = (size_t)(g.end - g.pos);
         const CdromTrack *t = track_at(lba);
-        int ok = 0;
-        if (t && t->audio && lba < t->start + t->sectors) {
-            uint64_t off = t->file_offset + (uint64_t)(lba - t->start) * 2352 + in_sec * 4;
-            FILE *f = g.files[t->file];
-            ok = seek64(f, off) == 0 && fread(buf, 4, n, f) == n;
-        }
+        int ok = t && t->audio && lba < t->start + t->sectors && cdrom_read_raw(lba, buf) == 0;
+        const uint8_t *b = buf + in_sec * 4;
         for (size_t i = 0; i < n; i++) {
             if (ok) {               /* Red Book PCM is little-endian */
-                out[2 * i]     = (int16_t)(buf[4 * i]     | buf[4 * i + 1] << 8);
-                out[2 * i + 1] = (int16_t)(buf[4 * i + 2] | buf[4 * i + 3] << 8);
+                out[2 * i]     = (int16_t)(b[4 * i]     | b[4 * i + 1] << 8);
+                out[2 * i + 1] = (int16_t)(b[4 * i + 2] | b[4 * i + 3] << 8);
             } else {                /* data sectors / read errors play as silence */
                 out[2 * i] = out[2 * i + 1] = 0;
             }

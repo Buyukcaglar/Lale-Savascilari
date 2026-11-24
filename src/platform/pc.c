@@ -2,12 +2,15 @@
  * pc.c - the emulated PC services the decompiled code calls (see pc.h).
  */
 #include "platform/pc.h"
+#include "platform/cdrom.h"
+#include "platform/iso9660.h"
 
 #include <ctype.h>
 #include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>      /* ftruncate (POSIX; mingw-w64 provides it) */
 #ifndef _WIN32
 #include <sys/stat.h>
 #endif
@@ -58,6 +61,14 @@ uint32_t pc_bios_ticks(void)            { return bios_ticks; }
 void     pc_bios_int08(void)            { bios_ticks++; }   /* BIOS INT 08h: 0040:006C */
 void     pc_set_host_pump(void (*f)(void))    { host_pump = f; }
 void     pc_set_host_present(void (*f)(void)) { host_present = f; }
+
+static void (*host_video)(int event, const char *name);
+void     pc_set_host_video(void (*f)(int, const char *)) { host_video = f; }
+void     pc_video_event(int event, const char *name)
+{
+    if (host_video)
+        host_video(event, name);
+}
 void     pc_set_host_sleep(void (*f)(uint32_t)) { host_sleep = f; }
 
 void pc_set_virtual_time(int on, uint32_t step_us)
@@ -118,8 +129,28 @@ static void present_if_new_frame(void)
     }
 }
 
+/* Port 3DAh in real time.  The emulated clock follows the host's, so it
+   moves in steps: the idle sleep below, the window update, or simply the
+   system taking the processor away for a moment.  A program that waits for
+   the vertical retrace reads 3DAh in a tight loop and on the PC cannot miss
+   the pulse (two scan lines, 64 us in mode 13h; a read takes about 1 us) -
+   here a step can carry the clock right over it, and the wait then lasts
+   another frame, or several (the video player ran late that way and dropped
+   most of its frames).  So between two reads of 3DAh that follow each other
+   with nothing else polled in between, the clock is not allowed past the
+   start of the retrace: the second read gets the clock 20 us into the pulse
+   and sees bit 3, as it would have on the PC; the clock catches up with the
+   host's at the next poll.  Reads that do not follow each other see the
+   real time. */
+static int      in_3da;             /* pc_poll() called from pc_in_3da() */
+static int      last_poll_3da;      /* the poll before this one was a 3DAh read ... */
+static uint8_t  last_3da;           /* ... which returned this */
+static uint64_t poll_limit_us;      /* this poll may not advance beyond (0 = no limit) */
+
 void pc_poll(void)
 {
+    if (!in_3da)
+        last_poll_3da = 0;
     if (host_pump)
         host_pump();
     if (virtual_time) {
@@ -133,7 +164,10 @@ void pc_poll(void)
     /* never run more than 1 s behind (debugger pauses, window drags) */
     if (target_us > emu_clock_us() + 1000000u)
         host_t0_us = host_us() - emu_clock_us();
-    else {
+    else if (poll_limit_us && target_us > poll_limit_us) {
+        advance_to((poll_limit_us * PC_PIT_HZ + 999999u) / 1000000u);
+        idle_polls = 0;
+    } else {
         uint64_t before = pit_next_irq;
         advance_to(target_us * PC_PIT_HZ / 1000000u);
         /* The original spins in busy loops; the port yields the CPU once a
@@ -141,8 +175,20 @@ void pc_poll(void)
            sleep is far shorter than one timer period (10 ms at 100 Hz). */
         if (pit_next_irq != before)
             idle_polls = 0;
-        else if (++idle_polls > 64 && host_sleep)
-            host_sleep(500);
+        else if (++idle_polls > 64 && host_sleep) {
+            /* ... and never across the vertical retrace: a program waiting
+               for bit 3 of 3DAh polls it without a pause, and the pulse is
+               much shorter than this sleep - slept through, the wait lasts
+               another frame, and another (the video player then runs late
+               and drops frames).  The sleep ends 150 us before the pulse
+               (the host's sleep is exact to a few microseconds); those and
+               the pulse itself are spent polling. */
+            double r = vga_us_to_vretrace(&pc_vga);
+            if (r < 0.0 || r > 650.0)
+                host_sleep(500);
+            else if (r > 200.0)
+                host_sleep((uint32_t)(r - 150.0));
+        }
     }
     present_if_new_frame();
 }
@@ -162,11 +208,19 @@ uint8_t pc_in_3da(void)
        lets busy loops on retrace make progress */
     if (virtual_time)
         advance_us(2);
-    else
+    else {
+        double r = last_poll_3da && !(last_3da & 8) ? vga_us_to_vretrace(&pc_vga) : -1.0;
+        poll_limit_us = r > 0.0 ? emu_clock_us() + (uint64_t)r + 20 : 0;
+        in_3da = 1;
         pc_poll();
+        in_3da = 0;
+        poll_limit_us = 0;
+    }
     uint8_t v = vga_in8(&pc_vga, 0x3DA);
     if (v & 8)
         present_if_new_frame();
+    last_poll_3da = 1;
+    last_3da = v;
     return v;
 }
 
@@ -291,6 +345,17 @@ void pc_key_push(uint16_t key)
         return;                       /* buffer full: BIOS beeps and drops */
     kbuf[ktail] = key;
     ktail = next;
+}
+
+/* MS-DOS: $STD_CON_INPUT_FLUSH sends the CON driver its flush command, which
+   reads INT 16h until the buffer is empty and drops its look-ahead byte (the
+   same byte INT 1Bh uses for ^C); no break check is made. */
+void pc_dos_flush_keys(void)
+{
+    pc_poll();
+    khead = ktail = 0;
+    pending_scan = -1;
+    dos_break_pending = 0;
 }
 
 int16_t pc_kbhit(void)
@@ -711,10 +776,50 @@ void pc_vga_sync(void)
 /* files                                                                    */
 /* ======================================================================== */
 
-static char game_dir[1024] = ".";
+/*
+ * Where a DOS file name leads (pc.h):
+ *   reads:   SAVE folder, DATA folder, then the virtual CD's own files;
+ *   writes:  the SAVE folder, always (a file found elsewhere is copied there
+ *            first when it is opened for writing);
+ *   a name on the CD drive ("D:\0GFL.CKD"): the disc only, read-only.
+ * With pc_set_game_dir() both folders are the same one - the working
+ * folder of the DOS game - and nothing is ever copied.
+ */
+static char data_dir[1024] = ".";
+static char save_dir[1024] = ".";
+static IsoFs disc_fs;
+static int   disc_on;
 
-void        pc_set_game_dir(const char *dir) { snprintf(game_dir, sizeof game_dir, "%s", dir); }
-const char *pc_game_dir(void)                { return game_dir; }
+struct PcFile {
+    FILE    *f;             /* host file, or NULL: a file of the disc */
+    IsoEntry iso;
+    int      drive;
+};
+
+void pc_set_dirs(const char *data, const char *save)
+{
+    snprintf(data_dir, sizeof data_dir, "%s", data);
+    snprintf(save_dir, sizeof save_dir, "%s", save);
+}
+
+void        pc_set_game_dir(const char *dir) { pc_set_dirs(dir, dir); }
+const char *pc_game_dir(void)                { return save_dir; }
+const char *pc_data_dir(void)                { return data_dir; }
+const char *pc_save_dir(void)                { return save_dir; }
+
+static int disc_read(void *ctx, uint32_t lba, uint8_t *sector)
+{
+    (void)ctx;
+    return cdrom_read_data(lba, sector);
+}
+
+int pc_use_disc_files(int on)
+{
+    disc_on = on && iso_mount(&disc_fs, disc_read, NULL) == 0;
+    return disc_on ? 0 : -1;
+}
+
+const char *pc_disc_volume_id(void) { return disc_on ? disc_fs.volume_id : ""; }
 
 static int ieq(const char *a, const char *b)
 {
@@ -724,15 +829,27 @@ static int ieq(const char *a, const char *b)
     return *a == *b;
 }
 
-char *pc_resolve(const char *dos_name, char *buf, size_t size)
+/* Drive index of "X:..." (0 = A:), -1 without a drive letter. */
+static int dos_drive(const char *dos_name)
+{
+    if (isalpha((unsigned char)dos_name[0]) && dos_name[1] == ':')
+        return toupper((unsigned char)dos_name[0]) - 'A';
+    return -1;
+}
+
+/* Host path of a DOS name under `root`, each part matched without regard to
+   case; a part that does not exist is taken as written. */
+static char *resolve_in(const char *root, const char *dos_name, char *buf, size_t size)
 {
     char tmp[1024];
-    snprintf(buf, size, "%s", game_dir);
+    snprintf(buf, size, "%s", root);
     snprintf(tmp, sizeof tmp, "%s", dos_name);
     char *save = NULL;
     for (char *part = strtok_r(tmp, "\\/", &save); part; part = strtok_r(NULL, "\\/", &save)) {
         if (part[0] && part[1] == ':' && !part[2])
             continue;                  /* drive letter */
+        if (part[0] && part[1] == ':')
+            part += 2;                 /* "D:NAME" */
         size_t len = strlen(buf);
         const char *found = part;
         DIR *d = opendir(buf);
@@ -748,10 +865,15 @@ char *pc_resolve(const char *dos_name, char *buf, size_t size)
     return buf;
 }
 
-FILE *pc_fopen(const char *dos_name, const char *mode)
+char *pc_resolve(const char *dos_name, char *buf, size_t size)
+{
+    return resolve_in(save_dir, dos_name, buf, size);
+}
+
+static FILE *host_open(const char *root, const char *dos_name, const char *mode)
 {
     char path[1024];
-    FILE *f = fopen(pc_resolve(dos_name, path, sizeof path), mode);
+    FILE *f = fopen(resolve_in(root, dos_name, path, sizeof path), mode);
 #ifndef _WIN32
     /* DOS does not open a directory as a file (an empty name resolves to the
        game folder itself).  Windows' fopen refuses one too; POSIX hosts open
@@ -764,6 +886,202 @@ FILE *pc_fopen(const char *dos_name, const char *mode)
     }
 #endif
     return f;
+}
+
+FILE *pc_fopen(const char *dos_name, const char *mode)
+{
+    return host_open(save_dir, dos_name, mode);
+}
+
+/* The name on the disc: the path without its drive letter. */
+static int disc_find(const char *dos_name, IsoEntry *e)
+{
+    if (!disc_on)
+        return -1;
+    if (dos_drive(dos_name) >= 0)
+        dos_name += 2;
+    return iso_find(&disc_fs, dos_name, e) == 0 && !e->is_dir ? 0 : -1;
+}
+
+static int on_cd_drive(const char *dos_name)
+{
+    return disc_on && dos_drive(dos_name) == CDROM_DRIVE_INDEX;
+}
+
+static int two_dirs(void) { return strcmp(data_dir, save_dir) != 0; }
+
+static PcFile *file_new(FILE *f, const IsoEntry *iso, int drive)
+{
+    PcFile *p = calloc(1, sizeof *p);
+    if (!p) {
+        if (f)
+            fclose(f);
+        return NULL;
+    }
+    p->f = f;
+    if (iso)
+        p->iso = *iso;
+    p->drive = drive;
+    return p;
+}
+
+/* Copies a read-only original into the SAVE folder (upper-case DOS name). */
+static FILE *copy_up(PcFile *src, const char *dos_name)
+{
+    FILE *out = host_open(save_dir, dos_name, "w+b");
+    uint8_t buf[16384];
+    uint32_t pos = 0;
+    size_t n;
+    if (!out)
+        return NULL;
+    while ((n = pc_file_read(src, pos, buf, sizeof buf)) > 0) {
+        if (fwrite(buf, 1, n, out) != n) {
+            fclose(out);
+            return NULL;
+        }
+        pos += (uint32_t)n;
+    }
+    fflush(out);
+    return out;
+}
+
+PcFile *pc_file_open(const char *dos_name, int mode)
+{
+    IsoEntry e;
+    FILE *f;
+    if (on_cd_drive(dos_name)) {                    /* the CD: read-only */
+        if (mode != PC_OPEN_READ || disc_find(dos_name, &e) != 0)
+            return NULL;
+        return file_new(NULL, &e, CDROM_DRIVE_INDEX);
+    }
+    if (mode == PC_OPEN_CREATE) {
+        f = host_open(save_dir, dos_name, "w+b");
+        return f ? file_new(f, NULL, 2) : NULL;
+    }
+    f = host_open(save_dir, dos_name, mode == PC_OPEN_READ ? "rb" : "r+b");
+    if (f)
+        return file_new(f, NULL, 2);
+    /* the read-only originals: DATA folder, then the disc */
+    PcFile *orig = NULL;
+    if (two_dirs() && (f = host_open(data_dir, dos_name, "rb")) != NULL)
+        orig = file_new(f, NULL, 2);
+    else if (disc_find(dos_name, &e) == 0)
+        orig = file_new(NULL, &e, 2);
+    if (!orig || mode == PC_OPEN_READ)
+        return orig;
+    f = copy_up(orig, dos_name);
+    pc_file_close(orig);
+    return f ? file_new(f, NULL, 2) : NULL;
+}
+
+int pc_file_exists(const char *dos_name)
+{
+    PcFile *f = pc_file_open(dos_name, PC_OPEN_READ);
+    if (!f)
+        return 0;
+    pc_file_close(f);
+    return 1;
+}
+
+void pc_file_close(PcFile *p)
+{
+    if (!p)
+        return;
+    if (p->f)
+        fclose(p->f);
+    free(p);
+}
+
+int pc_file_drive(const PcFile *p) { return p->drive; }
+
+uint32_t pc_file_size(PcFile *p)
+{
+    if (!p->f)
+        return p->iso.size;
+    fseek(p->f, 0, SEEK_END);
+    return (uint32_t)ftell(p->f);
+}
+
+size_t pc_file_read(PcFile *p, uint32_t pos, void *buf, size_t n)
+{
+    if (!p->f)
+        return iso_read(&disc_fs, &p->iso, pos, buf, (uint32_t)n);
+    if (fseek(p->f, (long)pos, SEEK_SET) != 0)
+        return 0;
+    return fread(buf, 1, n, p->f);
+}
+
+size_t pc_file_write(PcFile *p, uint32_t pos, const void *buf, size_t n)
+{
+    if (!p->f || fseek(p->f, (long)pos, SEEK_SET) != 0)
+        return 0;
+    size_t put = fwrite(buf, 1, n, p->f);
+    fflush(p->f);
+    return put;
+}
+
+int pc_file_truncate(PcFile *p, uint32_t size)
+{
+    if (!p->f)
+        return -1;
+    fflush(p->f);
+    return ftruncate(fileno(p->f), (off_t)size);
+}
+
+/* ---- directory listing (the save menu's findfirst/findnext) ----------------- */
+
+static int list_add(char names[][13], int n, int max, const char *name, const char *ext)
+{
+    const char *dot = strrchr(name, '.');
+    size_t base = dot ? (size_t)(dot - name) : strlen(name);
+    char up[13];
+    size_t k;
+    if (n >= max || !dot || base == 0 || base > 8 || strlen(dot) != 4)
+        return n;
+    for (k = 0; name[k]; k++)
+        up[k] = (char)toupper((unsigned char)name[k]);
+    up[k] = 0;
+    if (strcmp(up + base + 1, ext) != 0)
+        return n;
+    for (int i = 0; i < n; i++)
+        if (strcmp(names[i], up) == 0)
+            return n;                   /* SAVE hides the same name in DATA */
+    strcpy(names[n], up);
+    return n + 1;
+}
+
+typedef struct ListCtx {
+    char      (*names)[13];
+    int         n, max;
+    const char *ext;
+} ListCtx;
+
+static int list_iso_cb(void *ctx, const IsoEntry *e)
+{
+    ListCtx *l = ctx;
+    if (!e->is_dir)
+        l->n = list_add(l->names, l->n, l->max, e->name, l->ext);
+    return 0;
+}
+
+int pc_list_files(const char *ext, char names[][13], int max)
+{
+    int n = 0;
+    for (int pass = 0; pass < (two_dirs() ? 2 : 1); pass++) {
+        DIR *d = opendir(pass == 0 ? save_dir : data_dir);
+        struct dirent *de;
+        if (!d)
+            continue;
+        while ((de = readdir(d)) != NULL)
+            n = list_add(names, n, max, de->d_name, ext);
+        closedir(d);
+    }
+    if (disc_on) {
+        ListCtx l = { names, n, max, ext };
+        iso_list(&disc_fs, "", list_iso_cb, &l);
+        n = l.n;
+    }
+    return n;
 }
 
 /* ======================================================================== */

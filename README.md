@@ -9,6 +9,9 @@ annotated, portable C. The aim is 1:1 fidelity with the original `IST.EXE`.
 * Progress: [`docs/PROGRESS.md`](docs/PROGRESS.md)
 * Analysis tooling: [`tools/README.md`](tools/README.md)
 * The macOS port: [`docs/MACOS.md`](docs/MACOS.md)
+* Playing: where the game's data comes from (CD, disc image, the 2005 release) and the folders
+  `DATA`, `SAVE`, `VIDEO`: [`docs/INSTALL.md`](docs/INSTALL.md); the two editions:
+  [`docs/EDITIONS.md`](docs/EDITIONS.md)
 
 ## 4K videos / 4K videolar
 
@@ -39,8 +42,12 @@ cmake --preset windows && cmake --build --preset windows
 ctest --test-dir out/windows
 ```
 
-The original game data is not tracked in git. The port reads it from the game folder
-(the `.CKD` archives plus `TRDOS.DAT`, `GRP.DAT`, …).
+The original game data is not tracked in git and not part of the program. At its first start
+`Lale64` imports it from what you have - the game CD, a disc image (`.cue`/`.bin`, `.iso`,
+`.chd`) or the 2005 release (ZIP, 7Z, RAR or a folder) - into `DATA/` beside the executable;
+saved games go to `SAVE/`. Both editions of the game (the 1996 CD and the 2005 re-release) are
+supported: [`docs/INSTALL.md`](docs/INSTALL.md). For development, `--game-dir orig` runs the
+game straight from a folder of the original's files.
 
 ## macOS (Apple Silicon)
 
@@ -49,7 +56,7 @@ brew install cmake ninja sdl3                 # + openjdk@21 dosbox-x for the an
 python3 -m venv .tools/venv && .tools/venv/bin/pip install capstone unicorn numpy pillow
 tools/bootstrap.sh                            # extract the reference zip, generate src/gen
 cmake --preset macos && cmake --build --preset macos
-out/macos/Lale64                              # the game, from the repo root (game files: ./orig)
+out/macos/Lale64 --game-dir orig              # the game, straight from the original's files
 open out/macos/Lale64.app                     # the same program as an application
 tools/package_macos.sh                        # dist/Lale64-<version>-macOS.zip to give away
 ```

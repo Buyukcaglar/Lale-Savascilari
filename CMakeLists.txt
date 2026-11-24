@@ -51,6 +51,14 @@ add_library(lale_platform STATIC
     src/platform/pc.c
     src/platform/vga.c
     src/platform/cdrom.c
+    src/platform/iso9660.c
+    src/platform/zdeflate.c
+    src/platform/flac.c
+    src/platform/cdsector.c
+    src/platform/chd.c
+    src/platform/zipfile.c
+    src/platform/drive.c
+    src/platform/install.c
     src/platform/options.c
     src/platform/audio.c
     src/platform/speaker.c
@@ -72,13 +80,17 @@ target_link_libraries(lale_platform PUBLIC lale_game)
 # ---- the game: SDL3 host + everything else ------------------------------------
 set(LALE_HOST_SRC
     src/platform/sdl3_main.c
+    src/platform/setup.c
+    src/platform/hdvideo.c
+    src/platform/hdvideo_mf.c
     src/platform/audio_sdl.c
     src/platform/about.c
     src/platform/about_win32.c
 )
 if(APPLE)
-    list(APPEND LALE_HOST_SRC src/platform/about_macos.m)
-    set_source_files_properties(src/platform/about_macos.m PROPERTIES COMPILE_OPTIONS -fobjc-arc)
+    list(APPEND LALE_HOST_SRC src/platform/about_macos.m src/platform/hdvideo_avf.m)
+    set_source_files_properties(src/platform/about_macos.m src/platform/hdvideo_avf.m
+                                PROPERTIES COMPILE_OPTIONS -fobjc-arc)
 endif()
 add_executable(lale ${LALE_HOST_SRC})
 # the built program is Lale64(.exe) (the user's decision of 2026-11-21); the
@@ -90,6 +102,8 @@ if(WIN32)
     target_sources(lale PRIVATE src/platform/lale.rc)
     # the About box (about_win32.c): dark title bar, themed button, link, registry
     target_link_libraries(lale PRIVATE dwmapi uxtheme shell32 advapi32)
+    # the 4K videos (hdvideo_mf.c): Media Foundation
+    target_link_libraries(lale PRIVATE mfreadwrite mfplat mfuuid ole32)
 endif()
 target_include_directories(lale PRIVATE src)
 target_link_libraries(lale PRIVATE lale_game lale_platform SDL3::SDL3)
@@ -101,7 +115,10 @@ if(WIN32)
 endif()
 
 if(APPLE)
-    target_link_libraries(lale PRIVATE "-framework Cocoa")
+    # the About box; the 4K videos (hdvideo_avf.m)
+    set(LALE_MAC_FRAMEWORKS "-framework Cocoa" "-framework AVFoundation" "-framework CoreMedia"
+                            "-framework CoreVideo")
+    target_link_libraries(lale PRIVATE ${LALE_MAC_FRAMEWORKS})
 
     # ---- Lale64.app: the same program as a double-clickable application ------
     # (the bare out/macos/Lale64 stays, for the terminal, tests and scripts).
@@ -120,7 +137,7 @@ if(APPLE)
         OUTPUT_NAME Lale64
         MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Info.plist.in)
     target_include_directories(lale_app PRIVATE src)
-    target_link_libraries(lale_app PRIVATE lale_game lale_platform SDL3::SDL3 "-framework Cocoa")
+    target_link_libraries(lale_app PRIVATE lale_game lale_platform SDL3::SDL3 ${LALE_MAC_FRAMEWORKS})
     # ad-hoc signature over the finished bundle (Apple Silicon runs nothing unsigned)
     add_custom_command(TARGET lale_app POST_BUILD
         COMMAND codesign --force --sign - $<TARGET_BUNDLE_DIR:lale_app>
@@ -136,6 +153,14 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
     target_compile_options(lale_game PRIVATE ${LALE_WARN})
 endif()
 
+# ---- chdtool: the disc code on the command line (tools/chdtool.c) ----------------
+add_executable(chdtool tools/chdtool.c)
+target_include_directories(chdtool PRIVATE src)
+target_link_libraries(chdtool PRIVATE lale_platform)
+if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
+    target_compile_options(chdtool PRIVATE ${LALE_WARN})
+endif()
+
 # ---- tests ----------------------------------------------------------------------
 enable_testing()
 add_executable(test_vga tests/test_vga.c)
@@ -143,7 +168,17 @@ target_link_libraries(test_vga PRIVATE lale_platform)
 add_test(NAME vga COMMAND test_vga)
 add_executable(test_cdaudio tests/test_cdaudio.c)
 target_link_libraries(test_cdaudio PRIVATE lale_game)
-add_test(NAME cdaudio COMMAND test_cdaudio WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+# The tests that write files (disc images made up by the test) work in a
+# folder of their own: the build folder is also where the program looks for
+# the player's game (docs/INSTALL.md), and it skips folders named with a dot.
+set(LALE_TEST_TMP ${CMAKE_CURRENT_BINARY_DIR}/.test_tmp)
+file(MAKE_DIRECTORY ${LALE_TEST_TMP})
+add_test(NAME cdaudio COMMAND test_cdaudio WORKING_DIRECTORY ${LALE_TEST_TMP})
+# The port's own codecs (deflate, FLAC, CD sectors, CHD, ISO 9660, ZIP) and the
+# importer, on data made up by the test.
+add_executable(test_codecs tests/test_codecs.c)
+target_link_libraries(test_codecs PRIVATE lale_platform)
+add_test(NAME codecs COMMAND test_codecs WORKING_DIRECTORY ${LALE_TEST_TMP})
 
 # Shared library for the Python differential tests (tests/py): the original
 # runs in tools/emu86.py, the C through ctypes.  Exactly the sources of

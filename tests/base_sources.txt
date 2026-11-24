@@ -2,8 +2,10 @@
 # (tools/testlib.sh) and CMake's lale_testlib is built from exactly this list.
 src/gen/dgroup_init.c
 src/engine/dgroup.c
+src/engine/edition.c
 src/platform/vga.c
 src/platform/cdrom.c
+src/platform/iso9660.c
 src/platform/options.c
 src/platform/pc.c
 src/platform/audio.c

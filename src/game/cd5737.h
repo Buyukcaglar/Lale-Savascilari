@@ -37,6 +37,7 @@ int16_t  o5737_cd_play_track(uint8_t track, int32_t length); /* 5737:0396  */
 /* Port-only: CD-music option.  Opens the cue/bin image, makes the virtual
  * MSCDEX visible and runs o5737_cd_init().  Returns 0 on success, -1 if the
  * image cannot be opened (the game then runs exactly as the original). */
+char cd5737_drive_letter(void);                /* E9B8, set by o5737_cd_init */
 int cd5737_port_enable(const char *cue_path);
 
 /* Port-only, for tests: the module's DGROUP state. */

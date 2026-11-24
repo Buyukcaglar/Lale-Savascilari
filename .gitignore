@@ -25,3 +25,12 @@ __pycache__/
 
 # macOS package (tools/package_macos.sh)
 /dist/
+
+# Files of the original 1997 CD (tools/cddump.py extract)
+/orig_cd/
+
+# What the program keeps beside itself when it is run from the repository
+# (the imported game, saved games, upscaled videos - docs/INSTALL.md)
+/DATA/
+/SAVE/
+/VIDEO/

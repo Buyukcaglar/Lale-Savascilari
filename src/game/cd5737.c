@@ -392,6 +392,9 @@ int16_t o5737_cd_play_track(uint8_t track, int32_t length)
     return ok;
 }
 
+/* E9B8: the CD drive's letter (main() of the CD build prints and uses it). */
+char cd5737_drive_letter(void) { return d.drive_letter; }
+
 /* ---- port: CD-music option ------------------------------------------------ */
 
 int cd5737_port_enable(const char *cue_path)

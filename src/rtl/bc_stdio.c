@@ -4,8 +4,8 @@
  * Every RTL function below is a transcription of IST.EXE seg0000 (the linked
  * Borland C++ 3.x large-model library), including its quirks.  See
  * bc_stdio.h for the runtime model.  Below the RTL sits an emulated DOS file
- * handle layer ("INT 21h") over pc_fopen() binary host streams; it is the only
- * place host file I/O happens.
+ * handle layer ("INT 21h") over the host's files (pc_file_open, platform/pc.h);
+ * it is the only place file I/O happens.
  *
  * Verified: tests/py/test_vfs.py (unicorn differential against the original
  * RTL code with the same DOS semantics served to the emulator), 2026-11-20.
@@ -42,7 +42,7 @@ typedef struct DosFile {
     uint8_t  device;
     uint8_t  access;        /* 0 read, 1 write, 2 read/write */
     uint16_t info;          /* IOCTL 4400h device information word */
-    FILE    *f;             /* host binary stream */
+    PcFile  *f;             /* host file (platform/pc.h) */
     uint32_t pos;
 } DosFile;
 
@@ -83,11 +83,7 @@ static int dos_alloc(void)
 
 static int dos_exists(const char *name)
 {
-    FILE *f = pc_fopen(name, "rb");
-    if (!f)
-        return 0;
-    fclose(f);
-    return 1;
+    return pc_file_exists(name);
 }
 
 /* AH=3Dh open existing file; al = access mode | sharing flags. */
@@ -96,15 +92,16 @@ static int32_t dos_open(const char *name, uint8_t al)
     uint8_t access = al & 7;
     if (access > 2)
         return -0x0C;                                   /* invalid access code */
-    FILE *f = pc_fopen(name, access == 0 ? "rb" : "r+b");
+    PcFile *f = pc_file_open(name, access == 0 ? PC_OPEN_READ : PC_OPEN_RDWR);
     if (!f)
         return dos_exists(name) ? -5 : -2;              /* read-only / not found */
     int h = dos_alloc();
     if (h < 0) {
-        fclose(f);
+        pc_file_close(f);
         return -4;                                      /* too many open files */
     }
-    dos_files[h] = (DosFile){ 1, 0, access, 0x0002, f, 0 };   /* info: drive C:, file */
+    /* info: the drive number, a file (the RTL reads bit 7 only: device) */
+    dos_files[h] = (DosFile){ 1, 0, access, (uint16_t)pc_file_drive(f), f, 0 };
     return h;
 }
 
@@ -117,10 +114,10 @@ static int32_t dos_creat(const char *name, uint16_t attr)
     int h = dos_alloc();
     if (h < 0)
         return -4;
-    FILE *f = pc_fopen(name, "w+b");
+    PcFile *f = pc_file_open(name, PC_OPEN_CREATE);
     if (!f)
         return dos_exists(name) ? -5 : -3;              /* access denied / path not found */
-    dos_files[h] = (DosFile){ 1, 0, 2, 0x0002, f, 0 };
+    dos_files[h] = (DosFile){ 1, 0, 2, (uint16_t)pc_file_drive(f), f, 0 };
     return h;
 }
 
@@ -130,15 +127,14 @@ static int32_t dos_close(int16_t h)
     if (!d)
         return -6;
     if (d->f)
-        fclose(d->f);
+        pc_file_close(d->f);
     memset(d, 0, sizeof *d);
     return 0;
 }
 
 static uint32_t dos_size(DosFile *d)
 {
-    fseek(d->f, 0, SEEK_END);
-    return (uint32_t)ftell(d->f);
+    return pc_file_size(d->f);
 }
 
 static int32_t dos_read(int16_t h, void *buf, uint16_t n)
@@ -152,9 +148,7 @@ static int32_t dos_read(int16_t h, void *buf, uint16_t n)
         return 0;                                       /* no console input in the port */
     if (d->pos >= 0x80000000u || n == 0)
         return 0;
-    if (fseek(d->f, (long)d->pos, SEEK_SET) != 0)
-        return 0;
-    size_t got = fread(buf, 1, n, d->f);
+    size_t got = pc_file_read(d->f, d->pos, buf, n);
     d->pos += (uint32_t)got;
     return (int32_t)got;
 }
@@ -176,15 +170,11 @@ static int32_t dos_write(int16_t h, const void *buf, uint16_t n)
     if (d->pos >= 0x80000000u)
         return 0;                                       /* "disk full" */
     if (n == 0) {                                       /* DOS: truncate/extend here */
-        fflush(d->f);
-        if (ftruncate(fileno(d->f), (off_t)d->pos) != 0)
+        if (pc_file_truncate(d->f, d->pos) != 0)
             return -5;
         return 0;
     }
-    if (fseek(d->f, (long)d->pos, SEEK_SET) != 0)
-        return 0;
-    size_t put = fwrite(buf, 1, n, d->f);
-    fflush(d->f);
+    size_t put = pc_file_write(d->f, d->pos, buf, n);
     d->pos += (uint32_t)put;
     return (int32_t)put;
 }
@@ -1237,7 +1227,7 @@ void bc_stdio_reset(void)
 {
     for (int h = 0; h < DOS_HANDLES; h++)
         if (dos_files[h].f)
-            fclose(dos_files[h].f);
+            pc_file_close(dos_files[h].f);
     dos_ready = 0;
     dos_init();
     /* buffers are not freed: they are far-heap blocks, reset with the heap

@@ -71,6 +71,16 @@ void     pc_resync_clock(void);
 /* Host hooks (set by sdl3_main.c): event pump, frame presentation. */
 void     pc_set_host_pump(void (*pump)(void));
 void     pc_set_host_present(void (*present)(void));
+
+/* The video player (src/game/gfl.c) tells the host what it is doing - a port
+   addition, so that the host can show a better copy of the video in place of
+   the original picture (hdvideo.h).  OPEN: gfl_play() was called for `name`,
+   nothing is loaded yet; START: frame 0 is on the screen and the video's
+   clock runs from this moment (g_gfl_start_ms is set); STOP: playback is
+   over.  Without a hook (the tests) the calls do nothing. */
+enum { PC_VIDEO_OPEN, PC_VIDEO_START, PC_VIDEO_STOP };
+void     pc_set_host_video(void (*hook)(int event, const char *name));
+void     pc_video_event(int event, const char *name);
 /* Optional: called at every input read of the game (kbhit, getch and each
    wake-up while it blocks, bioskey 0/1 likewise, INT 33h AX=3) before the
    read is served.  Used by the input-script mode of sdl3_main.c. */
@@ -87,6 +97,9 @@ void     pc_key_push(uint16_t key);
    the scan code on the next call for extended keys. */
 int16_t  pc_kbhit(void);
 int16_t  pc_getch(void);
+/* INT 21h AX=0C00h: empty the console's type-ahead (the BIOS buffer and the
+   pending second byte of an extended key). */
+void     pc_dos_flush_keys(void);
 /* Borland bioskey(cmd) = INT 16h AH=cmd on the same buffer:
      0 / 10h  wait for a key, remove it, return its word (scan << 8 | ASCII)
      1 / 11h  peek: 0 if the buffer is empty, else the word without removing
@@ -186,13 +199,46 @@ void     pc_vga_sync(void);
 
 /* ---- files ----------------------------------------------------------------- */
 
-/* Folder with the game's data files (the CD/HDD install). */
+/*
+ * The game's files live in two folders and, for the CD edition, on the
+ * virtual CD (src/platform/cdrom.c):
+ *   DATA  the read-only originals (2005 edition; the CD edition has only
+ *         LALE.CHD there, whose files are read through the virtual drive);
+ *   SAVE  everything the game writes: saved games, GRP.DAT, SES.CFG.
+ * A DOS name is looked up in SAVE, then DATA, then on the disc; files are
+ * created in SAVE, and one of the originals opened for writing is copied
+ * there first.  A name with the CD drive's letter is a file of the disc.
+ * Names match without regard to case; '\\' separates folders.
+ *
+ * pc_set_game_dir(dir) makes both folders the same one: the DOS game's
+ * working folder as it is (tests, --game-dir).
+ */
+void        pc_set_dirs(const char *data_dir, const char *save_dir);
 void        pc_set_game_dir(const char *dir);
-const char *pc_game_dir(void);
-/* fopen() of a DOS path (relative to the game dir, any case, '\\' separators).
-   mode as in C.  Writes create the file with the upper-case DOS name. */
+const char *pc_game_dir(void);              /* = the SAVE folder */
+const char *pc_data_dir(void);
+const char *pc_save_dir(void);
+/* Take the files of the open virtual CD into the lookup (on != 0) or leave
+   them out.  0, or -1 when the disc has no ISO 9660 volume. */
+int         pc_use_disc_files(int on);
+const char *pc_disc_volume_id(void);        /* "" without disc files */
+
+typedef struct PcFile PcFile;
+enum { PC_OPEN_READ, PC_OPEN_RDWR, PC_OPEN_CREATE };
+PcFile  *pc_file_open(const char *dos_name, int mode);     /* NULL: not found / refused */
+int      pc_file_exists(const char *dos_name);
+void     pc_file_close(PcFile *f);
+uint32_t pc_file_size(PcFile *f);
+size_t   pc_file_read(PcFile *f, uint32_t pos, void *buf, size_t n);
+size_t   pc_file_write(PcFile *f, uint32_t pos, const void *buf, size_t n);
+int      pc_file_truncate(PcFile *f, uint32_t size);       /* 0 = ok */
+int      pc_file_drive(const PcFile *f);    /* drive index: 2 = C:, the CD drive's for its files */
+/* Upper-cased 8.3 names with the extension ext ("SAV") of all three places,
+   each name once; returns their number (at most max). */
+int      pc_list_files(const char *ext, char names[][13], int max);
+
+/* Host stream / host path of a DOS name in the SAVE folder (host-side tools). */
 FILE       *pc_fopen(const char *dos_name, const char *mode);
-/* Host path for a DOS name (resolved case-insensitively); returns buf. */
 char       *pc_resolve(const char *dos_name, char *buf, size_t size);
 
 /* ---- reset (tests) ----------------------------------------------------------- */

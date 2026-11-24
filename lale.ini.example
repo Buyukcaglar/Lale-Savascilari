@@ -1,14 +1,28 @@
-; lale.ini - port options (copy to lale.ini next to where you run lale;
+; lale.ini - port options (copy to lale.ini next to the program;
 ; the macOS app also reads ~/Library/Application Support/Lale64/lale.ini)
-; Defaults reproduce the original IST.EXE exactly.
+; The command line overrides this file.  docs/INSTALL.md explains the folders.
 
-; Play the game CD's audio tracks (track 2: intro/menu, track 3: story).
-; The 2005 IST.EXE never does this; see docs/DISC.md.
-cd_music = 0
+; What to take the game from at this start: the game CD's drive, a disc image
+; (.cue, .iso, .chd), a folder, or the 2005 release as .zip / .7z / .rar.
+; Not needed once the game is in DATA; without it the program looks beside
+; itself and in the CD drives, then asks.
+source =
 
-; The game CD as a cue/bin image (real dump, or build/cd/... from tools/cdsim.py)
-cd_image =
+; auto: the CD edition (1996) when DATA/LALE.CHD is a disc with audio tracks,
+; else the 2005 edition.  cd | 2005 decide otherwise (docs/EDITIONS.md).
+edition = auto
 
-; Folder with the files of the original game (default: the working directory
-; if it has them, else ./orig; the macOS app then looks beside itself and asks)
+; Where DATA, SAVE and VIDEO are (default: beside the executable)
+base_dir =
+
+; What videos start as when VIDEO holds upscaled copies: 4k | original.
+; Ctrl+V switches while the game runs.
+video = 4k
+
+; ---- development ---------------------------------------------------------------
+; The game straight from a folder of the original's files (no DATA / SAVE)
 game_dir =
+; with game_dir and edition = cd: the disc (.cue, .chd)
+cd_image =
+; old name of edition = cd
+cd_music = 0

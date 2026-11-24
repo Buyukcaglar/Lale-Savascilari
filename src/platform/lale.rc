@@ -4,6 +4,9 @@
 // src/platform/about.c).
 1 ICON "../gen/lale.ico"
 
+// The application manifest (UTF-8 file names): resource type 24 = RT_MANIFEST.
+1 24 "lale.manifest"
+
 1 VERSIONINFO
 FILEVERSION     1,0,0,0
 PRODUCTVERSION  1,0,0,0

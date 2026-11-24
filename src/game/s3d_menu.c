@@ -274,25 +274,9 @@ static int16_t find_fill(uint8_t *ff)
 
 static int16_t s3d_findfirst(const char *pattern, uint8_t *ff)
 {
-    DIR *d = opendir(pc_game_dir());
-    struct dirent *de;
     (void)pattern;                              /* always "*.sav" (467B) */
-    find_count = find_pos = 0;
-    if (d) {
-        while ((de = readdir(d)) != NULL && find_count < 64) {
-            const char *n = de->d_name, *dot = strrchr(n, '.');
-            size_t base = dot ? (size_t)(dot - n) : strlen(n);
-            int k;
-            if (!dot || base == 0 || base > 8 || strlen(dot) != 4)
-                continue;
-            for (k = 0; n[k]; k++)
-                find_names[find_count][k] = (char)toupper((unsigned char)n[k]);
-            find_names[find_count][k] = 0;
-            if (strcmp(find_names[find_count] + base, ".SAV") == 0)
-                find_count++;
-        }
-        closedir(d);
-    }
+    find_pos = 0;
+    find_count = pc_list_files("SAV", find_names, 64);
     qsort(find_names, (size_t)find_count, sizeof find_names[0], name_cmp);
     return find_fill(ff);
 }

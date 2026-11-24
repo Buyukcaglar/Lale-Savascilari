@@ -173,6 +173,37 @@ Fixed on the way:
 | `tools/verify/vcompare.py` | the EMS page-map clock fields (86F8, E7AC) were one word short | 4 words |
 | `tools/ghidra_run.sh`, `FixSwitch.java` | the RTL's inline switch table 0000:0B08 unresolved; fpupatch.py ran on the previous switch list | form C (inline tables), the pipeline runs a second time when the switch list changed: 46 tables, 0 unresolved |
 
+## The real CD, both editions, DATA / SAVE / VIDEO (2026-11-24)
+
+The user's redumper dump of the game CD arrived (`_references/cd`).  What it settled and what
+was built on it:
+
+* **The disc** ([`DISC.md`](DISC.md)): tracks 1 and 2 match redump.org 91232; the data track is
+  mastered 48 samples early, which the importer repairs; track 3 lacks its last 48 samples.  The
+  data files equal the 2005 release's.  The simulated image's guesses (label, sector counts) held.
+* **Two editions** ([`EDITIONS.md`](EDITIONS.md)): the 1996 `IST.EXE` on the disc differs from
+  the 2005 one in `main`, two DEMOLAR routines and `ctl_flush_keys`, plus line numbers and file
+  names in error calls.  All of it is decompiled behind `ED_CD`; the port runs either.
+* **Start-up and import** ([`INSTALL.md`](INSTALL.md)): `DATA/` (a disc as `LALE.CHD`, or the 2005
+  release's files), `SAVE/` (everything the game writes, both editions), sources: CD drive,
+  cue/bin, ISO, CHD, folder, ZIP, 7Z, RAR.  CHD (v5, cdzl/cdfl) writer and reader, deflate, FLAC,
+  Mode 1 EDC/ECC, ISO 9660 and ZIP are the port's own code - no library was added.
+* **4K videos**: upscaled copies in `VIDEO/` shown over the game's own player, frame for frame;
+  Ctrl+V switches, with the notice `4K Video` / `Orijinal Video`.  Media Foundation on Windows,
+  AVFoundation on macOS (the latter not built yet).
+* **Found on the way - retrace waits in real time** (`src/platform/pc.c`): the host's idle sleep
+  (500 us) stepped the emulated clock over the 64 us vertical-retrace pulse, so a wait for the
+  retrace lasted several frames.  The video player ran late and showed about 20 of the intro's
+  79 frames; every other retrace wait was stretched the same way.  The sleep now ends before
+  the pulse, and between two consecutive reads of 3DAh the clock cannot pass the pulse's start.
+  All frames play (79/79, 172/172 measured).  Virtual-time runs (tests, scripted play-throughs)
+  were never affected.
+* **Tests**: `tests/test_codecs.c` (ctest `codecs`, 288 checks on made-up data); the differential
+  suite and the other unit tests pass unchanged.
+
+Open: audio from a physical drive (no drive here), a complete track 3, the Mac build of the new
+parts, a play-through of the CD edition against the 1996 `IST.EXE` in DOSBox-X.
+
 ## macOS port (2026-11-23)
 
 Built and verified on an Apple Silicon Mac (macOS 27.2, Apple clang, Homebrew SDL3

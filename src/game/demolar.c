@@ -26,6 +26,7 @@
 #include "dsmi/emsheap.h"
 #include "dsmi/memalloc.h"
 #include "engine/blit386.h"
+#include "engine/edition.h"
 #include "engine/fatal.h"
 #include "engine/fileman.h"
 #include "engine/grtext.h"
@@ -179,7 +180,7 @@ uint8_t demo_show_picture(MmHandle *a, MmHandle *b, uint16_t dur, uint8_t c, uin
         b_conv = 1;
         mm_change_type(b, 1);
     } else if (a->size != b->size) {
-        o559A_fatal(DGSTR(0x4B46), 0x67, 0, 0x68);
+        o559A_fatal(ED_FILE(0x4B46), 0x67, 0, 0x68);
     }
     tmp = mm_alloc(a->size, 0);
     mm_ref_set(RIX_COPY, mm_duplicate(mm_ref(RIX_TABLE), 0));
@@ -230,9 +231,9 @@ uint8_t demo_show_picture(MmHandle *a, MmHandle *b, uint16_t dur, uint8_t c, uin
 
 done:
     for (i = 0; i < 11; i++)
-        mm_free(step[i], 0xA0, DGSTR(0x4B55));
-    mm_free(tmp, 0xA1, DGSTR(0x4B64));
-    mm_free(mm_ref(RIX_COPY), 0xA2, DGSTR(0x4B73));
+        mm_free(step[i], 0xA0, ED_FILE(0x4B55));
+    mm_free(tmp, 0xA1, ED_FILE(0x4B64));
+    mm_free(mm_ref(RIX_COPY), 0xA2, ED_FILE(0x4B73));
     if (b_conv)
         mm_change_type(b, 0);
     if (a_conv)
@@ -310,7 +311,7 @@ int16_t demo_intro_menu(int16_t slot, uint8_t arg)
     r = 1;
     fm_load_cmp(1, DGSTR(0x4B90), slot);
     mm_copy_block(SURF(slot), SURF(0));
-    ctl_free_checked(SURF_REF(slot), 0x105, DGSTR(0x4B9C));
+    ctl_free_checked(SURF_REF(slot), 0x105, ED_FILE(0x4B9C));
     fm_load_pal(DGSTR(0x4BAB), 0, 0x100);
     gr_fade(0x640, (int16_t)(g_pal_level_max - g_pal_level), 0);
     goto menu;
@@ -328,11 +329,11 @@ mode12:
     fm_load_cmp(1, DGSTR(0x4BC2), slot);
     sys_blit_cb(0, 0, (uint16_t)g_surf_w(slot), (uint16_t)(g_surf_h(slot) * 2), 0, 0,
                 (uint8_t)slot, 0, sys_rowcopy_planar);
-    ctl_free_checked(SURF_REF(slot), 0x12F, DGSTR(0x4BCD));
+    ctl_free_checked(SURF_REF(slot), 0x12F, ED_FILE(0x4BCD));
     fm_load_cmp(1, DGSTR(0x4BDC), slot);
     sys_blit_cb(0, 0, (uint16_t)g_surf_w(slot), (uint16_t)(g_surf_h(slot) * 2), 0,
                 (uint16_t)(g_surf_h(slot) * 2), (uint8_t)slot, 0, sys_rowcopy_planar);
-    ctl_free_checked(SURF_REF(slot), 0x133, DGSTR(0x4BE7));
+    ctl_free_checked(SURF_REF(slot), 0x133, ED_FILE(0x4BE7));
     gr_fade(0x640, (int16_t)(g_pal_level_max - g_pal_level), 0);
     r = (uint8_t)demo_wait_key_or_delay(cnt++, 0x20, 0xBB8);
     gr_fade(0x640, (int16_t)-g_pal_level, 0);
@@ -344,7 +345,7 @@ mode12:
         ogr_copy_pal_entries(gr_target_pal);
         fm_load_cmp(1, DGSTR(0x4BFF), slot);
         sys_blit_cb(0, 0, 0x280, 0xBE, 0, 0x64, (uint8_t)slot, 0, sys_rowcopy_planar);
-        ctl_free_checked(SURF_REF(slot), 0x144, DGSTR(0x4C08));
+        ctl_free_checked(SURF_REF(slot), 0x144, ED_FILE(0x4C08));
         o5737_cd_play_track(2, -1);
         gr_fade(0x640, (int16_t)(g_pal_level_max - g_pal_level), 0);
         r = (uint8_t)demo_wait_key_or_delay(cnt++, 0x20, 0xBB8);
@@ -355,22 +356,26 @@ music:
     /* 0A37 */
     if (!o5737_cd_play())
         o5737_cd_play_track(2, -1);
-    for (i = 0; i < 4; i++)
-        if (SURF_SET(slot + i))
-            o559A_fatal(DGSTR(0x4C17), 0x150, 0, 0x69);
-    if (g_sound_on && ampGetModuleStatus() != 1) {
-        err = ampLoadModule(DGSTR(0x4C26), 0, &g_music_module);
-        if (err != 0) {
-            if (err == -2)
-                o559A_fatal(DGSTR(0x4C2F), 0x153, DGSTR(0x4C3E), -1);
-            else if (err == -1)
-                o559A_fatal(DGSTR(0x4C61), 0x154, DGSTR(0x4C70), -1);
+    /* 0A50-0BDE: only the 2005 build, whose menu music is DEMO.AMF; the CD
+       build goes on at the title with CD track 2 playing */
+    if (!ED_CD) {
+        for (i = 0; i < 4; i++)
+            if (SURF_SET(slot + i))
+                o559A_fatal(DGSTR(0x4C17), 0x150, 0, 0x69);
+        if (g_sound_on && ampGetModuleStatus() != 1) {
+            err = ampLoadModule(DGSTR(0x4C26), 0, &g_music_module);
+            if (err != 0) {
+                if (err == -2)
+                    o559A_fatal(DGSTR(0x4C2F), 0x153, DGSTR(0x4C3E), -1);
+                else if (err == -1)
+                    o559A_fatal(DGSTR(0x4C61), 0x154, DGSTR(0x4C70), -1);
+            }
         }
-    }
-    if (g_sound_on && ampGetModuleStatus() != 1) {
-        ampPlayModule(g_music_module, 1);
-        ampSetTrackVolume(-1, 0x40);
-        music_pan_random();
+        if (g_sound_on && ampGetModuleStatus() != 1) {
+            ampPlayModule(g_music_module, 1);
+            ampSetTrackVolume(-1, 0x40);
+            music_pan_random();
+        }
     }
 
     /* 0BDE: the title */
@@ -397,11 +402,11 @@ music:
     }
     /* 0E65 */
     mm_copy_block(SURF(slot + 1), SURF(0));
-    ctl_free_checked(SURF_REF(slot + 2), 0x17F, DGSTR(0x4CC5));
-    ctl_free_checked(SURF_REF(slot + 3), 0x180, DGSTR(0x4CD4));
+    ctl_free_checked(SURF_REF(slot + 2), 0x17F, ED_FILE(0x4CC5));
+    ctl_free_checked(SURF_REF(slot + 3), 0x180, ED_FILE(0x4CD4));
     r = (uint8_t)demo_wait_key_or_delay(cnt++, 0x20, 0x1F4);
-    ctl_free_checked(SURF_REF(slot), 0x1AE, DGSTR(0x4CE3));
-    ctl_free_checked(SURF_REF(slot + 1), 0x1AF, DGSTR(0x4CF2));
+    ctl_free_checked(SURF_REF(slot), 0x1AE, ED_FILE(0x4CE3));
+    ctl_free_checked(SURF_REF(slot + 1), 0x1AF, ED_FILE(0x4CF2));
     (void)r;
 
 menu:
@@ -416,7 +421,7 @@ menu:
     do {
         ui_event_loop(4, 0xB, -1, DG8(0x9665), DG8(0x9664), DG8(0x9667), 4, 1);
     } while (g_ui_list_sel == 0 || g_ui_list_sel / 5 != 0);
-    ctl_free_checked(SURF_REF(7), 0x1C8, DGSTR(0x4D52));
+    ctl_free_checked(SURF_REF(7), 0x1C8, ED_FILE(0x4D52));
     if (g_ui_list_sel == 2) {
         if ((uint8_t)s3d_save_load_menu(0) == 0)
             goto menu;
@@ -424,6 +429,9 @@ menu:
     }
     if (g_ui_list_sel == 1) {
         gr_fade(0x5DC, (int16_t)-g_pal_level, 0);
+    } else if (ED_CD) {                         /* CD build 3C2D:0EC1: no module to fade or free */
+        gr_fade(0x5DC, (int16_t)-g_pal_level, 0);
+        o5737_cd_stop();
     } else {
         gr_fade(0x5DC, (int16_t)-g_pal_level, (int16_t)-g_music_level);
         music_stop_free();
@@ -464,10 +472,10 @@ static int story_slide(int16_t slot, int16_t *page, int16_t *t, char **texts, ui
     e = (uint8_t)oses_load_sample(1, sndname, 0x21, 2, 0, 0);
     if (e != 0) {
         if (group0)
-            o559A_fatal(DGSTR(0x55CF), 0x306,
+            o559A_fatal(ED_FILE(0x55CF), ED_LINE(0x306, 0x302),
                         e == 1 ? DGSTR(0x55DE) : e == 2 ? DGSTR(0x55F2) : DGSTR(0x5618), -1);
         else
-            o559A_fatal(DGSTR(0x5641), 0x320,
+            o559A_fatal(ED_FILE(0x5641), ED_LINE(0x320, 0x31C),
                         e == 1 ? DGSTR(0x5650) : e == 2 ? DGSTR(0x5664) : DGSTR(0x568A), -1);
     }
     ui_load_voice(0x21, 0x4E52, 0, 0);
@@ -512,14 +520,16 @@ void demo_story_scene(int16_t slot)
     sys_load_rix(DGSTR(0x5571));
     for (i = 0; i < 3; i++)
         if (SURF_SET(slot + i))
-            o559A_fatal(DGSTR(0x557B), 0x2DA, 0, 0x6A);
-    if (g_sound_on && ampLoadModule(DGSTR(0x558A), 0, &g_music_module) != 0)
+            o559A_fatal(ED_FILE(0x557B), ED_LINE(0x2DA, 0x2D8), 0, 0x6A);
+    /* the 2005 build plays DEMO.AMF here too (11C8-1201, 1228-1309, 1968-19C5);
+       the CD build has CD track 3 only */
+    if (!ED_CD && g_sound_on && ampLoadModule(DGSTR(0x558A), 0, &g_music_module) != 0)
         o559A_fatal(DGSTR(0x5593), 0x2DC, DGSTR(0x55A2), -1);
     ogr_clear_screen();
     ogr_black_palette();
     fm_load_pal(DGSTR(0x55C5), 0, 0x100);
     g_music_level = 0x40;
-    if (g_sound_on) {
+    if (!ED_CD && g_sound_on) {
         ampPlayModule(g_music_module, 1);
         ampSetTrackVolume(-1, 0x40);
         music_pan_random();
@@ -538,7 +548,7 @@ void demo_story_scene(int16_t slot)
             goto end;
         wait_ms = 0;
     }
-    ctl_free_checked(SURF_REF(slot), 0x30E, DGSTR(0x5632));
+    ctl_free_checked(SURF_REF(slot), ED_LINE(0x30E, 0x30A), ED_FILE(0x5632));
     picname[4]++;
     for (g = 1; g < 8; g++) {
         fm_load_cmp(1, picname, slot);
@@ -546,19 +556,20 @@ void demo_story_scene(int16_t slot)
             if (story_slide(slot, &page, &t, texts, 0, wait_ms, sndname))
                 goto end;
         if (g < 7)
-            ctl_free_checked(SURF_REF(slot), 0x327, DGSTR(0x56A4));
+            ctl_free_checked(SURF_REF(slot), ED_LINE(0x327, 0x323), ED_FILE(0x56A4));
         picname[4]++;
     }
-    ctl_free_checked(SURF_REF(slot + 2), 0x32A, DGSTR(0x56B3));
+    ctl_free_checked(SURF_REF(slot + 2), ED_LINE(0x32A, 0x326), ED_FILE(0x56B3));
     mm_change_type(SURF(slot), 0);
     demo_show_picture(SURF(slot + (page ^ 1) + 1), SURF(slot), 2000, 0, 0, wait_ms, 0);
 end:
     if (SURF_SET(slot + 2))
-        ctl_free_checked(SURF_REF(slot + 2), 0x330, DGSTR(0x56C2));
-    ctl_free_checked(SURF_REF(slot + 1), 0x331, DGSTR(0x56D1));
-    ctl_free_checked(SURF_REF(slot), 0x332, DGSTR(0x56E0));
+        ctl_free_checked(SURF_REF(slot + 2), ED_LINE(0x330, 0x32C), ED_FILE(0x56C2));
+    ctl_free_checked(SURF_REF(slot + 1), ED_LINE(0x331, 0x32D), ED_FILE(0x56D1));
+    ctl_free_checked(SURF_REF(slot), ED_LINE(0x332, 0x32E), ED_FILE(0x56E0));
     gr_fade(0x5DC, (int16_t)-g_pal_level, (int16_t)-g_music_level);
-    music_stop_free();
+    if (!ED_CD)
+        music_stop_free();
     sys_load_rix(DGSTR(0x56EF));
     ctl_flush_keys();
     memcpy(DGP(WIN_CUR), saved, 0x48);
@@ -652,12 +663,12 @@ void demo_ending(void)
     ogr_palette_step_fade(1, DGSTR(0x579B), 0x14);
     demo_show_picture(SURF(sd), SURF(sc), 1000, 0, 0, 0, 0x4D80);
     ogr_palette_step_fade(1, DGSTR(0x57A5), 1);
-    ctl_free_checked(SURF_REF(sb), 0x39B, DGSTR(0x57AF));
-    ctl_free_checked(SURF_REF(sc), 0x39C, DGSTR(0x57BE));
-    ctl_free_checked(SURF_REF(sd), 0x39D, DGSTR(0x57CD));
+    ctl_free_checked(SURF_REF(sb), ED_LINE(0x39B, 0x396), ED_FILE(0x57AF));
+    ctl_free_checked(SURF_REF(sc), ED_LINE(0x39C, 0x397), ED_FILE(0x57BE));
+    ctl_free_checked(SURF_REF(sd), ED_LINE(0x39D, 0x398), ED_FILE(0x57CD));
     ui_wait_click_or_key(0x64);
     gr_cursor_set_shape((uint8_t)((int16_t (*)(void))ui_far_fn(DG32(0x9650)))());
-    ctl_free_checked(0xE4D7, 0x3A0, DGSTR(0x57DC));
+    ctl_free_checked(0xE4D7, ED_LINE(0x3A0, 0x39B), ED_FILE(0x57DC));
     ui_message_box(DGSTR(0x57EB), 1, 0);
     ui_wait_click_or_key(0x8C);
     ui_restore_background();
@@ -686,7 +697,7 @@ void demo_play_music(int16_t track, int16_t opt_lo, int16_t opt_hi)
 
     if (!g_sound_on)
         return;
-    mm_ems_lock(g_blit_lock, 0x3C4, DGSTR(0x580C));
+    mm_ems_lock(g_blit_lock, ED_LINE(0x3C4, 0x3BF), ED_FILE(0x580C));
     if (g_music_level != 0)
         fade = 1;
     if (fade)
@@ -707,9 +718,9 @@ void demo_play_music(int16_t track, int16_t opt_lo, int16_t opt_hi)
         if (r != 0) {
             if (r == -1) {
                 if (!demo_free_music())
-                    o559A_fatal(DGSTR(0x581B), 0x3CE, DGSTR(0x582A), -1);
+                    o559A_fatal(ED_FILE(0x581B), ED_LINE(0x3CE, 0x3C9), DGSTR(0x582A), -1);
             } else {
-                o559A_fatal(DGSTR(0x5843), 0x3D0, DGSTR(0x5852), -1);
+                o559A_fatal(ED_FILE(0x5843), ED_LINE(0x3D0, 0x3CB), DGSTR(0x5852), -1);
             }
         }
     } while (r != 0);
@@ -769,7 +780,7 @@ void demo_credits_exit(void)
 
     fd = vfs_open(DGSTR(0x586C), 2);
     if (fd == -1)
-        o559A_fatal(DGSTR(0x5876), 0x3EA, DGSTR(0x5885), -1);
+        o559A_fatal(ED_FILE(0x5876), ED_LINE(0x3EA, 0x3E5), DGSTR(0x5885), -1);
     if (g_pal_level != 0)
         gr_fade(0x64, (int16_t)-g_pal_level, (int16_t)-g_music_level);
     fm_load_pal(DGSTR(0x58B0), 0, 0x100);
@@ -836,7 +847,7 @@ void demo_credits_exit(void)
             vfs_seek(fd, pos + i + 1, 0);
             grt_decode_turkish_lower(DGSTR(0xBACC));
             if (strlen(DGSTR(0xBACC)) > 0x68)
-                o559A_fatal(DGSTR(0x58C2), 0x429, 0, 0x6B);
+                o559A_fatal(ED_FILE(0x58C2), ED_LINE(0x429, 0x424), 0, 0x6B);
             credits_draw(style, lineh, col);
         }
         /* 26C7: scroll */
@@ -866,7 +877,7 @@ void demo_credits_exit(void)
             g_mouse_present = 0;
             if (!gfl_play(DGSTR(0x58D1)))
                 ui_wait_click_or_key(0x8C);
-            o559A_fatal(DGSTR(0x58D5), 0x44E, DGSTR(0x58E4), -1);
+            o559A_fatal(ED_FILE(0x58D5), ED_LINE(0x44E, 0x449), DGSTR(0x58E4), -1);
         }
         g_fade_bright_d = (int16_t)-g_pal_level;
         g_fade_volume_d = (int16_t)-g_music_level;
@@ -874,12 +885,12 @@ void demo_credits_exit(void)
     }
     /* 2926 */
     vfs_close(fd);
-    ctl_free_checked(SURF_REF(0xB), 0x456, DGSTR(0x58EF));
-    ctl_free_checked(SURF_REF(0xC), 0x457, DGSTR(0x58FE));
-    ctl_free_checked(SURF_REF(0xD), 0x458, DGSTR(0x590D));
+    ctl_free_checked(SURF_REF(0xB), ED_LINE(0x456, 0x451), ED_FILE(0x58EF));
+    ctl_free_checked(SURF_REF(0xC), ED_LINE(0x457, 0x452), ED_FILE(0x58FE));
+    ctl_free_checked(SURF_REF(0xD), ED_LINE(0x458, 0x453), ED_FILE(0x590D));
     if (ui_kbhit())
         ui_getch();
-    o559A_fatal(DGSTR(0x591C), 0x45C, DGSTR(0x592B), -1);
+    o559A_fatal(ED_FILE(0x591C), ED_LINE(0x45C, 0x457), DGSTR(0x592B), -1);
 }
 
 /* the screen buffer as demo_palette_effect fetches it per pixel */
@@ -1005,14 +1016,14 @@ int16_t demo_city_map_travel(void)
     g_q3d_opt_flags &= 0xFFEF;
     fm_load_cmp(1, DGSTR(0x59E0), 0x57);
     mm_copy_range(SURF(0x57), SURF(6), 0, 0, 0xFA00);
-    ctl_free_checked(SURF_REF(0x57), 0x4CC, DGSTR(0x59EC));
+    ctl_free_checked(SURF_REF(0x57), ED_LINE(0x4CC, 0x4C7), ED_FILE(0x59EC));
     fm_load_cmp(1, DGSTR(0x59FB), 0x57);
     mm_copy_range(SURF(0x57), SURF(6), 0, 0xFA00, 0xBB80);
-    ctl_free_checked(SURF_REF(0x57), 0x4CF, DGSTR(0x5A07));
+    ctl_free_checked(SURF_REF(0x57), ED_LINE(0x4CF, 0x4CA), ED_FILE(0x5A07));
 
 redraw:
     /* 2FA7 */
-    mm_ems_lock(g_blit_lock, 0x4D3, DGSTR(0x5A16));
+    mm_ems_lock(g_blit_lock, ED_LINE(0x4D3, 0x4CE), ED_FILE(0x5A16));
     p = EMSLock((int16_t)SURF(6)->ems, (int32_t)y * 0x140 + x, 1);
     if ((*p >= 8 && *p < 0x10) || (*p >= 0x1A && *p < 0x1E)) {
         x = px;
@@ -1069,7 +1080,7 @@ redraw:
     }
     if (sel) {
         if (sprintf(buf, DGSTR(0x5A3C), names[sel - 1]) >= 0x64)
-            o559A_fatal(DGSTR(0x5A3F), 0x508, 0, 0x6C);
+            o559A_fatal(ED_FILE(0x5A3F), ED_LINE(0x508, 0x503), 0, 0x6C);
         map_status_text(buf, buf);
     } else {
         map_clear_status();
@@ -1124,7 +1135,7 @@ enter:
     /* 34BD */
     map_clear_status();
     if (sprintf(buf, DGSTR(0x5ABE), names[sel - 1]) >= 0x64)
-        o559A_fatal(DGSTR(0x5ADA), 0x531, 0, 0x6C);
+        o559A_fatal(ED_FILE(0x5ADA), ED_LINE(0x531, 0x52C), 0, 0x6C);
     map_status_text(buf, buf);
     for (;;) {
         char kb[2];
@@ -1159,7 +1170,7 @@ enter:
         }
     }
     /* 36A7 */
-    ctl_free_checked(SURF_REF(6), 0x547, DGSTR(0x5B7D));
+    ctl_free_checked(SURF_REF(6), ED_LINE(0x547, 0x542), ED_FILE(0x5B7D));
     gr_fade(0x64, (int16_t)-g_pal_level, 0);
     ctl_flush_keys();
     g_map_y = (int16_t)(y - 5);
@@ -1248,7 +1259,7 @@ out:
     if (g_sound_on && e == 0)
         cdiStopChannel(0);
     if (DG16(0xE26D) | DG16(0xE26F))
-        ctl_free_checked(0xE26D, 0x58D, DGSTR(0x5BAE));
+        ctl_free_checked(0xE26D, ED_LINE(0x58D, 0x588), ED_FILE(0x5BAE));
 }
 
 /* ---- port: overlay thunk registry ---------------------------------------- */

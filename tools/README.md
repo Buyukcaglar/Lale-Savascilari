@@ -28,6 +28,11 @@
 | `cmpview.py` | Decode CMP images, verify all, render PNG |
 | `fmtcheck.py` | Check the KOR, RIX and AMF formats of `docs/FORMATS.md` against every game file (`kor`, `rix`, `amf`, `all`) |
 | `funcstatus.py` | Function status of the port from the `Original:` / `Verified:` comments of `src/` (the table in `docs/PROGRESS.md`; `--list` one line per routine) |
+| `cddump.py` | Analyse a redumper dump of the game CD (tracks, offsets, scrambled sectors, the ISO volume) - see `docs/DISC.md` |
+| `chd.py` | Independent CHD reader: `info`, `verify` (zlib + ffmpeg's FLAC decoder; compares the tracks with redump.org) - see `docs/INSTALL.md` |
+| `chdtool.c` | Built with the port (`chdtool`): `create`, `info`, `verify`, `ls`, `cat`, `extract`, `import` - the game's own disc and import code on the command line |
+| `exediff.py` | Compare the two builds of `IST.EXE` routine by routine (`docs/EDITIONS.md`) |
+| `export_videos.py` | Every GFL video as `<NAME>.mp4` (the input for upscaled copies in `VIDEO/`) |
 | `cdsim.py` | Build/verify the CD image (redump 91232 layout; simulated or real) — see `docs/DISC.md` |
 | `dosbox/oracle.py` | Scripted DOSBox-X debugger oracle (breakpoints, DGROUP/VGA/DAC dumps); the emulator is `$DOSBOX_X`, else `C:\DOSBox-X\dosbox-x.exe` / Homebrew's `dosbox-x` |
 | `verify/build_hook.py` | Assembles `verify/hook.S` (the input hook inside the emulated PC); llvm-mingw on Windows, the system clang + a built-in flat link elsewhere |

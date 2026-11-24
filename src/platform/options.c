@@ -10,6 +10,8 @@ void options_defaults(LaleOptions *o)
 {
     memset(o, 0, sizeof *o);
     o->cd_play_seconds = 15;
+    snprintf(o->edition, sizeof o->edition, "auto");
+    snprintf(o->video, sizeof o->video, "4k");
 }
 
 static char *trim(char *s)
@@ -36,6 +38,14 @@ static int set_key(LaleOptions *o, const char *k, const char *v)
         snprintf(o->game_dir, sizeof o->game_dir, "%s", v);
     else if (!strcmp(k, "ist_args"))
         o->ist_args = atoi(v);
+    else if (!strcmp(k, "source"))
+        snprintf(o->source, sizeof o->source, "%s", v);
+    else if (!strcmp(k, "edition"))
+        snprintf(o->edition, sizeof o->edition, "%s", v);
+    else if (!strcmp(k, "base_dir"))
+        snprintf(o->base_dir, sizeof o->base_dir, "%s", v);
+    else if (!strcmp(k, "video"))
+        snprintf(o->video, sizeof o->video, "%s", v);
     else
         return -1;
     return 0;
@@ -85,6 +95,16 @@ int options_parse_args(LaleOptions *o, int argc, char **argv)
             snprintf(o->game_dir, sizeof o->game_dir, "%s", argv[++i]);
         else if (!strcmp(a, "--ist-args") && i + 1 < argc)
             o->ist_args = atoi(argv[++i]);
+        else if (!strcmp(a, "--source") && i + 1 < argc)
+            snprintf(o->source, sizeof o->source, "%s", argv[++i]);
+        else if (!strcmp(a, "--edition") && i + 1 < argc)
+            snprintf(o->edition, sizeof o->edition, "%s", argv[++i]);
+        else if (!strcmp(a, "--base-dir") && i + 1 < argc)
+            snprintf(o->base_dir, sizeof o->base_dir, "%s", argv[++i]);
+        else if (!strcmp(a, "--video") && i + 1 < argc)
+            snprintf(o->video, sizeof o->video, "%s", argv[++i]);
+        else if (a[0] != '-' && !o->source[0])          /* a file or folder dropped on the program */
+            snprintf(o->source, sizeof o->source, "%s", a);
         else if (!strcmp(a, "--frames") && i + 1 < argc)
             o->frames = atoi(argv[++i]);
         else if (!strcmp(a, "--screenshot") && i + 1 < argc)

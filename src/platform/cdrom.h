@@ -4,8 +4,11 @@
  * Replaces MSCDEX + the CD-ROM device driver the original talks to through
  * INT 2Fh (AX=1500h install check, AX=1510h send device request).  The disc is
  * a cue/bin image (e.g. the redump dump of the original CD, or the simulated
- * image built by tools/cdsim.py).  Red Book audio is rendered as 44.1 kHz
- * 16-bit stereo PCM; the host pulls it with cdrom_render() and plays it.
+ * image built by tools/cdsim.py) or another sector source: the game's own
+ * DATA/LALE.CHD (src/platform/chd.c).  Red Book audio is rendered as 44.1 kHz
+ * 16-bit stereo PCM; the host pulls it with cdrom_render() and plays it.  The
+ * data track is read through cdrom_read_data() (src/platform/iso9660.c: the
+ * files of the disc).
  *
  * The decompiled game code (src/game/cd5737.c) builds the request blocks
  * byte for byte like the original; this file interprets them like a DOS CD
@@ -34,15 +37,29 @@ typedef struct CdromTrack {
     uint8_t  audio;          /* 1 = audio, 0 = data                      */
     uint32_t start;          /* absolute LBA of INDEX 01                 */
     uint32_t sectors;        /* length up to the next track / lead-out   */
-    uint16_t sector_size;    /* bytes per sector in the image file       */
-    int      file;           /* index into the image's file table        */
-    uint64_t file_offset;    /* byte offset of `start` in that file      */
+    uint16_t sector_size;    /* cue/bin: bytes per sector in the image file */
+    int      file;           /* cue/bin: index into the image's file table  */
+    uint64_t file_offset;    /* cue/bin: byte offset of `start` in that file */
 } CdromTrack;
+
+/* Where the sectors of a disc come from when it is not a cue/bin image. */
+typedef struct CdromSource {
+    /* One sector as 2352 bytes in the order of a .bin file: audio as
+       little-endian samples, data as the raw sector (sync, header, user data,
+       EDC/ECC).  Returns 0, or -1 when the sector cannot be read. */
+    int  (*read_sector)(void *ctx, uint32_t lba, uint8_t *raw);
+    void (*close)(void *ctx);               /* may be NULL */
+    void  *ctx;
+} CdromSource;
 
 /* Open a cue sheet (FILE ... BINARY, TRACK nn AUDIO|MODE1/2352|MODE1/2048|
  * MODE2/2352, INDEX 00/01, PREGAP).  Returns 0 on success, -1 on error
  * (message in cdrom_error()).  Opening a new image closes the previous one. */
 int  cdrom_open(const char *cue_path);
+/* Open a disc given by its tracks (number, audio, start, sectors), lead-out and
+ * sector source.  The source is closed by cdrom_close() - and by this call
+ * when it fails. */
+int  cdrom_open_source(const CdromTrack *tracks, int ntracks, uint32_t leadout, const CdromSource *src);
 void cdrom_close(void);
 int  cdrom_is_open(void);
 const char *cdrom_error(void);
@@ -51,6 +68,12 @@ const char *cdrom_error(void);
 int  cdrom_track_count(void);
 const CdromTrack *cdrom_track(int number);   /* by track number, NULL if none */
 uint32_t cdrom_leadout(void);                /* absolute LBA of the lead-out  */
+
+/* One raw sector (2352 bytes, see CdromSource), or the 2048 bytes of user data
+ * of a data-track sector (Mode 1, Mode 2 form 1).  0, or -1: no such sector,
+ * read error, or (cdrom_read_data) an audio sector. */
+int  cdrom_read_raw(uint32_t lba, uint8_t *raw);
+int  cdrom_read_data(uint32_t lba, uint8_t *user);
 
 /* ---- MSCDEX ---------------------------------------------------------------
  * mscdex_present(): whether INT 2Fh AX=1500h finds MSCDEX.  When the CD-music

@@ -216,6 +216,23 @@ static uint8_t status1(VgaState *v)
     return s;
 }
 
+double vga_us_to_vretrace(const VgaState *v)
+{
+    if (!v->clock_us)
+        return -1.0;
+    double lu = line_us(v), frame = lu * v_total(v);
+    if (!(lu > 0.0) || !(frame > 0.0))
+        return -1.0;
+    int vrs = v_retrace_start(v);
+    int len = ((v->crtc[VGA_CRTC_V_RETRACE_END] & 0x0F) - (vrs & 0x0F)) & 0x0F;
+    if (len == 0)
+        len = 16;
+    double t = fmod((double)v->clock_us(), frame), start = vrs * lu;
+    if (t >= start && t < start + len * lu)
+        return 0.0;
+    return t < start ? start - t : frame - t + start;
+}
+
 void vga_out8(VgaState *v, uint16_t port, uint8_t value)
 {
     switch (port) {

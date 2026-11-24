@@ -19,6 +19,7 @@
 #include "dsmi/amp.h"
 #include "dsmi/memalloc.h"
 #include "engine/dgroup.h"
+#include "engine/edition.h"
 #include "engine/fatal.h"
 #include "engine/fileman.h"
 #include "engine/intrface.h"
@@ -83,6 +84,13 @@ int32_t ist_time_override = -1;
 #define IST_PORTRAIT_REF(i) ((uint16_t)(0xE4D7 + 8 * (i))) /* far MmHandle *, party portraits 47h+i */
 #define g_ist_party_race(i) DGS16(0x9A44 + 0x5C * (i))     /* per member, index into the 13-byte
                                                               name table at 269B */
+/* Strings only the CD build has (its DGROUP 3851-3961; code page 857) */
+#define ED_STR_NO_MSCDEX   "CD S\x81r\x81" "c\x81 bulunamad\x8D veya MSCDEX y\x81kl\x81 de\xA7il!"
+#define ED_STR_DRIVE_FOUND "CD s\x81r\x81" "c\x81 tan\x8Dnd\x8D...\n"
+#define ED_STR_INSERT_CD   "\nL\x81tfen s\x81r\x81" "c\x81ye oyun CD'sini tak\x8Dn ve bir tu\x9F" "a bas\x8Dn. \n" \
+                           "NOT: Oyun boyunca CD'yi bir daha s\x81r\x81" "c\x81" "den \x87\x8Dkartmay\x8Dn!"
+#define ED_STR_NO_CD       "CD'yi takmazsan\x8Dz oyunu oynayamazs\x8Dn\x8Dz!!!"
+#define ED_STR_CD_IN_DRIVE "Oyunun CD'si %c: s\x81r\x81" "c\x81" "de...\n"
 #define IST_FILE          DGSTR(0x33D7)   /* "CODE\ISTANBUL.C" (each site has its own copy) */
 
 /* overlay manager (seg122B) */
@@ -274,9 +282,34 @@ int ist_main(int argc, char **argv)
     if (r != 0 && r == 3)
         o559A_fatal(DGSTR(0x381F), 0x6E, DGSTR(0x382F), -1);
     ctl_timer_install();
-    g_ist_3d5c = 0;
-    ui_init_tables();
-    buf[0] = 0;
+    if (ED_CD) {
+        /* CD build 0546:02DD-03B0: the game wants its CD.  3D5C = 1 also makes
+           the FRPOS video opcode check for the disc (frpos.c). */
+        int16_t ok = 0;                     /* [bp-4], cleared at 0546:0007 */
+        g_ist_3d5c = 1;
+        if ((uint8_t)o5737_cd_init() == 0)
+            o559A_fatal(DGSTR(0x33D7), 0x75, ED_STR_NO_MSCDEX, -1);
+        fatal_puts(ED_STR_DRIVE_FOUND);
+        for (;;) {
+            for (i = 0; i < 3; i++)
+                ok |= o5737_cd_vtoc_ok();
+            if (ok)
+                break;
+            fatal_puts(ED_STR_INSERT_CD);
+            ok = pc_getch();
+            if (ok == 0x1B)
+                o559A_fatal(DGSTR(0x33D7), 0x7E, ED_STR_NO_CD, -1);
+            else
+                ok = 0;
+        }
+        fatal_printf(ED_STR_CD_IN_DRIVE, cd5737_drive_letter());
+        ui_init_tables();
+        sprintf(buf, "%c:\\", cd5737_drive_letter());
+    } else {
+        g_ist_3d5c = 0;
+        ui_init_tables();
+        buf[0] = 0;
+    }
     strcat(buf, DGSTR(0x3841));
     if ((g_archive_slot(0) = vfs_mount_archive(DGSTR(0x384A), 0)) == -1 ||
         (g_archive_slot(1) = vfs_mount_archive(DGSTR(0x3854), 0)) == -1 ||
@@ -286,7 +319,7 @@ int ist_main(int argc, char **argv)
         (g_archive_slot(5) = vfs_mount_archive(DGSTR(0x387B), 0)) == -1 ||
         (g_archive_slot(6) = vfs_mount_archive(DGSTR(0x3885), 0)) == -1 ||
         (g_archive_slot(7) = vfs_mount_archive(buf, 0)) == -1)
-        o559A_fatal(DGSTR(0x388C), 0xAE, DGSTR(0x389C), -1);
+        o559A_fatal(DGSTR(0x388C), ED_LINE(0xAE, 0xAA), DGSTR(0x389C), -1);
     bc_flushall();
     bc_setvbuf(vfile_files[g_archive_slot(7)], 0, 1, 0x800);
     fatal_puts(DGSTR(0x392E));
@@ -333,13 +366,15 @@ int ist_main(int argc, char **argv)
         case 0:                                     /* yeni oyuna başla */
             if (!cg_main())
                 goto next;
-            gr_fade(1000, 0, (int16_t)-g_music_level);
-            if (g_sound_on && g_sound_on) {
-                ampStopModule();
-                if (g_music_module) {
-                    ampFreeModule(g_music_module);
-                    MemFree(g_music_module);
-                    g_music_module = 0;
+            if (!ED_CD) {                           /* 05A8-062B: DEMO.AMF, 2005 build only */
+                gr_fade(1000, 0, (int16_t)-g_music_level);
+                if (g_sound_on && g_sound_on) {
+                    ampStopModule();
+                    if (g_music_module) {
+                        ampFreeModule(g_music_module);
+                        MemFree(g_music_module);
+                        g_music_module = 0;
+                    }
                 }
             }
             o5737_cd_stop();
@@ -372,7 +407,7 @@ int ist_main(int argc, char **argv)
         case 1:                                     /* eski oyun (loaded) */
             ctl_flush_keys();
             s3d_explore_loop();
-            o559A_fatal(DGSTR(0x3A9B), 0x112, DGSTR(0x3AAB), -1);
+            o559A_fatal(DGSTR(0x3A9B), ED_LINE(0x112, 0x10C), DGSTR(0x3AAB), -1);
             goto next;
         case 3:                                     /* dos'a çık */
             o5737_cd_stop();
@@ -403,7 +438,7 @@ int ist_main(int argc, char **argv)
             /* fall through */
         default:
             sprintf(buf, DGSTR(0x3AC0), (int)g_ui_list_sel);
-            o559A_fatal(DGSTR(0x3AE7), 0x134, buf, -1);
+            o559A_fatal(DGSTR(0x3AE7), ED_LINE(0x134, 0x12E), buf, -1);
             break;
         }
     next:
