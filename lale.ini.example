@@ -18,9 +18,11 @@
 source =
 
 ; TR: auto: DATA/LALE.CHD ses izleri olan bir disk ise CD sürümü (1996), yoksa
-;     2005 sürümü.  cd | 2005 ile kendiniz seçersiniz (docs/EDITIONS.md).
+;     2005 sürümü.  cd | 2005 ile kendiniz seçersiniz (docs/EDITIONS.md); cd, ses
+;     izleri olmayan bir diskle de çalışır (Level dergisinin CD'si: müziksiz giriş).
 ; EN: auto: the CD edition (1996) when DATA/LALE.CHD is a disc with audio tracks,
-;     else the 2005 edition.  cd | 2005 decide otherwise (docs/EDITIONS.md).
+;     else the 2005 edition.  cd | 2005 decide otherwise (docs/EDITIONS.md); cd also
+;     runs with a disc without audio tracks (the Level magazine CD: no intro music).
 edition = auto
 
 ; TR: DATA, SAVE ve VIDEO klasörlerinin yeri (varsayılan: programın yanı)

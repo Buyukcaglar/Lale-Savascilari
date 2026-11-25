@@ -228,6 +228,14 @@ kesinleştirdiği ve üzerine neler kurulduğu:
 * **Konsol penceresi yok** (2026-11-25, kullanıcının isteği): `Lale64.exe` bir Windows pencere
   programıdır (GUI alt sistemi). Günlüğü (log) bir boruya ya da dosyaya yönlendirilmişse oraya,
   bir komut isteminden başlatıldıysa o konsola yazılır; Explorer'dan açıldığında görünmez.
+* **Level dergisinin CD'si** (2026-11-25, kullanıcının diski): Ocak 1998 kapak CD'si, redumper
+  ile dökümü alındı (`_references/cd_level`, bkz. [`DISC.md`](DISC.md#level-dergisinin-cdsi-_referencescd_level)).
+  Oyun dosyaları ilk CD ile bayt bayt aynı, ama ses izi yok. Port onu sürücüden ve disk
+  kalıbından içe aktarır ve oynatır: varsayılan olarak 2005 baskısı (müzikle), `--edition cd` ile
+  diskteki 1996 programı (giriş ve menü müziği olmadan); her ikisi de menüye ve oyuna ulaştı. CD
+  sürücüsü artık etiketi `ISTANBUL` olmasa da kökünde oyunu taşıyan bir diski bulur; CD baskısı
+  ses izi olmayan bir diskle de çalışır. Test kipinde (`--frames`) içe aktarma sırasında
+  pencere artık "Yanıt Vermiyor" olmaz.
 * **CD baskısı orijinaline karşı** (2026-11-25): `pair.py --cd`, 1996 `IST.EXE` DOSBox-X'te;
   intro'nun 1600 örneğinin tamamı portun görüntü durumlarıyla eşleşir (bkz.
   [`VERIFY.md`](VERIFY.md#cd-baskısı-1996---port-ve-orijinal-2026-11-25)).
@@ -502,6 +510,14 @@ was built on it:
 * **No console window** (2026-11-25, the user's request): `Lale64.exe` is a Windows windowed
   program (GUI subsystem). Its log goes to a pipe or file when redirected, to the console when
   started from a command prompt, and nowhere visible when opened from Explorer.
+* **The Level magazine CD** (2026-11-25, the user's disc): the January 1998 cover CD, dumped with
+  redumper (`_references/cd_level`, see [`DISC.md`](DISC.md#the-level-magazine-cd-_referencescd_level)).
+  The game's files are byte for byte those of the first CD, but there are no audio tracks. The
+  port imports it from the drive and from the disc image and plays it: by default as the 2005
+  edition (with music), with `--edition cd` as the disc's 1996 program (no intro and menu music);
+  both reached the menu and the game. The CD drive search now also finds a disc not labelled
+  `ISTANBUL` that holds the game in its root; the CD edition also runs with a disc without audio
+  tracks. In test mode (`--frames`) the window no longer turns "Not Responding" during an import.
 * **CD edition against its original** (2026-11-25): `pair.py --cd`, the 1996 `IST.EXE` in
   DOSBox-X; all 1600 samples of the intro match video states of the port (see
   [`VERIFY.md`](VERIFY.md#cd-edition-1996---port-vs-original-2026-11-25)).

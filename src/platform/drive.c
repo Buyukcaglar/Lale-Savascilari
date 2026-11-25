@@ -54,6 +54,21 @@ int drive_is_optical(const char *path)
     return root[0] && GetDriveTypeA(root) == DRIVE_CDROM;
 }
 
+/* the game in the root folder: IST.EXE and the big archive (a magazine's cover CD) */
+static int game_in_root(const char *root)
+{
+    static const char *const names[] = { "IST.EXE", "0GFL.CKD", "3D.CKD" };
+    char path[16];
+    for (size_t i = 0; i < sizeof names / sizeof names[0]; i++) {
+        DWORD a;
+        snprintf(path, sizeof path, "%s%s", root, names[i]);
+        a = GetFileAttributesA(path);
+        if (a == INVALID_FILE_ATTRIBUTES || (a & FILE_ATTRIBUTE_DIRECTORY))
+            return 0;
+    }
+    return 1;
+}
+
 int drive_find_game(const char *label, char *out, size_t size)
 {
     DWORD drives = GetLogicalDrives();
@@ -64,7 +79,7 @@ int drive_find_game(const char *label, char *out, size_t size)
         if (!(drives & (1u << i)) || GetDriveTypeA(root) != DRIVE_CDROM)
             continue;
         if (GetVolumeInformationA(root, name, sizeof name, NULL, NULL, NULL, NULL, 0)
-            && _stricmp(name, label) == 0) {
+            && (_stricmp(name, label) == 0 || game_in_root(root))) {
             snprintf(out, size, "%c:", root[0]);
             found = 1;
         }

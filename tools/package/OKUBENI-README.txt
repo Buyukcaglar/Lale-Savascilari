@@ -31,6 +31,9 @@ Sürümler
   olarak çalışır (müzik CD'nin ses izlerinden).  Dosyalardan kurulan oyun 2005
   sürümü olarak çalışır.  lale.ini içinde "edition = cd" ya da "edition = 2005"
   ile kendiniz seçebilirsiniz (lale.ini.example dosyasına bakın).
+  Level dergisinin 1998 CD'sinde ses izi yoktur; o CD'den kurulan oyun 2005
+  sürümü olarak, müzikle çalışır ("edition = cd": diskteki 1996 programı,
+  giriş ve menü müziği olmadan).
 
 4K videolar
   ModDB'deki "Lale Savascilari 4K Video Pack" paketini indirin, içindeki VIDEO
@@ -82,6 +85,9 @@ Editions
   the 1996 CD edition (music from the CD's audio tracks).  A game installed
   from files runs as the 2005 edition.  "edition = cd" or "edition = 2005" in
   lale.ini decides otherwise (see lale.ini.example).
+  The Level magazine's 1998 CD has no audio tracks; a game installed from it
+  runs as the 2005 edition, with music ("edition = cd": the disc's 1996
+  program, without intro and menu music).
 
 4K videos
   Download the "Lale Savascilari 4K Video Pack" from ModDB and put its VIDEO

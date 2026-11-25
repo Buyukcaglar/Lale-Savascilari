@@ -48,6 +48,7 @@ yanındaki klasörlere yerleştirir. Oyunun her iki sürümü de desteklenir.
 |---|---|---|
 | Sürücüdeki oyun CD'si (Windows) | `DATA/LALE.CHD` olarak saklanır | CD (1996) |
 | CD'nin disk kalıbı: `.cue` + `.bin`, `.iso`, `.chd` | `DATA/LALE.CHD` olarak saklanır | CD (1996); `.iso` ses izleri içermediği için 2005 |
+| Level dergisinin Ocak 1998 kapak CD'si (sürücüde ya da disk kalıbı olarak) | `DATA/LALE.CHD` olarak saklanır | 2005, çünkü diskte ses izi yoktur; `--edition cd` ile diskteki 1996 programı, giriş ve menü müziği olmadan |
 | 2005 sürümü: `.zip`, `.7z`, `.rar` arşivi ya da açılmış klasörü | Oyun dosyaları `DATA/` klasörüne kopyalanır | 2005 |
 
 1. Kaynağı programın yanına koyun ya da `Lale64 <yol>` ile verin. Hiçbir şey bulunamazsa
@@ -69,6 +70,7 @@ folders beside the executable. Both editions of the game are supported.
 |---|---|---|
 | The game CD in a drive (Windows) | stored as `DATA/LALE.CHD` | CD (1996) |
 | A disc image of the CD: `.cue` + `.bin`, `.iso`, `.chd` | stored as `DATA/LALE.CHD` | CD (1996); an `.iso` has no audio tracks and plays as 2005 |
+| The cover CD of the Level magazine, January 1998 (in a drive or as a disc image) | stored as `DATA/LALE.CHD` | 2005, as the disc has no audio tracks; `--edition cd` gives the disc's 1996 program, without intro and menu music |
 | The 2005 release: a `.zip`, `.7z` or `.rar` archive, or its unpacked folder | the game's files are copied to `DATA/` | 2005 |
 
 1. Put the source beside the program, or name it: `Lale64 <path>`. If nothing is found, the

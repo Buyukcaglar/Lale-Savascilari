@@ -77,8 +77,15 @@ static int is_dir(const char *path)
 static int progress(void *ctx, const char *text, uint64_t done, uint64_t total)
 {
     (void)ctx;
-    if (!dialogs)
+    if (!dialogs) {                                     /* no progress dialog (test runs): */
+        static Uint64 last;                             /* the window still answers Windows, */
+        Uint64 now = SDL_GetTicks();                    /* no "Not Responding" while importing */
+        if (now - last >= 50) {
+            last = now;
+            SDL_PumpEvents();
+        }
         return 0;
+    }
     return ui_progress(win, progress_source, text, total ? (double)done / (double)total : -1.0);
 }
 
@@ -270,7 +277,8 @@ int setup_game(const LaleOptions *o, SDL_Window *window, SDL_Renderer *renderer,
                     audio = 1;
         }
     }
-    if (want == EDITION_CD && !(g->disc && audio)) {
+    if (want == EDITION_CD && !g->disc) {           /* a disc without audio tracks will do:
+                                                       the Level CD (docs/EDITIONS.md) */
         show_error(T_CD_EDITION_NEEDS_DISC);
         return -1;
     }

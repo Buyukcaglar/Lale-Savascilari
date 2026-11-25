@@ -23,8 +23,10 @@
 /* 1 when `path` names an optical drive ("D:", "D:\"). */
 int drive_is_optical(const char *path);
 
-/* The first optical drive that holds a disc with the volume label `label`:
-   its name ("D:") in out.  Returns 1, or 0 when there is none. */
+/* The first optical drive that holds a disc with the volume label `label`,
+   or with the game in its root folder (IST.EXE, 0GFL.CKD, 3D.CKD: the cover
+   CD of the Turkish magazine Level, January 1998, label LEVEL_CD): its name
+   ("D:") in out.  Returns 1, or 0 when there is none. */
 int drive_find_game(const char *label, char *out, size_t size);
 
 /* Opens the drive: the disc's tracks and lead-out, and a sector source for

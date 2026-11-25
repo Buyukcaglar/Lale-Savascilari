@@ -24,12 +24,13 @@ bir yer belirtilebilir.
 |---|---|---|
 | sürücüdeki oyun CD'si (Windows) | `DATA/LALE.CHD` | CD (1996) |
 | bir disk kalıbı (disc image): `.cue` + `.bin`, `.iso`, `.chd` ya da bunlardan birini içeren bir klasör (bir redumper döküm (dump) klasörü olduğu gibi verilebilir) | `DATA/LALE.CHD` | CD (1996); `.iso` dosyasında ses izleri yoktur, 2005 baskısı olarak oynanır |
+| Level dergisinin Ocak 1998 kapak CD'si (sürücüde ya da disk kalıbı olarak; bkz. [DISC.md](DISC.md#level-dergisinin-cdsi-_referencescd_level)) | `DATA/LALE.CHD` | 2005, çünkü diskte ses izi yoktur; `edition = cd` ile diskteki 1996 programı, giriş ve menü müziği olmadan |
 | 2005 sürümü: bir `.zip`, `.7z` ya da `.rar` arşivi veya arşivin açıldığı klasör | veri dosyaları `DATA/` içine, kayıtlı oyunlar ve ayarlar `SAVE/` içine | 2005 |
 
 İki sürüm yalnızca programda ayrılır (bkz. [EDITIONS.md](EDITIONS.md)); veri dosyaları bayt bayt
 aynıdır, bu yüzden hangi kaynağı verirseniz verin oyunun tamamı elde edilir. `--edition cd|2005`
-bu seçimi geçersiz kılar: 2005 baskısı tek başına `LALE.CHD` ile de çalışır; CD baskısı ise ses
-izlerini içeren bir disk ister.
+bu seçimi geçersiz kılar: 2005 baskısı tek başına `LALE.CHD` ile de çalışır; CD baskısı ise bir
+disk ister (ses izleri olmayan bir diskte giriş, menü ve hikâye müziksiz kalır).
 
 Kaynak şu sırayla aranır:
 
@@ -38,7 +39,8 @@ Kaynak şu sırayla aranır:
 2. daha önce içe aktarılmışsa: `DATA/` içinde `LALE.CHD` ya da oyunun dosyaları varsa;
 3. programın yanında, temel klasörde (base folder) ya da çalışma dizininde duruyorsa (önce
    kalıplar, sonra oyunu içeren klasörler, en son arşivler);
-4. içindeki diskin etiketi `ISTANBUL` olan bir CD sürücüsü;
+4. içindeki diskin etiketi `ISTANBUL` olan ya da kök klasöründe oyunu taşıyan (`IST.EXE`,
+   `0GFL.CKD`, `3D.CKD`: Level dergisinin CD'si) bir CD sürücüsü;
 5. hiçbiri yoksa program sorar: *Dosya Seç…* (bir dosya seçmek için), *Klasör Seç…* (bir klasör
    seçmek için), *Çıkış* (programdan çıkmak için).
 
@@ -217,12 +219,13 @@ is used instead. `--base-dir <folder>` (`base_dir` in `lale.ini`) names another 
 |---|---|---|
 | the game CD in a drive (Windows) | `DATA/LALE.CHD` | CD (1996) |
 | a disc image: `.cue` + `.bin`, `.iso`, `.chd`, or a folder holding one (a redumper dump folder as it is) | `DATA/LALE.CHD` | CD (1996); an `.iso` has no audio tracks and plays as 2005 |
+| the cover CD of the Level magazine, January 1998 (in a drive or as a disc image; see [DISC.md](DISC.md#the-level-magazine-cd-_referencescd_level)) | `DATA/LALE.CHD` | 2005, as the disc has no audio tracks; `edition = cd` gives the disc's 1996 program, without intro and menu music |
 | the 2005 release: a `.zip`, `.7z` or `.rar`, or the folder it was unpacked to | the data files in `DATA/`, saved games and settings in `SAVE/` | 2005 |
 
 The two releases differ in the program only (see [EDITIONS.md](EDITIONS.md)); their data files
 are the same byte for byte, so either source gives the complete game. `--edition cd|2005`
 overrides the choice: the 2005 edition also runs from `LALE.CHD` alone; the CD edition needs a
-disc with its audio tracks.
+disc (on one without audio tracks the intro, menu and story have no music).
 
 How the source is found, in this order:
 
@@ -231,7 +234,8 @@ How the source is found, in this order:
 2. already imported: `DATA/` holds `LALE.CHD` or the files;
 3. lying beside the program, in the base folder or in the working directory (images first, then
    folders with the game, then archives);
-4. a CD drive whose disc is labelled `ISTANBUL`;
+4. a CD drive whose disc is labelled `ISTANBUL` or holds the game in its root folder (`IST.EXE`,
+   `0GFL.CKD`, `3D.CKD`: the Level magazine CD);
 5. the program asks: *Dosya Seç…* (choose a file), *Klasör Seç…* (choose a folder), *Çıkış* (quit).
 
 A progress window shows the import; Esc cancels it and leaves nothing behind. A source that is

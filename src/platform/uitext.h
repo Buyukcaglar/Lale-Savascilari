@@ -42,7 +42,7 @@
 #define T_BAD_CHD_FMT \
     "Bu dosya kullanılamıyor:\n%s\n\n%s\n\nDosyayı silin ve oyun CD'sini programa yeniden verin."
 #define T_CD_EDITION_NEEDS_DISC \
-    "CD sürümü için, ses izleriyle birlikte oyun CD'si gerekir (DATA/LALE.CHD).\n\n" \
+    "CD sürümü için oyun CD'si gerekir (DATA/LALE.CHD).\n\n" \
     "Programı CD sürücüdeyken ya da CD'nin disk kalıbıyla (.cue) başlatın ya da " \
     "edition = 2005 ayarını kullanın."
 

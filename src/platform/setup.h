@@ -25,7 +25,9 @@
  *      edition when DATA holds a disc with audio tracks, else the 2005
  *      edition - but a source imported in this very run decides for the run.
  *      The 2005 edition also runs from a disc alone (the data files of both
- *      releases are identical); the CD edition needs the disc.
+ *      releases are identical); the CD edition needs a disc, which may lack
+ *      the audio tracks (the Level magazine's CD: no intro and menu music,
+ *      as with the original).
  *   5. SAVE/SES.CFG is written with defaults when the game would find none.
  */
 #ifndef LALE_PLATFORM_SETUP_H

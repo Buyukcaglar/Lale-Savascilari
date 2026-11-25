@@ -105,6 +105,27 @@ olarak bağlar.
 değerleriyle (hash) karşılaştırır; `python tools/chd.py verify <chd>` aynısını bir CHD
 içindeki izler için yapar.
 
+### Level dergisinin CD'si (`_references/cd_level`)
+
+Oyun dergisi Level'ın Ocak 1998 kapak CD'si (birim etiketi `LEVEL_CD`, ISO 9660 tarihleri
+1998-01-15) oyunu kök klasöründe taşır. Dökümü 2026-11-25'te redumper b775 ile bir HL-DT-ST
+DVDRAM GT80N sürücüsünde alındı (`--retries=20`; SCSI ve C2 hatası yok):
+
+* tek bir veri izi, Mode 2 Form 1 (CD-ROM XA), 320.331 sektör; ses izi yoktur;
+* `lale_level.bin`: 753.418.512 bayt, SHA-1 `5fc85b5f77570dd898ba3482cda96f2f5e4f9e0b`, CRC32
+  `b816e3fd`; diskin yazma kayması (write offset) -102;
+* sürücü alt kanal (subchannel) verisi vermedi; yalnızca veri taşıyan bir disk için bunun önemi
+  yoktur;
+* oyunun dosyalarının tamamı, `IST.EXE` (1996-11-10 CD derlemesi) dahil, `_references/cd`
+  diskindekilerle bayt bayt aynıdır; yalnızca `ISTANBUL.TXT` ve üç `.PIF` kısayolu farklıdır.
+  Diskte ayrıca `YARDIM\LALEFIX.TXT`/`.HTM` (Windows 95 ve DOS için sorun giderme notları),
+  Level'ın kendi menü programı ve başka demolar vardır.
+
+Sürücüden içe aktarırken içindekiler tablosunun (TOC) saydığı son 152 sektör okunamaz (ISO
+biriminin ardında kalırlar); içe aktarma onları boş yazar, oyunun dosyaları o alanın dışındadır.
+Ses izleri olmadığından o diskteki 1996 programı, çalmak istediği CD iz 2 ve 3'ü bulamaz; port bu
+diski varsayılan olarak 2005 baskısı olarak oynatır (bkz. [EDITIONS.md](EDITIONS.md#hangisi-çalışır)).
+
 ## English
 
 Reference: <http://redump.org/disc/91232/> (cue, MD5, SHA-1 and SFV files fetched 2026-11-20).
@@ -202,3 +223,24 @@ exact sector counts and track types above. `tools/dosbox/ist_cd.conf` mounts it 
 
 `python tools/cdsim.py verify <cue>` compares an image in redump.org's layout with the hashes
 above; `python tools/chd.py verify <chd>` does the same for the tracks inside a CHD.
+
+### The Level magazine CD (`_references/cd_level`)
+
+The cover CD of the games magazine Level, January 1998 (volume label `LEVEL_CD`, ISO 9660 dates
+1998-01-15), carries the game in its root folder. Dumped on 2026-11-25 with redumper b775 on an
+HL-DT-ST DVDRAM GT80N (`--retries=20`; no SCSI or C2 errors):
+
+* one data track, Mode 2 Form 1 (CD-ROM XA), 320,331 sectors; no audio tracks;
+* `lale_level.bin`: 753,418,512 bytes, SHA-1 `5fc85b5f77570dd898ba3482cda96f2f5e4f9e0b`, CRC32
+  `b816e3fd`; disc write offset -102;
+* the drive gave no subchannel data, which does not matter for a disc that holds data only;
+* every file of the game, `IST.EXE` (the 1996-11-10 CD build) included, is byte for byte the one
+  on the `_references/cd` disc; only `ISTANBUL.TXT` and the three `.PIF` shortcuts differ. The
+  disc also holds `YARDIM\LALEFIX.TXT`/`.HTM` (troubleshooting notes for Windows 95 and DOS),
+  Level's own menu program and other demos.
+
+Imported from a drive, the last 152 sectors the table of contents counts cannot be read (they lie
+past the ISO volume); the import writes them empty, and no file of the game is there. With no
+audio tracks, the 1996 program on this disc does not find the CD tracks 2 and 3 it wants to
+play; the port plays the disc as the 2005 edition by default (see
+[EDITIONS.md](EDITIONS.md#which-one-runs)).

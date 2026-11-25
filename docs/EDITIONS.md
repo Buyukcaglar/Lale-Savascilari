@@ -41,8 +41,12 @@ Veri segmenti yansısı (mirror) her ikisi için de 2005 derlemesininkidir.
 `edition = auto` (varsayılan), oyun ses izleri olan bir diskten (`DATA/LALE.CHD`) içe
 aktarıldıysa CD baskısını, dosya olarak içe aktarıldıysa 2005 baskısını seçer. `--edition cd`
 ya da `--edition 2005` (`lale.ini` içinde `edition`) mümkün olduğunda başka türlü karar verir:
-2005 baskısı CHD'den de çalışır - veri dosyalarını diskte bulur - oysa CD baskısı ses izleri
-olan bir disk olmadan çalışamaz. Bkz. [INSTALL.md](INSTALL.md).
+2005 baskısı CHD'den de çalışır - veri dosyalarını diskte bulur - CD baskısı ise bir disk ister.
+Ses izleri olmayan bir disk de olur; o zaman CD iz 2 ve 3 bulunamaz ve giriş, menü ve hikâye
+müziksiz kalır. Level dergisinin Ocak 1998 kapak CD'si böyledir: üzerinde aynı 1996 `IST.EXE`
+vardır, ama ses izleri yoktur (bkz. [DISC.md](DISC.md#level-dergisinin-cdsi-_referencescd_level)).
+`auto` böyle bir disk için müzikli 2005 baskısını seçer; `--edition cd`, o diskteki özgün
+programın davranışını verir. Bkz. [INSTALL.md](INSTALL.md).
 
 CD baskısında disk `DATA/LALE.CHD`'dir ve sanal MSCDEX'in D: sürücüsü olarak bağlanır
 (`src/platform/cdrom.c`, `chd.c`); oyunun kendi CD modülü (`src/game/cd5737.c`, 1:1 geri
@@ -91,7 +95,12 @@ segment mirror is the 2005 build's for both.
 audio tracks (`DATA/LALE.CHD`), the 2005 edition when it was imported as files. `--edition cd`
 or `--edition 2005` (`edition` in `lale.ini`) decides otherwise where that is possible: the 2005
 edition runs from the CHD as well - it finds its data files on the disc - while the CD edition
-cannot run without a disc that has the audio tracks. See [INSTALL.md](INSTALL.md).
+needs a disc. One without audio tracks will do; CD tracks 2 and 3 are then not found, and the
+intro, menu and story have no music. The cover CD of the Level magazine, January 1998, is such a
+disc: it carries the same 1996 `IST.EXE`, but no audio tracks (see
+[DISC.md](DISC.md#the-level-magazine-cd-_referencescd_level)). `auto` takes the 2005 edition,
+with its music, for such a disc; `--edition cd` gives the behaviour of the original program on
+it. See [INSTALL.md](INSTALL.md).
 
 In the CD edition the disc is `DATA/LALE.CHD`, mounted as drive D: of the virtual MSCDEX
 (`src/platform/cdrom.c`, `chd.c`); the game's own CD module (`src/game/cd5737.c`, decompiled
