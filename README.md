@@ -87,7 +87,7 @@ choose the edition yourself. Details: [`docs/INSTALL.md`](docs/INSTALL.md),
 ## 4K videolar / 4K videos
 
 **Türkçe.** Oyunun 34 videosunun tamamı, 320x200'den 4K'ya büyütülmüş halde (H.264 MP4,
-1,08 GB): **[ModDB'de Lale Savaşçıları 4K Video Paketi](https://www.moddb.com/mods/lale-savascilari-4k-video-pack/downloads/lale-savascilari-4k-video-pack)**
+1,08 GB): **[ModDB'de Lale Savaşçıları 4K Video Paketi](https://www.moddb.com/mods/lale-savascilari-4k-video-pack1/downloads/lale-savascilari-4k-video-pack1)**
 (MD5 `2ad684edf009f77449def40685f1bce3`).
 
 1. `Lale-Savascilari-Video-4k.zip` dosyasını indirip açın.
@@ -97,7 +97,7 @@ choose the edition yourself. Details: [`docs/INSTALL.md`](docs/INSTALL.md),
    `Orijinal Video` yazar. Oyunun kendi sesi korunur; yalnızca görüntü değişir.
 
 **English.** All 34 videos of the game, upscaled from 320x200 to 4K (H.264 MP4, 1.08 GB):
-**[Lale Savascilari 4K Video Pack on ModDB](https://www.moddb.com/mods/lale-savascilari-4k-video-pack/downloads/lale-savascilari-4k-video-pack)**
+**[Lale Savascilari 4K Video Pack on ModDB](https://www.moddb.com/mods/lale-savascilari-4k-video-pack1/downloads/lale-savascilari-4k-video-pack1)**
 (MD5 `2ad684edf009f77449def40685f1bce3`).
 
 1. Download and unzip `Lale-Savascilari-Video-4k.zip`.

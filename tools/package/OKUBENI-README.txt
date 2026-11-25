@@ -35,7 +35,7 @@ Sürümler
 4K videolar
   ModDB'deki "Lale Savascilari 4K Video Pack" paketini indirin, içindeki VIDEO
   klasörünü Lale64.exe'nin yanına koyun:
-  https://www.moddb.com/mods/lale-savascilari-4k-video-pack
+  https://www.moddb.com/mods/lale-savascilari-4k-video-pack1
   Oyun sırasında Ctrl+V, 4K ile orijinal video arasında geçiş yapar; her
   geçişte sağ üst köşede üç saniye "4K Video" ya da "Orijinal Video" yazar.
   Oyunun kendi sesi korunur; yalnızca görüntü değişir.
@@ -86,7 +86,7 @@ Editions
 4K videos
   Download the "Lale Savascilari 4K Video Pack" from ModDB and put its VIDEO
   folder beside Lale64.exe:
-  https://www.moddb.com/mods/lale-savascilari-4k-video-pack
+  https://www.moddb.com/mods/lale-savascilari-4k-video-pack1
   In the game, Ctrl+V switches between 4K and the original video; "4K Video"
   or "Orijinal Video" appears in the top right corner for three seconds at
   each switch.  The game's own sound is kept; only the picture changes.
