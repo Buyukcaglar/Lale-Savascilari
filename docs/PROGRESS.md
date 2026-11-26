@@ -300,6 +300,15 @@ anlatım: [`README.md`](../README.md), [`INSTALL.md`](INSTALL.md#başlatıcılar
   yavaştır. `DATA` aynı oyunu zaten içeriyorsa içe aktarmayı atlamak, sonraki bir sürüm için
   küçük bir kod değişikliğidir. sp00nznet'in `.cmd` dosyası da `--source` verir; aynı şey
   orada da geçerlidir.
+* **Mac'te denetim (2026-11-26 gece, kullanıcının isteği; hiçbir şey değiştirilmedi):**
+  yayımlanan `Lale64-1.0-macOS.zip` indirildi (GitHub'ın SHA-256 değeriyle aynı), `ditto` ile
+  açıldı; `recomplauncher.json` şemaya uyuyor ve depodakiyle aynı. `Lale64.app`, başlatıcının
+  yaptığı gibi başka bir klasörden, `RECOMPLAUNCHER=1` ve `--source <oyun klasörü>` ile
+  çalıştırıldı: oyunu `{install}/DATA` içine aldı, `{install}/SAVE` klasörünü yaptı (bildirimdeki
+  kayıt yolu) ve başlık ekranına geldi. Başlatıcıda ayarı yok. Gerçek bir kayıt yapılmadı;
+  RecompLauncher'ın kendisi çalıştırılmadı (Mac sürümü noterden geçmemiş). **Risk:** uygulama
+  ad hoc imzalı ve noterden geçmemiş; Gatekeeper onu reddeder, başlatıcı indirdiği dosyayı
+  karantinaya alırsa *Play* engellenebilir (denenemedi).
 
 ### macOS uyarlaması (2026-11-23)
 
@@ -637,6 +646,15 @@ player's side: [`README.md`](../README.md), [`INSTALL.md`](INSTALL.md#launchers)
   [`INSTALL.md`](INSTALL.md#verification)). The result is correct, only slow. Skipping the
   import when `DATA` already holds the same game would be a small code change for a later
   version. sp00nznet's `.cmd` passes `--source` too, so the same holds there.
+* **Checked on the Mac (2026-11-26, night, at the user's request; nothing changed):** the
+  published `Lale64-1.0-macOS.zip` downloaded (the same SHA-256 as GitHub's) and unpacked with
+  `ditto`; `recomplauncher.json` passes the schema and is the repository's. `Lale64.app` started
+  as the launcher does, from another folder, with `RECOMPLAUNCHER=1` and `--source <game
+  folder>`: it imported the game into `{install}/DATA`, made `{install}/SAVE` (the manifest's
+  saves path) and reached the title screen. It has no launcher settings. No real saved game
+  was made; RecompLauncher itself was not run (its Mac build is not notarized). **Risk:** the
+  app is ad-hoc signed, not notarized, so Gatekeeper rejects it; if the launcher quarantines
+  its download, *Play* may be blocked (not tried).
 
 ### macOS port (2026-11-23)
 
