@@ -244,6 +244,63 @@ Açık kalanlar: fiziksel bir sürücüden ses (burada sürücü yok), eksiksiz 
 parçaların Mac derlemesi, CD baskısının intro'dan ötesinin (oynanışın) 1996 `IST.EXE`'ye
 karşı karşılaştırılması.
 
+### Başlatıcı desteği (2026-11-26)
+
+Program iki başlatıcı (launcher) üzerinden kurulup başlatılabilir (kullanıcının isteği). Program
+değiştirilmedi: oyunu zaten komut satırından alıyordu (`Lale64 --source <yol>`). Oyuncuya dönük
+anlatım: [`README.md`](../README.md), [`INSTALL.md`](INSTALL.md#başlatıcılar-launcher).
+
+* **`recomplauncher.json`** (depo kökü): [RecompLauncher](https://recomplauncher.com) bu dosyayı
+  sürüm arşivinin en üstünde, programın yanında (`Lale64/` klasörünün içinde) okur. İçinde:
+  oyuncunun seçtiği kaynak (`.iso`, `.cue` ya da içinde `3D.CKD` bulunan klasör), *Play*'in
+  çalıştırdığı komut (`Lale64.exe` / `Lale64.app`, `--source <seçim>`), kayıt klasörü
+  (`SAVE`) ve çıkış kodu 1'in anlamı. Arşivler ve `.chd` listede yoktur, çünkü o başlatıcı
+  bunları kabul etmez. Kılavuz:
+  <https://github.com/elripalda/RecompLauncher/blob/main/docs/DEVELOPERS.md>.
+* **Kural: her sürüm arşivi `recomplauncher.json` taşır.** Yalnızca depoda duran dosya oyuncu
+  için hiçbir şey yapmaz. `tools/package_windows.sh` ve `tools/package_macos.sh` onu depo
+  kökünden paketin `Lale64/` klasörüne kopyalar. Sürüm dosyalarının adında sistemi belirten
+  sözcük kalmalıdır (`Windows`, `macOS`).
+* **Birlikte güncellenecekler:** bir komut satırı seçeneği (`--source`), programın dosya adı
+  (`Lale64.exe`, `Lale64.app`), kayıt klasörü (`SAVE`) ya da bir ayar anahtarı değişirse,
+  `recomplauncher.json` aynı sürümde değişir. Sürüm dosyasının adı (`Lale64-*-Windows.zip`) ya
+  da programın adı değişirse `launcher/setup.ps1` içindeki `$Asset` ve `$Program` da değişir.
+* **`launcher/launcher.json`, `launcher/setup.ps1`**:
+  [sp00nznet'in recomp-launcher'ı](https://github.com/sp00nznet/recomp-launcher) için. Kurucu
+  oyun klasörünü bulur ya da sorar, depoyu indirir ve `setup.ps1` betiğini çalıştırır (yalnızca
+  Windows). Betik hiçbir şey derlemez: oyun klasörünü denetler (`3D.CKD`, `0GFL.CKD`,
+  `TRDOS.DAT`), en yeni Windows sürümünü GitHub'dan indirir (GitHub'ın SHA-256 değeriyle
+  karşılaştırır), `play\` klasörüne açar ve programı oyun klasörüyle başlatan
+  `Lale Savascilari (recomp).cmd` dosyasını depo köküne yazar. `setup.ps1` git'te CR LF satır
+  sonlarıyla saklanır.
+* **`.github/workflows/installer.yml`**: sp00nznet'in yeniden kullanılabilir iş akışını
+  çağırır; `005639c34bc2fc3096219fce2bd0a5ea13f8ac5b` işlemesine (commit) sabitlenmiştir
+  (`launcher-ref` olarak da). `main` dalına yapılan ve `launcher/**` ya da iş akışını değiştiren
+  bir itme (push), kurucuyu iş akışı çıktısı (artifact) olarak derler. İtilen bir `v*` etiketi
+  ayrıca `Lale64-Installer-windows-x64.exe` ve `SHA256SUMS.txt` dosyalarını o etiketin sürümüne
+  ekler; sürüm henüz yoksa onu kendiliğinden üretilmiş notlarla oluşturur. Bu yüzden yeni bir
+  sürümde ya GitHub sürümünü etiketten önce oluşturun ya da notları sonradan düzeltin (önce
+  Türkçe, sonra İngilizce). Proje sp00nznet'in `catalog.json` listesinde değildir.
+* **Sürüm 1.0'a yapılan** (26 Kasım 2026): v1.0 sürümünün iki zip dosyası yerinde değiştirildi.
+  Etiket aynı, program dosyaları bayt bayt aynı, yeni derleme yok; eklenen tek dosya
+  `Lale64/recomplauncher.json`.
+
+  | Dosya | Boyut | SHA-256 |
+  |---|---|---|
+  | `Lale64-1.0-Windows.zip` | 2,663,450 bayt | `3e64cc6a98376296679e10f26624d0758b9769cee52b030bd2c9eb1a8c4ce35f` |
+  | `Lale64-1.0-macOS.zip` | 6,257,546 bayt | `a85691bc8b835a97ebdf166d6b82c146b179ca079d8b11189b6b966cb56ecc8b` |
+
+* **Bilinen sınır:** adı verilen bir kaynak her açılışta yeniden içe aktarılır
+  (`src/platform/setup.c`, `setup_game` içindeki 1. adım koşulsuzdur; `install_import`
+  `DATA/` içinde aynı oyunun bulunup bulunmadığına bakmaz). RecompLauncher her *Play*'de
+  `--source` verdiği için kopyalama her seferinde yinelenir: klasörde veri dosyaları `DATA/`
+  içine yeniden kopyalanır (`SAVE/` içinde zaten bulunan dosyalara dokunulmaz), `.iso` ve
+  `.cue` için `DATA/LALE.CHD` yeniden yazılır ve doğrulanır (gerçek CD'nin cue/bin dökümünde
+  yaklaşık 13 s + 5 s, bkz. [`INSTALL.md`](INSTALL.md#doğrulama)). Sonuç doğrudur, yalnızca
+  yavaştır. `DATA` aynı oyunu zaten içeriyorsa içe aktarmayı atlamak, sonraki bir sürüm için
+  küçük bir kod değişikliğidir. sp00nznet'in `.cmd` dosyası da `--source` verir; aynı şey
+  orada da geçerlidir.
+
 ### macOS uyarlaması (2026-11-23)
 
 Bir Apple Silicon Mac üzerinde derlendi ve doğrulandı (macOS 27.2, Apple clang, Homebrew SDL3
@@ -524,6 +581,62 @@ was built on it:
 
 Open: audio from a physical drive (no drive here), a complete track 3, the Mac build of the new
 parts, a comparison of the CD edition beyond the intro (game play) against the 1996 `IST.EXE`.
+
+### Launcher support (2026-11-26)
+
+The program can be installed and started from two launchers (the user's request). The program
+was not changed: it already took the game on its command line (`Lale64 --source <path>`). The
+player's side: [`README.md`](../README.md), [`INSTALL.md`](INSTALL.md#launchers).
+
+* **`recomplauncher.json`** (repository root): [RecompLauncher](https://recomplauncher.com) reads
+  it from the top of the release archive, next to the program (inside the `Lale64/` folder). It
+  holds: the source the player picks (`.iso`, `.cue`, or the folder that holds `3D.CKD`), the
+  command *Play* runs (`Lale64.exe` / `Lale64.app`, `--source <pick>`), the saves folder
+  (`SAVE`) and what exit code 1 means. Archives and `.chd` are not in its list because that
+  launcher refuses them. Guide:
+  <https://github.com/elripalda/RecompLauncher/blob/main/docs/DEVELOPERS.md>.
+* **Rule: every release archive carries `recomplauncher.json`.** A file that is only in the
+  repository does nothing for players. `tools/package_windows.sh` and `tools/package_macos.sh`
+  copy it from the repository root into the package's `Lale64/` folder. Release file names must
+  keep the word for the system (`Windows`, `macOS`).
+* **To be kept in step:** if a command-line option (`--source`), the program's file name
+  (`Lale64.exe`, `Lale64.app`), the saves folder (`SAVE`) or a settings key changes,
+  `recomplauncher.json` changes in the same release. If the release file's name
+  (`Lale64-*-Windows.zip`) or the program's name changes, so do `$Asset` and `$Program` in
+  `launcher/setup.ps1`.
+* **`launcher/launcher.json`, `launcher/setup.ps1`**: for
+  [sp00nznet's recomp-launcher](https://github.com/sp00nznet/recomp-launcher). Its installer
+  finds or asks for the game folder, downloads the repository and runs `setup.ps1` (Windows
+  only). The script compiles nothing: it checks the game folder (`3D.CKD`, `0GFL.CKD`,
+  `TRDOS.DAT`), downloads the newest Windows release from GitHub (checked against GitHub's
+  SHA-256), unpacks it into `play\` and writes `Lale Savascilari (recomp).cmd` into the
+  repository's root, which starts the program with the game folder. `setup.ps1` is kept in git
+  with CR LF line ends.
+* **`.github/workflows/installer.yml`**: calls sp00nznet's reusable workflow, pinned to commit
+  `005639c34bc2fc3096219fce2bd0a5ea13f8ac5b` (also as `launcher-ref`). A push to `main` that
+  changes `launcher/**` or the workflow builds the installer as a workflow artifact. A pushed
+  `v*` tag also attaches `Lale64-Installer-windows-x64.exe` and `SHA256SUMS.txt` to that tag's
+  release, and creates the release with generated notes if it does not exist yet. So for a new
+  version, either create the GitHub release before the tag, or edit the notes afterwards
+  (Turkish first, then English). The project is not in sp00nznet's `catalog.json` list.
+* **What was done to release 1.0** (26 November 2026): the two zips of the v1.0 release were
+  replaced in place. Same tag, the program's files the same byte for byte, no new build; the
+  one added file is `Lale64/recomplauncher.json`.
+
+  | File | Size | SHA-256 |
+  |---|---|---|
+  | `Lale64-1.0-Windows.zip` | 2,663,450 bytes | `3e64cc6a98376296679e10f26624d0758b9769cee52b030bd2c9eb1a8c4ce35f` |
+  | `Lale64-1.0-macOS.zip` | 6,257,546 bytes | `a85691bc8b835a97ebdf166d6b82c146b179ca079d8b11189b6b966cb56ecc8b` |
+
+* **Known limit:** a named source is imported again at every start (`src/platform/setup.c`,
+  step 1 of `setup_game` is unconditional; `install_import` does not look whether `DATA/`
+  already holds the same game). As RecompLauncher passes `--source` at every *Play*, the copy
+  is repeated each time: for a folder the data files are copied to `DATA/` again (files already
+  in `SAVE/` are left alone), for an `.iso` or `.cue` `DATA/LALE.CHD` is written and verified
+  again (about 13 s + 5 s for the cue/bin dump of the real CD, see
+  [`INSTALL.md`](INSTALL.md#verification)). The result is correct, only slow. Skipping the
+  import when `DATA` already holds the same game would be a small code change for a later
+  version. sp00nznet's `.cmd` passes `--source` too, so the same holds there.
 
 ### macOS port (2026-11-23)
 

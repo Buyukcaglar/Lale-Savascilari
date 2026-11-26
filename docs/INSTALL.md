@@ -92,6 +92,24 @@ oraya kopyalanır). Bu, iki baskı için de geçerlidir. CD'de `SES.CFG` yoktur 
 programı yazıyordu); bu yüzden diskten yapılan bir kurulum, bir `SES.CFG` bulunmadıkça 2005
 sürümüyle gelen ayarları alır (Sound Blaster 16, 220h, IRQ 7, DMA 5, 22050 Hz).
 
+#### Başlatıcılar (launcher)
+
+Program iki başlatıcı üzerinden de kurulabilir; ikisi de oyunu içermez ve indirmez.
+
+* **[RecompLauncher](https://recomplauncher.com)**: programı GitHub sürümünden kurar, oyun
+  kopyanızı bir kez sorar ve her *Play*'de `Lale64.exe --source <seçtiğiniz>` komutunu
+  çalıştırır (macOS'ta `Lale64.app`). Seçilebilenler: disk kalıbı (`.iso` ya da yanındaki `.bin`
+  ile birlikte `.cue`) veya CD'nin ya da 2005 sürümünün klasörü (içinde `3D.CKD` bulunan klasör).
+  `.cue` CD baskısını, `.iso` ve klasör 2005 baskısını verir (yukarıdaki tablo). Arşivler
+  (`.zip`, `.7z`, `.rar`) ve `.chd` orada sunulmaz, çünkü o başlatıcı bunları kabul etmez: arşivi
+  önce açın ya da `Lale64.exe` dosyasını kendiniz başlatın; program bunları alır. Kayıtlı
+  oyunlar programın yanındaki `SAVE\` klasöründedir.
+* **[sp00nznet'in recomp-launcher'ı](https://github.com/sp00nznet/recomp-launcher)** (yalnızca
+  Windows): kurucusu oyun klasörünü (`3D.CKD`, `0GFL.CKD`, `TRDOS.DAT` içeren) bulur ya da
+  sorar ve `launcher\setup.ps1` betiğini çalıştırır. Betik programın en yeni Windows sürümünü
+  `play\` klasörüne açar ve `Lale Savascilari (recomp).cmd` dosyasını yazar. Elle:
+  `launcher\setup.ps1 -Game "<oyun klasörü>"`.
+
 ### 4K videolar
 
 `tools/export_videos.py`, oyunun 35 videosunun her birini `<NAME>.mp4` olarak yazar (320×200,
@@ -283,6 +301,24 @@ goes to `SAVE/` (a file that so far only exists in `DATA/` or on the disc is cop
 This holds for both editions. The CD carries no `SES.CFG` - its installer wrote one - so a disc
 install gets the settings the 2005 release ships with (Sound Blaster 16, 220h, IRQ 7, DMA 5,
 22050 Hz) unless one is found.
+
+#### Launchers
+
+The program can also be installed through two launchers; neither contains or downloads the game.
+
+* **[RecompLauncher](https://recomplauncher.com)**: installs the program from its GitHub
+  release, asks once for your copy of the game and runs `Lale64.exe --source <your pick>` at
+  every *Play* (`Lale64.app` on macOS). What can be picked: a disc image (`.iso`, or `.cue` with
+  its `.bin` beside it), or the folder of the CD or of the 2005 release (the one that holds
+  `3D.CKD`). A `.cue` gives the CD edition, an `.iso` or a folder the 2005 edition (the table
+  above). Archives (`.zip`, `.7z`, `.rar`) and `.chd` are not offered there because that
+  launcher refuses them: unpack the archive first, or start `Lale64.exe` yourself, which takes
+  them. Saved games are in `SAVE\` beside the program.
+* **[sp00nznet's recomp-launcher](https://github.com/sp00nznet/recomp-launcher)** (Windows
+  only): its installer finds or asks for the game folder (the one with `3D.CKD`, `0GFL.CKD`,
+  `TRDOS.DAT`) and runs `launcher\setup.ps1`. The script unpacks the program's newest Windows
+  release into `play\` and writes `Lale Savascilari (recomp).cmd`. By hand:
+  `launcher\setup.ps1 -Game "<game folder>"`.
 
 ### 4K videos
 

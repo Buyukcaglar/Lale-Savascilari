@@ -1,4 +1,5 @@
 # Lale Savaşçıları – geri derleme ve taşınabilir C sürümü / decompilation and portable C port
+<a href="https://recomplauncher.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://recomplauncher.com/assets/press/launcher/badge-light.svg"><img alt="Get it on RecompLauncher" src="https://recomplauncher.com/assets/press/launcher/badge-dark.svg" height="48"></picture></a>
 
 **Türkçe.** Bu depo, 1995–2005 tarihli DOS oyunu **İstanbul Efsaneleri – Bölüm I: Lale
 Savaşçıları**'nın açıklamalı, taşınabilir C koduyla yeniden kurulmuş halidir. Amaç, özgün
@@ -63,6 +64,24 @@ CD sürümünde müzik CD'nin ses izlerinden, 2005 sürümünde `DEMO.AMF` modü
 dosyaları iki sürümde bayt bayt aynıdır. `--edition cd|2005` ile sürümü kendiniz seçebilirsiniz.
 Ayrıntılar: [`docs/INSTALL.md`](docs/INSTALL.md), [`docs/EDITIONS.md`](docs/EDITIONS.md).
 
+**Başlatıcı (launcher) ile oynamak.** Program iki başlatıcı üzerinden de kurulup
+başlatılabilir. İkisi de oyunu içermez ve indirmez; oyunun kopyası yine sizde olmalıdır.
+
+* **[RecompLauncher](https://recomplauncher.com)**: Lale Savaşçıları'nı oradan kurun, oyun
+  kopyanızı bir kez gösterin, *Play* düğmesine basın. Gösterebilecekleriniz: oyun CD'sinin disk
+  kalıbı (`.iso` ya da yanındaki `.bin` ile birlikte `.cue`) veya CD'nin ya da 2005 sürümünün
+  klasörü (içinde `3D.CKD` bulunan klasör). Başlatıcı programı `Lale64.exe --source <seçtiğiniz>`
+  olarak çalıştırır. Arşivler (`.zip`, `.7z`, `.rar`) ve `.chd` orada sunulmaz, çünkü o başlatıcı
+  bunları kabul etmez: arşivi önce açın ya da `Lale64.exe` dosyasını kendiniz başlatın; program
+  bunları alır. Kayıtlı oyunlar programın yanındaki `SAVE\` klasöründedir; başlatıcıdaki oyun
+  sayfası bu klasörü açar.
+* **[sp00nznet'in recomp-launcher'ı](https://github.com/sp00nznet/recomp-launcher)** (yalnızca
+  Windows): kurucu (`Lale64-Installer-windows-x64.exe`), bir sonraki etiketli sürümden
+  başlayarak sürüm sayfasında yer alacak. O zamana kadar aynı işi elle yapabilirsiniz: depoyu
+  indirin ve kök klasöründe `launcher\setup.ps1 -Game "<oyun klasörü>"` komutunu PowerShell'de
+  çalıştırın. Betik hiçbir şey derlemez: programın en yeni Windows sürümünü GitHub'dan indirir,
+  `play\` klasörüne açar ve oyunu başlatan `Lale Savascilari (recomp).cmd` dosyasını yazar.
+
 **English.** At its first start the program takes the game from your own copy and keeps it in
 folders beside the executable. Both editions of the game are supported.
 
@@ -85,6 +104,23 @@ The CD edition plays its music from the CD's audio tracks, the 2005 edition from
 `DEMO.AMF`; the data files of the two are the same byte for byte. `--edition cd|2005` lets you
 choose the edition yourself. Details: [`docs/INSTALL.md`](docs/INSTALL.md),
 [`docs/EDITIONS.md`](docs/EDITIONS.md).
+
+**Playing through a launcher.** The program can be installed and started from two launchers.
+Neither contains or downloads the game; you still need your own copy.
+
+* **[RecompLauncher](https://recomplauncher.com)**: install Lale Savaşçıları there, pick your
+  copy of the game once, press *Play*. What you can pick: the game CD's image (`.iso`, or `.cue`
+  with its `.bin` beside it), or the folder of the CD or of the 2005 release (the one that holds
+  `3D.CKD`). The launcher starts the program as `Lale64.exe --source <your pick>`. Archives
+  (`.zip`, `.7z`, `.rar`) and `.chd` are not offered there because that launcher refuses them:
+  unpack the archive first, or start `Lale64.exe` yourself, which takes them. Saved games are in
+  `SAVE\` beside the program; the game's page in the launcher opens that folder.
+* **[sp00nznet's recomp-launcher](https://github.com/sp00nznet/recomp-launcher)** (Windows
+  only): the installer (`Lale64-Installer-windows-x64.exe`) will be on the release page from the
+  next tagged version on. Until then you can do the same by hand: download the repository and
+  run `launcher\setup.ps1 -Game "<game folder>"` in PowerShell from its root folder. The script
+  compiles nothing: it downloads the program's newest Windows release from GitHub, unpacks it
+  into `play\` and writes `Lale Savascilari (recomp).cmd`, which starts the game.
 
 ## 4K videolar / 4K videos
 

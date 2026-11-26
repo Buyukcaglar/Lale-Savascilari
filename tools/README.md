@@ -9,7 +9,9 @@
 | `bootstrap.sh` | `orig/`, `extracted/` ve `build/` dizinlerini başvuru zip'inden yeniden oluşturur; `--tools` Ghidra'yı (Windows'ta ayrıca llvm-mingw ve SDL3'ü) indirir; `--ghidra` çözümleme hattını (pipeline) çalıştırır |
 | `hostenv.sh` | Kabuk betiklerince içe alınır (source): ana sistemin (host) Python'u (varsa `.tools/venv`), JDK 21, başlatıcı soneki ve yerel yollar - Windows (Git Bash), macOS, Linux |
 | `testlib.sh` | CMake olmadan özel karşılaştırmalı test (differential test) kitaplığı (`.dll` / `.dylib` / `.so`) |
-| `package_macos.sh` | Dağıtılacak macOS uygulaması: preset `macos-release` (evrensel, statik SDL3) -> `dist/Lale64-<version>-macOS.zip` |
+| `package_windows.sh` | Dağıtılacak Windows programı: preset `windows`, hata ayıklama bilgisi çıkarılmış `Lale64.exe` + `SDL3.dll` -> `dist/Lale64-<version>-Windows.zip`. Paket, depo kökündeki `recomplauncher.json` dosyasını programın yanında taşır (RecompLauncher için; bkz. `docs/PROGRESS.md`, "Başlatıcı desteği") |
+| `package_macos.sh` | Dağıtılacak macOS uygulaması: preset `macos-release` (evrensel, statik SDL3) -> `dist/Lale64-<version>-macOS.zip`. Paket, `recomplauncher.json` dosyasını `Lale64.app`'in yanında taşır |
+| `../launcher/setup.ps1` | sp00nznet'in recomp-launcher'ının çalıştırdığı kurulum (`launcher/launcher.json` onu adlandırır; yalnızca Windows): oyun klasörünü denetler, en yeni Windows sürümünü GitHub'dan indirir, `play\` klasörüne açar ve `Lale Savascilari (recomp).cmd` dosyasını yazar. Sürüm dosyasını ad kalıbıyla (`$Asset`), programı adıyla (`$Program`) bulur |
 | `genicon.py` | `assets/icon`'dan program simgesi: `src/gen/lale.ico` (Windows), `app_icon.c` (pencere), `lale.icns` (macOS uygulaması) |
 | `flib.py` | FLiB `.CKD` arşivlerini listeler/açar (biçimi `docs/FORMATS.md` içinde) |
 | `exeload.py` | Bir MZ + Borland FBOV çalıştırılabilir dosyasını düz, bağlanmış bir imaja (`build/<exe>_flat.bin`) ve bir haritaya (`build/<exe>_map.json`) açar. Bindirmeler (overlay) 0x2700 segmentinden başlayarak eşlenir; saplama thunk'ları `JMP FAR` olur |
@@ -51,7 +53,9 @@ programın yüklemeye göreli segmentleriyle aynıdır; bindirmeler 2700 ve üze
 | `bootstrap.sh` | Recreate `orig/`, `extracted/` and `build/` from the reference zip; `--tools` downloads Ghidra (and on Windows llvm-mingw and SDL3); `--ghidra` runs the analysis pipeline |
 | `hostenv.sh` | Sourced by the shell scripts: the host's Python (`.tools/venv` if present), JDK 21, launcher suffix and native paths - Windows (Git Bash), macOS, Linux |
 | `testlib.sh` | Private differential-test library without CMake (`.dll` / `.dylib` / `.so`) |
-| `package_macos.sh` | The macOS application to give away: preset `macos-release` (universal, static SDL3) -> `dist/Lale64-<version>-macOS.zip` |
+| `package_windows.sh` | The Windows program to give away: preset `windows`, `Lale64.exe` without its debug information + `SDL3.dll` -> `dist/Lale64-<version>-Windows.zip`. The package carries `recomplauncher.json` from the repository root next to the program (for RecompLauncher; see `docs/PROGRESS.md`, "Launcher support") |
+| `package_macos.sh` | The macOS application to give away: preset `macos-release` (universal, static SDL3) -> `dist/Lale64-<version>-macOS.zip`. The package carries `recomplauncher.json` beside `Lale64.app` |
+| `../launcher/setup.ps1` | The setup that sp00nznet's recomp-launcher runs (`launcher/launcher.json` names it; Windows only): checks the game folder, downloads the newest Windows release from GitHub, unpacks it into `play\` and writes `Lale Savascilari (recomp).cmd`. It finds the release file by a name pattern (`$Asset`) and the program by name (`$Program`) |
 | `genicon.py` | Program icon from `assets/icon`: `src/gen/lale.ico` (Windows), `app_icon.c` (window), `lale.icns` (macOS app) |
 | `flib.py` | List/extract FLiB `.CKD` archives (format in `docs/FORMATS.md`) |
 | `exeload.py` | Unpack an MZ + Borland FBOV executable into a flat, linked image (`build/<exe>_flat.bin`) and a map (`build/<exe>_map.json`). Overlays are mapped at segment 0x2700 and up; stub thunks become `JMP FAR` |
