@@ -1,0 +1,67 @@
+{
+  "$schema": "https://recomplauncher.com/schema/recomplauncher.json",
+  "format": 1,
+  "name": "Lale Savaşçıları 64bit (Lale64)",
+  "repo": "Buyukcaglar/Lale-Savascilari",
+  "inputs": [
+    {
+      "id": "game",
+      "label": "Your copy of İstanbul Efsaneleri: Lale Savaşçıları: the game CD's image (.iso, or .cue with its .bin beside it), or the folder of the CD or of the 2005 release (the one that holds 3D.CKD).",
+      "formats": [
+        {
+          "type": "file",
+          "extensions": [
+            "iso",
+            "cue"
+          ]
+        },
+        {
+          "type": "folder"
+        }
+      ],
+      "check": {
+        "file": "3D.CKD",
+        "iso9660": "3D.CKD"
+      }
+    }
+  ],
+  "start": {
+    "program": [
+      "Lale64.exe",
+      "Lale64.app"
+    ],
+    "args": [
+      "--source",
+      "{input:game}"
+    ]
+  },
+  "saves": [
+    "{install}/SAVE"
+  ],
+  "folders": {
+    "saves": [
+      {
+        "path": "{install}/SAVE"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "id": "saves",
+      "label": "Saves",
+      "help": "Open the folder your saves are in.",
+      "open": "saves"
+    }
+  ],
+  "exit_codes": {
+    "1": "It couldn't start: your copy of the game couldn't be set up. Pick your game folder again on the game's page."
+  },
+  "system": {
+    "windows": {
+      "version": "10"
+    },
+    "macos": {
+      "version": "11"
+    }
+  }
+}

@@ -9,7 +9,8 @@
 # SDL3.dll, and writes
 #   dist/Lale64-<version>-Windows.zip    Lale64.exe, SDL3.dll, the READ ME
 #                                        (Turkish, then English), LICENSES.txt,
-#                                        lale.ini.example
+#                                        lale.ini.example, recomplauncher.json
+#                                        (for RecompLauncher: docs/PROGRESS.md)
 # The game's own files are not part of it (see the READ ME:
 # tools/package/OKUBENI-README.txt).
 set -e
@@ -29,7 +30,7 @@ STAGE=out/windows/stage/Lale64
 rm -rf out/windows/stage
 mkdir -p "$STAGE" dist
 "$BIN/llvm-strip" -o "$STAGE/Lale64.exe" out/windows/Lale64.exe
-cp out/windows/SDL3.dll lale.ini.example "$STAGE/"
+cp out/windows/SDL3.dll lale.ini.example recomplauncher.json "$STAGE/"
 cp docs/LICENSES.txt "$STAGE/LICENSES.txt"
 
 # nothing but Windows itself (system libraries, the universal C runtime) and SDL3.dll

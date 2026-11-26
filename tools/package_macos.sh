@@ -7,7 +7,8 @@
 # SDL3 built from source and linked statically: the app needs nothing that is
 # not part of macOS), checks the result and writes
 #   dist/Lale64-<version>-macOS.zip      Lale64.app, the READ ME (Turkish, then
-#                                        English), LICENSES.txt, lale.ini.example
+#                                        English), LICENSES.txt, lale.ini.example,
+#                                        recomplauncher.json (for RecompLauncher)
 # The app is signed ad hoc, not notarised: on another Mac the first start is
 # by right-click > Open (or: xattr -dr com.apple.quarantine Lale64.app).
 # The game's own files are not part of it (see the READ ME:
@@ -36,7 +37,7 @@ STAGE=out/macos-release/stage/Lale64
 rm -rf out/macos-release/stage
 mkdir -p "$STAGE" dist
 ditto "$APP" "$STAGE/Lale64.app"
-cp lale.ini.example "$STAGE/"
+cp lale.ini.example recomplauncher.json "$STAGE/"
 cp docs/LICENSES.txt "$STAGE/LICENSES.txt"
 # the READ ME (Turkish, then English): tools/package/OKUBENI-README-macOS.txt
 sed "s/@VER@/$VER/g" tools/package/OKUBENI-README-macOS.txt > "$STAGE/OKU BENI - READ ME.txt"
