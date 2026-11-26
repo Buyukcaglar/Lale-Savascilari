@@ -1,5 +1,4 @@
 # Lale Savaşçıları – geri derleme ve taşınabilir C sürümü / decompilation and portable C port
-<a href="https://recomplauncher.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://recomplauncher.com/assets/press/launcher/badge-light.svg"><img alt="Get it on RecompLauncher" src="https://recomplauncher.com/assets/press/launcher/badge-dark.svg" height="48"></picture></a>
 
 **Türkçe.** Bu depo, 1995–2005 tarihli DOS oyunu **İstanbul Efsaneleri – Bölüm I: Lale
 Savaşçıları**'nın açıklamalı, taşınabilir C koduyla yeniden kurulmuş halidir. Amaç, özgün
@@ -231,3 +230,5 @@ ctest --test-dir out/macos
 The new start-up and import (`DATA`, `SAVE`) and the 4K video decoder have not been built or run
 on the Mac yet. What is particular to the Mac (keys, window, the About box):
 [`docs/MACOS.md`](docs/MACOS.md).
+
+<a href="https://recomplauncher.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://recomplauncher.com/assets/press/launcher/badge-light.svg"><img alt="Get it on RecompLauncher" src="https://recomplauncher.com/assets/press/launcher/badge-dark.svg" height="48"></picture></a>
