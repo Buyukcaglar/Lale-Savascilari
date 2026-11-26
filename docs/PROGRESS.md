@@ -309,6 +309,17 @@ anlatım: [`README.md`](../README.md), [`INSTALL.md`](INSTALL.md#başlatıcılar
   RecompLauncher'ın kendisi çalıştırılmadı (Mac sürümü noterden geçmemiş). **Risk:** uygulama
   ad hoc imzalı ve noterden geçmemiş; Gatekeeper onu reddeder, başlatıcı indirdiği dosyayı
   karantinaya alırsa *Play* engellenebilir (denenemedi).
+* **macOS uygulaması onaylandı (2026-11-27 00:09, kullanıcının isteği):** v1.0'ın yayımlanan
+  `Lale64.app`'i (aynı program) Developer ID ile, hardened runtime ve güvenli zaman damgasıyla
+  yeniden imzalandı, Apple'a onaylatıldı (gönderim `53a8af92-81d8-441c-b06e-2656432a3cf3`:
+  Accepted, sorun yok) ve onay belgesi eklendi.  İki dilimde (arm64, x86_64) kod ve veri bayt
+  bayt aynıdır; yalnızca imza ve onun boyunu tutan başlık alanları değişti.  Denendi:
+  başlatıcının yaptığı gibi `--source` ile başlangıç (giriş videosu, `SAVE/` yazıldı), karantina
+  işaretiyle başlangıç (Gatekeeper sormadan açıldı, `spctl`: Notarized Developer ID), Rosetta
+  altında x86_64.  `Lale64-1.0-macOS.zip` aynı yerde değiştirildi (6,271,153 bayt, SHA-256
+  `e938dd686fc7185cdbd9208e4aae20e336858756dfeb2ecf6ab3d2a3124f0780`); `OKU BENI - READ ME.txt`
+  yeni ilk açılış adımını söyler, öteki dosyalar aynıdır; sürüm notlarına tarihli satır eklendi.
+  `tools/package_macos.sh` bundan sonra bunu kendisi yapar.  Yukarıdaki risk kalktı.
 
 ### macOS uyarlaması (2026-11-23)
 
@@ -655,6 +666,17 @@ player's side: [`README.md`](../README.md), [`INSTALL.md`](INSTALL.md#launchers)
   was made; RecompLauncher itself was not run (its Mac build is not notarized). **Risk:** the
   app is ad-hoc signed, not notarized, so Gatekeeper rejects it; if the launcher quarantines
   its download, *Play* may be blocked (not tried).
+* **macOS app notarised (2026-11-27 00:09, at the user's request):** v1.0's published
+  `Lale64.app` (the same program) re-signed with the Developer ID, the hardened runtime and a
+  secure timestamp, notarised (submission `53a8af92-81d8-441c-b06e-2656432a3cf3`: Accepted, no
+  issues) and stapled.  In both slices (arm64, x86_64) code and data are byte for byte the same;
+  only the signature and the header fields holding its size changed.  Tried: a start with
+  `--source` as the launcher does (intro video, `SAVE/` written), a start with a quarantine mark
+  (opened without a Gatekeeper question; `spctl`: Notarized Developer ID), x86_64 under Rosetta.
+  `Lale64-1.0-macOS.zip` replaced in place (6,271,153 bytes, SHA-256
+  `e938dd686fc7185cdbd9208e4aae20e336858756dfeb2ecf6ab3d2a3124f0780`); `OKU BENI - READ ME.txt`
+  gives the new first-start step, the other files are the same; a dated line in the release
+  notes.  `tools/package_macos.sh` now does this itself.  The risk above is gone.
 
 ### macOS port (2026-11-23)
 

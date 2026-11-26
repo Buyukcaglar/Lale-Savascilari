@@ -14,9 +14,9 @@ Program, oyunu sizin elinizdeki kopyadan alır:
 Kurulum
   1. Bu klasörü dilediğiniz, yazılabilir bir yere açın (Programlar klasörü
      olmasın; oyun, Lale64.app'in yanına yazar).
-  2. İlk açılış: uygulama Apple tarafından onaylanmış (notarised) değildir.
-     Lale64.app'e sağ tıklayıp Aç'ı seçin (bir kez), ya da Terminal'de:
-       xattr -dr com.apple.quarantine Lale64.app
+  2. Lale64.app'i açın.  Uygulama Developer ID ile imzalı ve Apple
+     tarafından onaylıdır (notarised); macOS, internetten indirilen bir
+     uygulamayı açmak isteyip istemediğinizi bir kez sorabilir.
   3. Program oyunu kendisi bulamazsa sorar: "Dosya Seç…" ile disk kalıbını
      (.cue / .iso / .chd) ya da arşivi, "Klasör Seç…" ile oyunun klasörünü
      seçin.  Kaynağı Lale64.app'in yanına koymak da yeterlidir.
@@ -67,9 +67,9 @@ it first.)
 Installing
   1. Unpack this folder to any place you can write to (not Applications; the
      game writes beside Lale64.app).
-  2. First start: the app is not notarised by Apple.  Right-click Lale64.app
-     and choose Open (once), or in Terminal:
-       xattr -dr com.apple.quarantine Lale64.app
+  2. Open Lale64.app.  The app is signed with a Developer ID and notarised
+     by Apple; macOS may ask once whether to open an app downloaded from the
+     Internet.
   3. If the program does not find the game itself, it asks (in Turkish):
      "Dosya Seç…" (choose a file) for the disc image (.cue / .iso / .chd) or
      the archive, "Klasör Seç…" (choose a folder) for the game's folder.

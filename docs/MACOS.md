@@ -20,9 +20,11 @@ ve araçlardadır (`tools/hostenv.sh`).  Derleme komutları: [`README.md`](../RE
 | `out/macos/lale_testlib.dylib` | karşılaştırmalı testlerin (differential test) kitaplığı |
 | `dist/Lale64-<version>-macOS.zip` | `tools/package_macos.sh`: preset `macos-release` - evrensel (arm64 + x86_64), macOS 11+, kaynaktan derlenip statik olarak bağlanan SDL3 3.4.18 (`LALE_VENDOR_SDL`); böylece uygulama macOS dışında hiçbir şeye bağımlı değildir |
 
-Uygulama ad hoc imzalıdır ve noter onaylı (notarised) değildir: başka bir Mac'te ilk açılış
-sağ tık > Aç (Open) ile yapılır (ya da `xattr -dr com.apple.quarantine Lale64.app`).  Developer
-ID imzası ve noter onayı sahibin Apple hesabını gerektirir ve derlemenin parçası değildir.
+`out/macos` içindeki uygulama ad hoc imzalıdır.  Dağıtılan uygulamayı `tools/package_macos.sh`
+sahibin Developer ID'si ile imzalar (hardened runtime, güvenli zaman damgası, yetki/entitlement
+yok), Apple'a onaylatır (notarytool, anahtarlık profili `civ64-notary`) ve onay belgesini ekler
+(staple); `LALE_NOTARIZE=0` bu adımı atlar.  v1.0'ın macOS paketi 27 Kasım 2026'da bu şekilde
+yeniden imzalandı (program baytları aynı, yalnızca imza değişti).
 
 ### Mac'ten Windows derlemesi
 
@@ -128,10 +130,11 @@ and the tooling (`tools/hostenv.sh`).  Build commands: [`README.md`](../README.m
 | `out/macos/lale_testlib.dylib` | the differential tests' library |
 | `dist/Lale64-<version>-macOS.zip` | `tools/package_macos.sh`: preset `macos-release` - universal (arm64 + x86_64), macOS 11+, SDL3 3.4.18 built from source and linked statically (`LALE_VENDOR_SDL`), so the app depends on nothing outside macOS |
 
-The app is signed ad hoc and not notarised: on another Mac the first start is
-right-click > Open (or `xattr -dr com.apple.quarantine Lale64.app`).  A Developer ID
-signature and notarisation need the owner's Apple account and are not part of the
-build.
+The app in `out/macos` is signed ad hoc.  The app given away is signed by
+`tools/package_macos.sh` with the owner's Developer ID (hardened runtime, secure
+timestamp, no entitlements), notarised (notarytool, keychain profile `civ64-notary`)
+and stapled; `LALE_NOTARIZE=0` skips that.  v1.0's macOS package was re-signed this way
+on 27 November 2026 (the program's bytes the same, only the signature changed).
 
 ### The Windows build from the Mac
 

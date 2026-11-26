@@ -185,8 +185,9 @@ open out/macos/Lale64.app                     # aynı program, uygulama olarak
 tools/package_macos.sh                        # dağıtım için dist/Lale64-<sürüm>-macOS.zip
 ```
 
-`tools/package_macos.sh`, `macos-release` ön ayarını derler: SDL3'ün statik bağlandığı, ad hoc
-imzalı evrensel bir uygulama (arm64 + x86_64, macOS 11 ve sonrası).
+`tools/package_macos.sh`, `macos-release` ön ayarını derler: SDL3'ün statik bağlandığı evrensel
+bir uygulama (arm64 + x86_64, macOS 11 ve sonrası); uygulamayı Developer ID ile imzalar, Apple'a
+onaylatır (notarise) ve onay belgesini ekler (`LALE_NOTARIZE=0`: yalnızca ad hoc imza).
 
 Testler, çözümleme görüntüsüne ve DOSBox-X kayıtlarına ihtiyaç duyar; bunlar Mac'te de
 Windows'taki gibi üretilir:
@@ -215,7 +216,8 @@ tools/package_macos.sh                        # dist/Lale64-<version>-macOS.zip 
 ```
 
 `tools/package_macos.sh` builds the preset `macos-release`: a universal app (arm64 +
-x86_64, macOS 11 or later) with SDL3 linked statically, signed ad hoc.
+x86_64, macOS 11 or later) with SDL3 linked statically, signed with the Developer ID,
+notarised and stapled (`LALE_NOTARIZE=0`: the ad-hoc signature only).
 
 The tests need the analysis image and the DOSBox-X captures, made on the Mac the same
 way as on Windows:
