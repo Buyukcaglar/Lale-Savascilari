@@ -45,6 +45,60 @@
       }
     ]
   },
+  "settings": [
+    {
+      "id": "edition",
+      "label": "Edition",
+      "in": "args",
+      "help": "Which edition of the game plays. Automatic picks the 1996 CD edition when your copy is a disc with music tracks, otherwise the 2005 edition.",
+      "choices": [
+        {
+          "label": "Automatic",
+          "args": []
+        },
+        {
+          "label": "CD edition (1996)",
+          "args": [
+            "--edition",
+            "cd"
+          ]
+        },
+        {
+          "label": "2005 edition",
+          "args": [
+            "--edition",
+            "2005"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "video",
+      "label": "Videos",
+      "in": "args",
+      "help": "What the game's videos start as when its VIDEO folder holds upscaled copies. Ctrl+V switches while you play.",
+      "choices": [
+        {
+          "label": "Game's option",
+          "args": []
+        },
+        {
+          "label": "Upscaled (4K)",
+          "args": [
+            "--video",
+            "4k"
+          ]
+        },
+        {
+          "label": "Original",
+          "args": [
+            "--video",
+            "original"
+          ]
+        }
+      ]
+    }
+  ],
   "actions": [
     {
       "id": "saves",

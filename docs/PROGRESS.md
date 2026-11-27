@@ -287,8 +287,15 @@ anlatım: [`README.md`](../README.md), [`INSTALL.md`](INSTALL.md#başlatıcılar
 
   | Dosya | Boyut | SHA-256 |
   |---|---|---|
-  | `Lale64-1.0-Windows.zip` | 2,663,450 bayt | `3e64cc6a98376296679e10f26624d0758b9769cee52b030bd2c9eb1a8c4ce35f` |
-  | `Lale64-1.0-macOS.zip` | 6,257,546 bayt | `a85691bc8b835a97ebdf166d6b82c146b179ca079d8b11189b6b966cb56ecc8b` |
+  | `Lale64-1.0-Windows.zip` | 2,663,721 bayt | `8da229a3dc9fd61f15836cff7d09e60febf6198bc562d5290973eb4f606f4217` |
+  | `Lale64-1.0-macOS.zip` | 6,271,153 bayt | `e938dd686fc7185cdbd9208e4aae20e336858756dfeb2ecf6ab3d2a3124f0780` |
+
+  27 Kasım 2026'da `Lale64-1.0-Windows.zip` bir kez daha yerinde değiştirildi: yalnızca
+  içindeki `recomplauncher.json` yenilendi (başlatıcı ayarları eklendi: *Edition*,
+  `--edition cd | 2005`; *Videos*, `--video 4k | original`; ikisi de komut satırından verilir).
+  Program dosyaları aynıdır. Tablodaki değerler bu son dosyanındır; macOS satırı, aynı gün
+  Mac'te imzalanıp onaylanan zip'in değerleridir ve o zip'teki `recomplauncher.json` henüz
+  ayarsız, eski hâlidir.
 
 * **Bilinen sınır:** adı verilen bir kaynak her açılışta yeniden içe aktarılır
   (`src/platform/setup.c`, `setup_game` içindeki 1. adım koşulsuzdur; `install_import`
@@ -645,8 +652,15 @@ player's side: [`README.md`](../README.md), [`INSTALL.md`](INSTALL.md#launchers)
 
   | File | Size | SHA-256 |
   |---|---|---|
-  | `Lale64-1.0-Windows.zip` | 2,663,450 bytes | `3e64cc6a98376296679e10f26624d0758b9769cee52b030bd2c9eb1a8c4ce35f` |
-  | `Lale64-1.0-macOS.zip` | 6,257,546 bytes | `a85691bc8b835a97ebdf166d6b82c146b179ca079d8b11189b6b966cb56ecc8b` |
+  | `Lale64-1.0-Windows.zip` | 2,663,721 bytes | `8da229a3dc9fd61f15836cff7d09e60febf6198bc562d5290973eb4f606f4217` |
+  | `Lale64-1.0-macOS.zip` | 6,271,153 bytes | `e938dd686fc7185cdbd9208e4aae20e336858756dfeb2ecf6ab3d2a3124f0780` |
+
+  On 27 November 2026 `Lale64-1.0-Windows.zip` was replaced in place once more: only its
+  `recomplauncher.json` is new (launcher settings added: *Edition*, `--edition cd | 2005`;
+  *Videos*, `--video 4k | original`; both passed on the command line). The program's files
+  are the same. The table gives this last file; the macOS row gives the zip that was signed
+  and notarised on the Mac the same day, whose `recomplauncher.json` is still the earlier one
+  without settings.
 
 * **Known limit:** a named source is imported again at every start (`src/platform/setup.c`,
   step 1 of `setup_game` is unconditional; `install_import` does not look whether `DATA/`
